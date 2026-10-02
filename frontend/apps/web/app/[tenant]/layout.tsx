@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { fonts } from "@/lib/fonts";
+import { getSessionUser } from "@/lib/session";
 import { resolveTenant } from "@/lib/tenant";
 import { getTenant } from "@/tenants";
 
@@ -32,7 +33,7 @@ export default async function TenantLayout({ children, params }: LayoutProps<"/[
 
   return (
     <div style={themeVars} className="flex flex-1 flex-col bg-white font-sans text-foreground">
-      <Header tenant={tenant} />
+      <Header tenant={tenant} user={await getSessionUser(tenant.slug)} />
       <main className="flex-1">{children}</main>
       <Footer tenant={tenant} />
     </div>

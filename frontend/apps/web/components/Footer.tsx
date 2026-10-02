@@ -30,7 +30,7 @@ export default function Footer({ tenant }: { tenant: SiteTenant }) {
   ];
 
   return (
-    <footer className="bg-primary text-on-primary/80">
+    <footer className="bg-primary print:hidden text-on-primary/80">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="text-on-primary">
           <Logo tenant={tenant} />
