@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/*
+ * Les couleurs, la police et l'arrondi viennent de la config du client
+ * (tenants/<client>.ts), injectées en variables CSS par app/[tenant]/layout.tsx.
+ * Les valeurs ci-dessous ne servent que de repli neutre.
+ */
+:root {
+  --tenant-primary: #1f2937;
+  --tenant-secondary: #2563eb;
+  --tenant-on-primary: #ffffff;
+  --tenant-on-secondary: #ffffff;
+  --tenant-text: #111827;
+  --tenant-muted: #f3f4f6;
+  --tenant-font: Arial, Helvetica, sans-serif;
+  --tenant-radius: 1rem;
+}
+
+@theme inline {
+  --color-foreground: var(--tenant-text);
+  --color-primary: var(--tenant-primary);
+  --color-primary-light: color-mix(in srgb, var(--tenant-primary) 85%, white);
+  --color-secondary: var(--tenant-secondary);
+  --color-secondary-dark: color-mix(in srgb, var(--tenant-secondary) 85%, black);
+  --color-on-primary: var(--tenant-on-primary);
+  --color-on-secondary: var(--tenant-on-secondary);
+  --color-muted: var(--tenant-muted);
+  --font-sans: var(--tenant-font);
+  --radius-brand: var(--tenant-radius);
+}
+
+body {
+  background: #ffffff;
+  color: var(--tenant-text);
+  font-family: var(--tenant-font);
+}
