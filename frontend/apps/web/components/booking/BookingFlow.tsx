@@ -65,7 +65,7 @@ export default function BookingFlow({
   const chosen = services.filter((s) => selected.includes(s.slug));
   // Prix exact si le véhicule est identifié par son immatriculation, sinon prix « à partir de ».
   const vehicle = lookupVehicle(plate);
-  const priceOf = (s: Service) => (vehicle ? computeQuote([s], vehicle.category).totalTTC : s.priceFrom);
+  const priceOf = (s: Service) => (vehicle ? computeQuote([s], vehicle.category).totalTTC : (s.priceFrom ?? 0));
   const pricePrefix = vehicle ? "" : "dès ";
   const total = chosen.reduce((sum, s) => sum + priceOf(s), 0);
   const garage = garages.find((g) => g.id === garageId);

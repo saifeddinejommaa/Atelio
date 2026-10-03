@@ -3,6 +3,7 @@ import type { TenantConfig } from "./types";
 const config: TenantConfig = {
   slug: "auto-express",
   domains: ["auto-express.com"],
+  apiTenant: "auto-express",
   name: "Auto Express",
   logo: "/tenants/auto-express/logo.svg",
   tagline: "Entretien rapide, sans rendez-vous ou en ligne.",

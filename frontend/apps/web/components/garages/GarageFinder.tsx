@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import Icon from "@/components/Icon";
 import type { Garage } from "@/lib/garages";
-import { getService } from "@/lib/services";
+
 import { tenantPath, type SiteTenant } from "@/tenants";
 
 // Carte Google Maps sans clé API (iframe). Avant la mise en prod, passer à la Maps Embed API officielle :
@@ -22,10 +22,13 @@ export default function GarageFinder({
   tenant,
   garages,
   initialQuery,
+  serviceNames,
 }: {
   tenant: SiteTenant;
   garages: Garage[];
   initialQuery: string;
+  /** Nom de chaque service, par code. */
+  serviceNames: Record<string, string>;
 }) {
   const [query, setQuery] = useState(initialQuery);
   const results = garages.filter((g) => {
@@ -88,7 +91,7 @@ export default function GarageFinder({
                         <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Prestations</p>
                         <p className="mt-1 text-sm">
                           {g.services.length
-                            ? g.services.map((s) => getService(s)?.name).filter(Boolean).join(", ")
+                            ? g.services.map((code) => serviceNames[code]).filter(Boolean).join(", ")
                             : "Toutes nos prestations"}
                         </p>
                         <div className="mt-4 flex gap-2">

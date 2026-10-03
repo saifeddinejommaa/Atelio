@@ -3,6 +3,7 @@ import type { TenantConfig } from "./types";
 const config: TenantConfig = {
   slug: "garage-dupont",
   domains: ["garage-dupont.fr"],
+  apiTenant: "gmg",
   name: "Garage Dupont",
   logo: "/tenants/garage-dupont/logo.svg",
   tagline: "Votre garage de confiance depuis 1987, au juste prix.",

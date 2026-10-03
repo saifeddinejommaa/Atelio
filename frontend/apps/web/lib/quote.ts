@@ -45,7 +45,8 @@ export type QuoteLine = { service: Service; parts: number; labour: number; total
 export function computeQuote(services: Service[], category: CategoryId) {
   const factor = vehicleCategories.find((c) => c.id === category)?.factor ?? 1;
   const lines: QuoteLine[] = services.map((service) => {
-    const total = Math.round(service.priceFrom * factor);
+    // Service sans prix « à partir de » : compté à 0, à chiffrer par le garage.
+    const total = Math.round((service.priceFrom ?? 0) * factor);
     const parts = Math.round(total * 0.6);
     return { service, parts, labour: total - parts, total };
   });

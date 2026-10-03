@@ -10,6 +10,8 @@ export type TenantConfig = {
    * Le site reste aussi accessible via <slug>.<TENANT_BASE_DOMAIN> et <domaine commun>/<slug>.
    */
   domains: string[];
+  /** Identifiant de la marque côté API (en-tête X-Tenant, voir Tenancy:Tenants de l'API). */
+  apiTenant: string;
   /** Nom affiché partout sur le site. */
   name: string;
   /** Logo dans public/tenants/<slug>/ (SVG ou PNG). */

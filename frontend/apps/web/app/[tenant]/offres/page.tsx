@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Icon from "@/components/Icon";
 import { getActiveOffers } from "@/lib/offers";
-import { getService } from "@/lib/services";
+import { getServices } from "@/lib/api/services";
 import { resolveTenant } from "@/lib/tenant";
 import { tenantPath } from "@/tenants";
 
@@ -13,6 +13,7 @@ const longDate = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long
 export default async function OffersPage({ params }: PageProps<"/[tenant]/offres">) {
   const tenant = await resolveTenant(params);
   const offers = getActiveOffers();
+  const allServices = await getServices(tenant.slug);
 
   return (
     <>
@@ -32,7 +33,7 @@ export default async function OffersPage({ params }: PageProps<"/[tenant]/offres
           <div className="grid gap-6 md:grid-cols-2">
             {offers.map((offer) => {
               const [y, m, d] = offer.validUntil.split("-").map(Number);
-              const services = offer.services.map(getService).filter((s) => s !== undefined);
+              const services = allServices.filter((s) => offer.services.includes(s.slug));
               return (
                 <article key={offer.id} className="flex flex-col overflow-hidden rounded-brand border border-zinc-200 bg-white shadow-sm">
                   <div className="flex items-center justify-between gap-4 bg-secondary p-6 text-on-secondary">

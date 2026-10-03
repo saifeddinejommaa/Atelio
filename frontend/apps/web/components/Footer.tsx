@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { services } from "@/lib/services";
+import type { Service } from "@/lib/services";
 import { tenantPath, type SiteTenant } from "@/tenants";
 
-export default function Footer({ tenant }: { tenant: SiteTenant }) {
+export default function Footer({ tenant, services }: { tenant: SiteTenant; services: Service[] }) {
   const columns = [
     {
       title: "Nos prestations",

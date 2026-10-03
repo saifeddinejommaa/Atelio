@@ -1,0 +1,33 @@
+@Api = http://localhost:5063/api
+@Tenant = garage-dupont
+
+### Services avec leur prix « à partir de »
+GET {{Api}}/services
+X-Tenant: {{Tenant}}
+
+### Garages (recherche par ville / code postal)
+GET {{Api}}/garages?search=lyon
+X-Tenant: {{Tenant}}
+
+### Créneaux d'un garage pour des services
+GET {{Api}}/garages/1/availability?serviceIds=1&serviceIds=2&days=7
+X-Tenant: {{Tenant}}
+
+### Promotions actives
+GET {{Api}}/promotions
+X-Tenant: {{Tenant}}
+
+### Prendre rendez-vous (heure locale du garage)
+POST {{Api}}/appointments
+X-Tenant: {{Tenant}}
+Content-Type: application/json
+
+{
+  "customerId": 1,
+  "garageId": 1,
+  "serviceIds": [1, 2],
+  "scheduledAt": "2026-10-12T09:00",
+  "plate": "AB-123-CD",
+  "mileage": 85000,
+  "customerNotes": "Bruit à l'avant au freinage"
+}

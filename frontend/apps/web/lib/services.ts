@@ -1,11 +1,21 @@
+import type { ApiService } from "@/lib/api/services";
+
+/** Prestation telle qu'affichée sur le site : données de l'API + contenu de présentation. */
 export type Service = {
+  id: number;
   slug: string;
   name: string;
   description: string;
-  priceFrom: number;
-  icon: IconName;
-  /** Durée indicative de l'intervention. */
+  /** Prix « à partir de » TTC, promotion déduite (null si non renseigné). */
+  priceFrom: number | null;
+  /** Prix TTC avant promotion. */
+  basePrice: number;
+  /** Remise en cours (ex. 20 pour -20 %), null si aucune. */
+  discountPercent: number | null;
+  durationMinutes: number;
+  /** Durée lisible, ex. "1 h 30". */
   duration: string;
+  icon: IconName;
   /** Texte de présentation de la page dédiée. */
   intro: string;
   /** Ce qui est compris dans la prestation. */
@@ -24,15 +34,19 @@ export type IconName =
   | "shield"
   | "exhaust";
 
-// Données fictives en attendant l'API backend.
-export const services: Service[] = [
+/** Contenu éditorial par code de service (icône, textes de la fiche). Le reste vient de l'API. */
+type ServiceContent = {
+  slug: string;
+  icon: IconName;
+  intro: string;
+  includes: string[];
+  when: string;
+};
+
+const content: ServiceContent[] = [
   {
     slug: "vidange",
-    name: "Vidange & entretien",
-    description: "Huile moteur, filtres et points de contrôle selon le carnet constructeur.",
-    priceFrom: 69,
     icon: "oil",
-    duration: "45 min",
     intro:
       "La vidange remplace l'huile moteur usagée et le filtre à huile. Elle protège votre moteur de l'usure et limite la consommation de carburant.",
     includes: [
@@ -46,11 +60,7 @@ export const services: Service[] = [
   },
   {
     slug: "freinage",
-    name: "Freinage",
-    description: "Plaquettes, disques et liquide de frein contrôlés et remplacés.",
-    priceFrom: 89,
     icon: "brake",
-    duration: "1 h",
     intro:
       "Un freinage en bon état, c'est votre sécurité. Nous contrôlons et remplaçons plaquettes, disques et liquide de frein avec des pièces de qualité.",
     includes: [
@@ -63,11 +73,7 @@ export const services: Service[] = [
   },
   {
     slug: "pneus",
-    name: "Pneus",
-    description: "Montage, équilibrage, géométrie et stockage de vos pneus.",
-    priceFrom: 49,
     icon: "tire",
-    duration: "45 min",
     intro:
       "Vos pneus sont le seul contact de votre voiture avec la route. Nous vous conseillons les bons pneus et les montons dans les règles de l'art.",
     includes: [
@@ -80,11 +86,7 @@ export const services: Service[] = [
   },
   {
     slug: "climatisation",
-    name: "Climatisation",
-    description: "Recharge, désinfection et diagnostic du circuit de clim.",
-    priceFrom: 79,
     icon: "snow",
-    duration: "1 h",
     intro:
       "Une climatisation entretenue refroidit mieux, consomme moins et évite les mauvaises odeurs dans l'habitacle.",
     includes: [
@@ -97,11 +99,7 @@ export const services: Service[] = [
   },
   {
     slug: "batterie",
-    name: "Batterie",
-    description: "Test gratuit et remplacement de batterie en moins de 30 minutes.",
-    priceFrom: 99,
     icon: "battery",
-    duration: "30 min",
     intro:
       "Démarrage difficile ? Nous testons gratuitement votre batterie et la remplaçons si besoin par une batterie adaptée à votre véhicule.",
     includes: [
@@ -114,11 +112,7 @@ export const services: Service[] = [
   },
   {
     slug: "revision",
-    name: "Révision constructeur",
-    description: "Révision complète qui préserve votre garantie constructeur.",
-    priceFrom: 149,
     icon: "wrench",
-    duration: "2 h",
     intro:
       "La révision suit le programme d'entretien de votre constructeur. Elle est réalisée avec des pièces de qualité d'origine et préserve votre garantie.",
     includes: [
@@ -131,11 +125,7 @@ export const services: Service[] = [
   },
   {
     slug: "controle-technique",
-    name: "Pré-contrôle technique",
-    description: "Vérification des points clés avant votre passage au contrôle.",
-    priceFrom: 29,
     icon: "shield",
-    duration: "30 min",
     intro:
       "Évitez la contre-visite : nous vérifions les principaux points du contrôle technique et vous indiquons ce qui doit être corrigé.",
     includes: [
@@ -148,11 +138,7 @@ export const services: Service[] = [
   },
   {
     slug: "echappement",
-    name: "Échappement",
-    description: "Silencieux, catalyseur et filtre à particules diagnostiqués.",
-    priceFrom: 119,
     icon: "exhaust",
-    duration: "1 h 30",
     intro:
       "Un échappement abîmé fait du bruit, pollue davantage et peut vous coûter le contrôle technique. Nous le diagnostiquons et le réparons.",
     includes: [
@@ -165,6 +151,43 @@ export const services: Service[] = [
   },
 ];
 
-export function getService(slug: string): Service | undefined {
-  return services.find((s) => s.slug === slug);
+export function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, "0")}`;
+}
+
+/** Complète un service de l'API avec son contenu de présentation (s'il existe). */
+export function toService(api: ApiService): Service {
+  const extra = content.find((c) => c.slug === api.code);
+  return {
+    id: api.id,
+    slug: api.code,
+    name: api.name,
+    description: api.description ?? "",
+    priceFrom: api.finalPrice,
+    basePrice: api.price,
+    discountPercent: api.discountPercent,
+    durationMinutes: api.durationMinutes,
+    duration: formatDuration(api.durationMinutes),
+    icon: extra?.icon ?? "wrench",
+    intro: extra?.intro ?? api.description ?? "",
+    includes: extra?.includes ?? [],
+    when: extra?.when ?? "",
+  };
+}
+
+/** « à partir de 69 € » ou « Sur devis » si le service n'a pas de prix. */
+export function priceLabel(service: Service, prefix = "à partir de "): string {
+  return service.priceFrom === null ? "Sur devis" : `${prefix}${formatEuro(service.priceFrom)}`;
+}
+
+/** 71.2 => "71,20 €", 69 => "69 €". */
+export function formatEuro(amount: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  }).format(amount);
 }

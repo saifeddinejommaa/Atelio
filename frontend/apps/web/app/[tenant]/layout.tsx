@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { fonts } from "@/lib/fonts";
+import { getServices } from "@/lib/api/services";
 import { getSessionUser } from "@/lib/session";
 import { resolveTenant } from "@/lib/tenant";
 import { getTenant } from "@/tenants";
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[tenant]">): Pr
 export default async function TenantLayout({ children, params }: LayoutProps<"/[tenant]">) {
   const tenant = await resolveTenant(params);
 
+  const services = await getServices(tenant.slug);
   const { theme } = tenant;
   const themeVars = {
     "--tenant-primary": theme.primary,
@@ -33,9 +35,9 @@ export default async function TenantLayout({ children, params }: LayoutProps<"/[
 
   return (
     <div style={themeVars} className="flex flex-1 flex-col bg-white font-sans text-foreground">
-      <Header tenant={tenant} user={await getSessionUser(tenant.slug)} />
+      <Header tenant={tenant} user={await getSessionUser(tenant.slug)} services={services} />
       <main className="flex-1">{children}</main>
-      <Footer tenant={tenant} />
+      <Footer tenant={tenant} services={services} />
     </div>
   );
 }

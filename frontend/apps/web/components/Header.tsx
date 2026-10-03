@@ -5,7 +5,7 @@ import { useState } from "react";
 import Icon from "@/components/Icon";
 import Logo from "@/components/Logo";
 import { logout } from "@/lib/auth-actions";
-import { services } from "@/lib/services";
+import { priceLabel, type Service } from "@/lib/services";
 import type { SessionUser } from "@/lib/session";
 import { tenantPath, type SiteTenant } from "@/tenants";
 
@@ -15,7 +15,15 @@ const navLinks = [
   { path: "/offres", label: "Offres du moment" },
 ];
 
-export default function Header({ tenant, user }: { tenant: SiteTenant; user: SessionUser | null }) {
+export default function Header({
+  tenant,
+  user,
+  services,
+}: {
+  tenant: SiteTenant;
+  user: SessionUser | null;
+  services: Service[];
+}) {
   const [open, setOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const href = (path: string) => tenantPath(tenant, path);
@@ -85,7 +93,7 @@ export default function Header({ tenant, user }: { tenant: SiteTenant; user: Ses
                     </span>
                     <span className="flex-1">
                       <span className="block font-semibold">{s.name}</span>
-                      <span className="block text-xs text-zinc-500">à partir de {s.priceFrom} €</span>
+                      <span className="block text-xs text-zinc-500">{priceLabel(s)}</span>
                     </span>
                   </Link>
                 ))}
@@ -138,7 +146,7 @@ export default function Header({ tenant, user }: { tenant: SiteTenant; user: Ses
               onClick={() => setOpen(false)}
             >
               {s.name}
-              <span className="text-sm text-on-primary/60">dès {s.priceFrom} €</span>
+              <span className="text-sm text-on-primary/60">{priceLabel(s, "dès ")}</span>
             </Link>
           ))}
           <div className="my-2 border-t border-on-primary/10" />

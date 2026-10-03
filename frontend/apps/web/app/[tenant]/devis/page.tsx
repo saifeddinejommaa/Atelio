@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import QuoteBuilder from "@/components/quote/QuoteBuilder";
-import { getService, services } from "@/lib/services";
+import { getServices } from "@/lib/api/services";
 import { resolveTenant } from "@/lib/tenant";
 
 export const metadata: Metadata = { title: "Devis en ligne" };
 
 export default async function QuotePage({ params, searchParams }: PageProps<"/[tenant]/devis">) {
   const tenant = await resolveTenant(params);
+  const services = await getServices(tenant.slug);
   const query = await searchParams;
 
   // Pré-remplissage depuis le formulaire de l'accueil ou une fiche prestation.
   const immat = typeof query.immat === "string" ? query.immat.slice(0, 12) : "";
   const preselected =
-    typeof query.prestation === "string" ? query.prestation.split(",").filter((s) => getService(s)) : [];
+    typeof query.prestation === "string" ? query.prestation.split(",").filter((code) => services.some((s) => s.slug === code)) : [];
 
   return (
     <>

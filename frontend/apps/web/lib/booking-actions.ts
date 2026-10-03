@@ -1,7 +1,7 @@
 "use server";
 
 import { getGarages } from "@/lib/garages";
-import { getService } from "@/lib/services";
+import { getServices } from "@/lib/api/services";
 import { getSessionUser } from "@/lib/session";
 import { getTenant } from "@/tenants";
 
@@ -32,7 +32,8 @@ export async function confirmBooking(input: BookingRequest): Promise<BookingResu
   const user = await getSessionUser(tenant.slug);
   if (!user) return { ok: false, error: "Veuillez vous reconnecter." };
 
-  if (req.services.length === 0 || !req.services.every((s) => getService(s)))
+  const known = await getServices(tenant.slug);
+  if (req.services.length === 0 || !req.services.every((code) => known.some((s) => s.slug === code)))
     return { ok: false, error: "Choisissez au moins une prestation." };
   if (!/^[A-Z]{2}-?\d{3}-?[A-Z]{2}$/i.test(req.plate.trim()))
     return { ok: false, error: "Immatriculation invalide (format AB-123-CD)." };

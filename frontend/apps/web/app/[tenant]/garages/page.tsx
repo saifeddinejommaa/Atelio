@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import GarageFinder from "@/components/garages/GarageFinder";
+import { getServices } from "@/lib/api/services";
 import { getGarages } from "@/lib/garages";
 import { resolveTenant } from "@/lib/tenant";
 
@@ -9,6 +10,7 @@ export default async function GaragesPage({ params, searchParams }: PageProps<"/
   const tenant = await resolveTenant(params);
   const { q } = await searchParams;
   const garages = await getGarages(tenant.slug);
+  const serviceNames = Object.fromEntries((await getServices(tenant.slug)).map((s) => [s.slug, s.name]));
 
   return (
     <>
@@ -20,7 +22,9 @@ export default async function GaragesPage({ params, searchParams }: PageProps<"/
           </p>
         </div>
       </section>
-      <GarageFinder tenant={tenant} garages={garages} initialQuery={typeof q === "string" ? q.slice(0, 60) : ""} />
+      <GarageFinder tenant={tenant} garages={garages} initialQuery={typeof q === "string" ? q.slice(0, 60) : ""}
+        serviceNames={serviceNames}
+      />
     </>
   );
 }

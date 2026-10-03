@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Icon from "@/components/Icon";
-import { services } from "@/lib/services";
+import { getServices } from "@/lib/api/services";
+import ServicePrice from "@/components/ServicePrice";
 import { resolveTenant } from "@/lib/tenant";
 import { tenantPath } from "@/tenants";
 
@@ -9,6 +10,7 @@ export const metadata: Metadata = { title: "Nos prestations" };
 
 export default async function ServicesPage({ params }: PageProps<"/[tenant]/prestations">) {
   const tenant = await resolveTenant(params);
+  const services = await getServices(tenant.slug);
   const href = (path: string) => tenantPath(tenant, path);
 
   return (
@@ -22,6 +24,12 @@ export default async function ServicesPage({ params }: PageProps<"/[tenant]/pres
         </div>
       </section>
 
+      {services.length === 0 && (
+        <p className="mx-auto max-w-7xl px-4 py-14 text-center text-zinc-600">
+          Nos prestations sont momentanément indisponibles. Merci de réessayer dans quelques instants.
+        </p>
+      )}
+
       <section className="mx-auto grid max-w-7xl gap-5 px-4 py-14 sm:grid-cols-2 lg:grid-cols-3">
         {services.map((s) => (
           <article key={s.slug} className="flex flex-col rounded-brand border border-zinc-200 p-6">
@@ -34,9 +42,7 @@ export default async function ServicesPage({ params }: PageProps<"/[tenant]/pres
               </Link>
             </h2>
             <p className="mt-2 flex-1 text-sm leading-6 text-zinc-600">{s.description}</p>
-            <p className="mt-4 text-sm">
-              à partir de <span className="text-2xl font-extrabold text-primary">{s.priceFrom} €</span>
-            </p>
+            <ServicePrice service={s} size="text-2xl" />
             <div className="mt-5 flex gap-2">
               <Link
                 href={href(`/rendez-vous?prestation=${s.slug}`)}

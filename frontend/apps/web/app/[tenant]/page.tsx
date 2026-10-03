@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
-import { services } from "@/lib/services";
+import { getServices } from "@/lib/api/services";
+import ServicePrice from "@/components/ServicePrice";
 import { resolveTenant } from "@/lib/tenant";
 import { tenantPath } from "@/tenants";
 
@@ -19,6 +20,7 @@ const reviews = [
 
 export default async function Home({ params }: PageProps<"/[tenant]">) {
   const tenant = await resolveTenant(params);
+  const services = await getServices(tenant.slug);
   const href = (path: string) => tenantPath(tenant, path);
 
   const steps = [
@@ -133,9 +135,7 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
               </span>
               <h3 className="mt-5 font-bold">{s.name}</h3>
               <p className="mt-2 text-sm leading-6 text-zinc-600">{s.description}</p>
-              <p className="mt-4 text-sm">
-                à partir de <span className="text-xl font-extrabold text-primary">{s.priceFrom} €</span>
-              </p>
+              <ServicePrice service={s} />
             </Link>
           ))}
         </div>
