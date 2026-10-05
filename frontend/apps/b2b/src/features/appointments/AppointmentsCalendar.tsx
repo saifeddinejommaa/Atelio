@@ -24,7 +24,7 @@ import '@fullcalendar/react/themes/classic/theme.css'
 import '@fullcalendar/react/themes/classic/palette.css'
 import { useCallback, useMemo, useRef, type Ref } from 'react'
 import { useBrand } from '../../brand/use-brand'
-import { appointmentStatuses } from './appointment-status'
+import { displayColors } from './appointment-status'
 
 // Options fixes, définies une fois pour que FullCalendar ne se reconfigure pas à chaque rendu.
 const plugins = [timeGridPlugin, interactionPlugin, classicThemePlugin]
@@ -70,8 +70,7 @@ export default function AppointmentsCalendar({
       start: a.scheduledAt,
       end: a.estimatedEndAt,
       title: `${a.customerFirstName} ${a.customerLastName}`,
-      color: appointmentStatuses[appointmentDisplayStatus(a)].color,
-      contrastColor: appointmentStatuses[appointmentDisplayStatus(a)].contrastColor,
+      ...displayColors(appointmentDisplayStatus(a)),
       className: 'appointment-event',
       extendedProps: { appointment: a },
     }))

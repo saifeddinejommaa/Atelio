@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import Icon from "@/components/Icon";
 import Logo from "@/components/Logo";
+import Button from "@/components/ui/Button";
 import { logout } from "@/lib/auth-actions";
 import { priceLabel, type Service } from "@/lib/garage-service/services";
 import type { SessionUser } from "@/lib/session";
@@ -117,12 +118,10 @@ export default function Header({
 
         <div className="flex items-center gap-4">
           <AccountLink tenant={tenant} user={user} className="hidden md:flex" />
-          <Link
-            href={href("/rendez-vous")}
-            className="hidden rounded-brand bg-secondary px-5 py-2.5 text-sm font-semibold text-on-secondary transition-colors hover:bg-secondary-dark sm:inline-block"
-          >
+          {/* max-sm:hidden plutôt que hidden : il l'emporte sur le inline-flex du bouton */}
+          <Button as={Link} href={href("/rendez-vous")} size="sm" className="max-sm:hidden">
             Prendre rendez-vous
-          </Link>
+          </Button>
           <button
             type="button"
             className="lg:hidden"
@@ -161,13 +160,9 @@ export default function Header({
             </Link>
           ))}
           <AccountLink tenant={tenant} user={user} className="flex py-3 md:hidden" />
-          <Link
-            href={href("/rendez-vous")}
-            className="mt-2 block rounded-brand bg-secondary px-5 py-3 text-center font-semibold text-on-secondary"
-            onClick={() => setOpen(false)}
-          >
+          <Button as={Link} href={href("/rendez-vous")} fullWidth className="mt-2" onClick={() => setOpen(false)}>
             Prendre rendez-vous
-          </Link>
+          </Button>
         </nav>
       )}
     </header>

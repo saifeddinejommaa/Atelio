@@ -19,7 +19,7 @@ public class Payment
     [Column("method")]
     public PaymentMethod Method { get; set; }
 
-    [Column("status")]
+    [Column("status_id")]
     public PaymentStatus Status { get; set; } = PaymentStatus.Succeeded;
 
     // Référence du prestataire de paiement.

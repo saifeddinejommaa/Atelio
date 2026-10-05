@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Icon from "@/components/Icon";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { getActiveOffers } from "@/lib/offer/offer-queries";
 import { getServices } from "@/lib/garage-service/service-queries";
 import { resolveTenant } from "@/lib/tenant";
@@ -37,7 +39,13 @@ export default async function OffersPage({ params }: PageProps<"/[tenant]/offres
               // Icône de la première prestation concernée.
               const icon = services[0]?.icon ?? "wrench";
               return (
-                <article key={offer.id} className="flex flex-col overflow-hidden rounded-brand border border-zinc-200 bg-white shadow-sm">
+                <Card
+                  as="article"
+                  key={offer.id}
+                  variant="outlined"
+                  padding="none"
+                  className="flex flex-col overflow-hidden shadow-sm"
+                >
                   <div className="flex items-center justify-between gap-4 bg-secondary p-6 text-on-secondary">
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-on-secondary/15">
                       <Icon name={icon} className="h-6 w-6" />
@@ -63,14 +71,17 @@ export default async function OffersPage({ params }: PageProps<"/[tenant]/offres
                       Valable jusqu&apos;au {longDate.format(new Date(y, m - 1, d))}
                     </p>
                     <p className="mt-2 flex-1 text-xs text-zinc-500">{offer.conditions}</p>
-                    <Link
+                    <Button
+                      as={Link}
                       href={`${tenantPath(tenant, "/rendez-vous")}?prestation=${offer.serviceCodes.join(",")}`}
-                      className="mt-6 block rounded-brand bg-secondary py-3.5 text-center font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
+                      size="lg"
+                      fullWidth
+                      className="mt-6"
                     >
                       J&apos;en profite
-                    </Link>
+                    </Button>
                   </div>
-                </article>
+                </Card>
               );
             })}
           </div>

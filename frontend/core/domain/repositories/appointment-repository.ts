@@ -2,15 +2,15 @@ import type {
   AbandonStatus,
   Appointment,
   AppointmentRequest,
-  AppointmentStatus,
   BookedAppointment,
   StartCheck,
 } from "../entities/appointment";
+import type { AppointmentStatus } from "../entities/status";
 
 export type AppointmentFilter = {
   customerId?: number;
   garageId?: number;
-  status?: AppointmentStatus;
+  statusId?: AppointmentStatus;
   upcomingOnly?: boolean;
   /** Premier jour inclus, heure locale du garage, "2026-10-01". */
   from?: string;

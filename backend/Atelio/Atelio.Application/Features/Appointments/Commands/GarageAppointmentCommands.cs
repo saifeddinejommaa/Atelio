@@ -99,8 +99,8 @@ public class AbandonAppointmentCommand : IRequest<Unit>
 {
     public string Reference { get; set; } = null!;
 
-    // "cancelled" ou "no_show".
-    public string Status { get; set; } = null!;
+    // Cancelled (annulé) ou NoShow (client non venu).
+    public AppointmentStatus Status { get; set; }
 }
 
 public class AbandonAppointmentCommandValidator : AbstractValidator<AbandonAppointmentCommand>
@@ -108,8 +108,8 @@ public class AbandonAppointmentCommandValidator : AbstractValidator<AbandonAppoi
     public AbandonAppointmentCommandValidator()
     {
         RuleFor(x => x.Status)
-            .Must(s => s is "cancelled" or "no_show")
-            .WithMessage("Statut attendu : « cancelled » ou « no_show ».");
+            .Must(s => s is AppointmentStatus.Cancelled or AppointmentStatus.NoShow)
+            .WithMessage($"Statut attendu : {(int)AppointmentStatus.Cancelled} (annulé) ou {(int)AppointmentStatus.NoShow} (client non venu).");
     }
 }
 
@@ -131,12 +131,12 @@ public class AbandonAppointmentCommandHandler : IRequestHandler<AbandonAppointme
         var nowUtc = _clock.GetUtcNow().UtcDateTime;
         var appointment = await GarageAppointmentRules.GetOpenAsync(_appointments, request.Reference, cancellationToken);
 
-        if (request.Status == "no_show" && appointment.ScheduledAt > nowUtc)
+        if (request.Status == AppointmentStatus.NoShow && appointment.ScheduledAt > nowUtc)
         {
             throw new BusinessException("Le client ne peut être noté absent qu'à partir de l'heure du rendez-vous.");
         }
 
-        appointment.Status = request.Status == "no_show" ? AppointmentStatus.NoShow : AppointmentStatus.Cancelled;
+        appointment.Status = request.Status;
         appointment.UpdatedAt = nowUtc;
         _appointments.Update(appointment);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

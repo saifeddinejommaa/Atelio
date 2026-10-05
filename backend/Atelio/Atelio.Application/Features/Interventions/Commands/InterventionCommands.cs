@@ -44,7 +44,7 @@ public class AssignInterventionEmployeeCommandHandler : IRequestHandler<AssignIn
         var intervention = await _interventions.GetByIdAsync(request.InterventionId, cancellationToken)
             ?? throw new NotFoundException($"Intervention {request.InterventionId} introuvable.");
 
-        if (intervention.Status is InterventionStatus.Done or InterventionStatus.Cancelled)
+        if (intervention.Status is not (InterventionStatus.Planned or InterventionStatus.InProgress))
         {
             throw new BusinessException("Cette intervention est close : son mécanicien ne peut plus être changé.");
         }

@@ -1,24 +1,16 @@
-import { interventionStages } from "../../domain";
 import type {
   Appointment,
   AppointmentRequest,
   AppointmentStatus,
   BookedAppointment,
-  InterventionStage,
+  InterventionStatus,
   StartCheck,
 } from "../../domain";
 import type { AppointmentCreatedDto, AppointmentDto, CreateAppointmentDto, StartCheckDto } from "../dto/appointment-dto";
 
-const statuses: AppointmentStatus[] = ["pending", "confirmed", "cancelled", "completed", "no_show"];
-
 /** L'API renvoie des dates UTC, parfois sans le suffixe "Z". */
 function utc(date: string): string {
   return /(Z|[+-]\d{2}:\d{2})$/.test(date) ? date : `${date}Z`;
-}
-
-function toStatus(status: string): AppointmentStatus {
-  const value = status.toLowerCase() as AppointmentStatus;
-  return statuses.includes(value) ? value : "pending";
 }
 
 export function toAppointmentEntity(dto: AppointmentDto): Appointment {
@@ -30,7 +22,8 @@ export function toAppointmentEntity(dto: AppointmentDto): Appointment {
     customerLastName: dto.customerLastName,
     customerPhone: dto.customerPhone,
     customerEmail: dto.customerEmail,
-    status: toStatus(dto.status),
+    // Ids fixes, partagés avec le backend : la conversion vers le type d'id est sûre.
+    status: { id: dto.statusId as AppointmentStatus, label: dto.statusLabel },
     scheduledAt: utc(dto.scheduledAt),
     estimatedEndAt: utc(dto.estimatedEndAt),
     customerNotes: dto.customerNotes,
@@ -44,7 +37,10 @@ export function toAppointmentEntity(dto: AppointmentDto): Appointment {
     serviceCodes: dto.serviceCodes ?? [],
     serviceNames: dto.serviceNames ?? [],
     interventionId: dto.interventionId ?? null,
-    interventionStage: toInterventionStage(dto.interventionStage),
+    interventionStatus:
+      dto.interventionStatusId != null
+        ? { id: dto.interventionStatusId as InterventionStatus, label: dto.interventionStatusLabel ?? "" }
+        : null,
   };
 }
 
@@ -79,9 +75,4 @@ export function toStartCheck(dto: StartCheckDto): StartCheck {
     employeeId: dto.employeeId,
     employeeName: dto.employeeName,
   };
-}
-
-function toInterventionStage(stage: string | null | undefined): InterventionStage | null {
-  const value = stage?.toLowerCase() as InterventionStage | undefined;
-  return value && interventionStages.includes(value) ? value : null;
 }

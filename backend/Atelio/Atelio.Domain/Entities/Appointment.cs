@@ -30,7 +30,7 @@ public class Appointment
     [Column("estimated_end_at")]
     public DateTime EstimatedEndAt { get; set; }
 
-    [Column("status")]
+    [Column("status_id")]
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Confirmed;
 
     // « Quelque chose à signaler au garage ? »

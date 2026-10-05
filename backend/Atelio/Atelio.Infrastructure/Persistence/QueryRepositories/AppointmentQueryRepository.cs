@@ -23,7 +23,8 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             c.last_name AS {nameof(AppointmentResponse.CustomerLastName)},
             c.phone AS {nameof(AppointmentResponse.CustomerPhone)},
             c.email AS {nameof(AppointmentResponse.CustomerEmail)},
-            a.status AS {nameof(AppointmentResponse.Status)},
+            a.status_id AS {nameof(AppointmentResponse.StatusId)},
+            ast.label AS {nameof(AppointmentResponse.StatusLabel)},
             a.scheduled_at AS {nameof(AppointmentResponse.ScheduledAt)},
             a.estimated_end_at AS {nameof(AppointmentResponse.EstimatedEndAt)},
             a.customer_notes AS {nameof(AppointmentResponse.CustomerNotes)},
@@ -37,12 +38,14 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             COALESCE(srv.codes, ARRAY[]::text[]) AS {nameof(AppointmentResponse.ServiceCodes)},
             COALESCE(srv.names, ARRAY[]::text[]) AS {nameof(AppointmentResponse.ServiceNames)},
             itv.id AS {nameof(AppointmentResponse.InterventionId)},
-            itv.stage AS {nameof(AppointmentResponse.InterventionStage)}
+            itv.status_id AS {nameof(AppointmentResponse.InterventionStatusId)},
+            itv.status_label AS {nameof(AppointmentResponse.InterventionStatusLabel)}
 
         FROM appointment a
         INNER JOIN customer c ON c.id = a.customer_id
         INNER JOIN garage g ON g.id = a.garage_id
         INNER JOIN vehicle v ON v.id = a.vehicle_id
+        INNER JOIN appointment_status ast ON ast.id = a.status_id
 
         LEFT JOIN LATERAL (
             SELECT
@@ -55,9 +58,9 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
 
         -- Dernière intervention ouverte à partir du rendez-vous.
         LEFT JOIN LATERAL (
-            SELECT i.id, {InterventionStageSql.Expression} AS stage
+            SELECT i.id, i.status_id, ist.label AS status_label
             FROM intervention i
-            LEFT JOIN invoice inv ON inv.intervention_id = i.id
+            INNER JOIN intervention_status ist ON ist.id = i.status_id
             WHERE i.appointment_id = a.id
             ORDER BY i.id DESC
             LIMIT 1
@@ -94,10 +97,10 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             parameters.Add("GarageId", filter.GarageId.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(filter.Status))
+        if (filter.StatusId.HasValue)
         {
-            sql.Append(" AND a.status = @Status");
-            parameters.Add("Status", filter.Status.Trim().ToLower());
+            sql.Append(" AND a.status_id = @StatusId");
+            parameters.Add("StatusId", filter.StatusId.Value);
         }
 
         if (filter.UpcomingOnly)

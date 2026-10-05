@@ -1,4 +1,4 @@
-import { VAT_RATE, type Invoice, type InvoiceLine } from '@atelio/core/domain'
+import { InvoiceStatus, VAT_RATE, type Invoice, type InvoiceLine } from '@atelio/core/domain'
 import { Link, useLoaderData } from 'react-router'
 import { useBrand } from '../../brand/use-brand'
 import { paymentMethods } from '../interventions/intervention-status'
@@ -55,7 +55,7 @@ export default function InvoicePage() {
             <p className="font-mono font-semibold">{invoice.number}</p>
             <p className="mt-1 text-zinc-600">Date : {date.format(new Date(invoice.issuedAt))}</p>
             {invoice.dueDate && <p className="text-zinc-600">Échéance : {formatDay(invoice.dueDate)}</p>}
-            {invoice.status === 'paid' && (
+            {invoice.status.id === InvoiceStatus.Paid && (
               <p className="mt-2 inline-block rounded border-2 border-emerald-600 px-2 py-0.5 font-bold uppercase text-emerald-700">Payée</p>
             )}
           </div>
@@ -121,7 +121,7 @@ export default function InvoicePage() {
         </div>
 
         <p className="mt-6">
-          {invoice.status === 'paid' && invoice.paidAt
+          {invoice.status.id === InvoiceStatus.Paid && invoice.paidAt
             ? `Réglée le ${date.format(new Date(invoice.paidAt))}${invoice.paymentMethod ? ` par ${paymentMethods[invoice.paymentMethod].toLowerCase()}` : ''}.`
             : 'À régler à réception.'}
         </p>

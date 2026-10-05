@@ -22,3 +22,5 @@ export { autoExpress, brands, garageDupont, getBrand } from "./brands";
 export type { AbsenceDto, DayScheduleDto, TeamMemberDto } from "./dto/team-dto";
 export { TeamApiRepository } from "./repositories/team-api-repository";
 export { InvoiceApiRepository, type InvoiceDto } from "./repositories/invoice-api-repository";
+export type { StatusDto } from "./dto/status-dto";
+export { StatusApiRepository } from "./repositories/status-api-repository";

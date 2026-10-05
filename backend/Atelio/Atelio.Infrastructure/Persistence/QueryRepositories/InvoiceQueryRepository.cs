@@ -1,5 +1,6 @@
 using Atelio.Application.Features.Invoices.Repositories;
 using Atelio.Application.Features.Invoices.Responses;
+using Atelio.Domain.Enums;
 using Dapper;
 using System.Data;
 
@@ -19,7 +20,8 @@ public class InvoiceQueryRepository : IInvoiceQueryRepository
             inv.total_ht AS {nameof(InvoiceResponse.TotalHt)},
             inv.total_vat AS {nameof(InvoiceResponse.TotalVat)},
             inv.total_ttc AS {nameof(InvoiceResponse.TotalTtc)},
-            inv.status AS {nameof(InvoiceResponse.Status)},
+            inv.status_id AS {nameof(InvoiceResponse.StatusId)},
+            ist.label AS {nameof(InvoiceResponse.StatusLabel)},
             i.id AS {nameof(InvoiceResponse.InterventionId)},
             a.reference AS {nameof(InvoiceResponse.AppointmentReference)},
             g.name AS {nameof(InvoiceResponse.GarageName)},
@@ -37,6 +39,7 @@ public class InvoiceQueryRepository : IInvoiceQueryRepository
             pay.paid_at AS {nameof(InvoiceResponse.PaidAt)}
 
         FROM invoice inv
+        INNER JOIN invoice_status ist ON ist.id = inv.status_id
         INNER JOIN intervention i ON i.id = inv.intervention_id
         INNER JOIN garage g ON g.id = i.garage_id
         INNER JOIN customer c ON c.id = i.customer_id
@@ -44,7 +47,7 @@ public class InvoiceQueryRepository : IInvoiceQueryRepository
         LEFT JOIN appointment a ON a.id = i.appointment_id
         LEFT JOIN LATERAL (
             SELECT p.method, p.paid_at FROM payment p
-            WHERE p.invoice_id = inv.id AND p.status = 'succeeded'
+            WHERE p.invoice_id = inv.id AND p.status_id = @PaymentSucceeded
             ORDER BY p.paid_at DESC
             LIMIT 1
         ) pay ON TRUE
@@ -76,7 +79,7 @@ public class InvoiceQueryRepository : IInvoiceQueryRepository
     public async Task<InvoiceResponse?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         var invoice = await _connection.QuerySingleOrDefaultAsync<InvoiceResponse>(
-            new CommandDefinition(InvoiceSelect, new { Id = id }, cancellationToken: cancellationToken));
+            new CommandDefinition(InvoiceSelect, new { Id = id, PaymentSucceeded = (int)PaymentStatus.Succeeded }, cancellationToken: cancellationToken));
 
         if (invoice is null)
         {

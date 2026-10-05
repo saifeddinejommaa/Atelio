@@ -1,4 +1,4 @@
-import { isCancellable, type Appointment as AppointmentEntity, type AppointmentStatus } from "@atelio/core/domain";
+import { AppointmentStatus, isCancellable, type Appointment as AppointmentEntity } from "@atelio/core/domain";
 
 // L'API renvoie les dates en UTC : on les affiche à l'heure des garages.
 const GARAGE_TIME_ZONE = "Europe/Paris";
@@ -12,18 +12,11 @@ const dateFormat = new Intl.DateTimeFormat("fr-FR", {
 });
 const timeFormat = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: GARAGE_TIME_ZONE });
 
-const statusLabels: Record<AppointmentStatus, string> = {
-  pending: "En attente",
-  confirmed: "Confirmé",
-  cancelled: "Annulé",
-  completed: "Terminé",
-  no_show: "Non honoré",
-};
-
 /** Rendez-vous tel qu'affiché dans « Mes rendez-vous ». */
 export type Appointment = {
   reference: string;
   status: AppointmentStatus;
+  /** Libellé de la table appointment_status. */
   statusLabel: string;
   /** "lundi 5 octobre 2026" */
   date: string;
@@ -42,8 +35,8 @@ export function toAppointment(entity: AppointmentEntity, now = new Date()): Appo
   const start = new Date(entity.scheduledAt);
   return {
     reference: entity.reference,
-    status: entity.status,
-    statusLabel: statusLabels[entity.status],
+    status: entity.status.id,
+    statusLabel: entity.status.label,
     date: dateFormat.format(start),
     time: timeFormat.format(start).replace(":", "h"),
     garageName: entity.garageName,
@@ -51,7 +44,7 @@ export function toAppointment(entity: AppointmentEntity, now = new Date()): Appo
     plate: entity.vehiclePlate,
     services: entity.serviceNames,
     notes: entity.customerNotes,
-    upcoming: start > now && entity.status !== "cancelled",
+    upcoming: start > now && entity.status.id !== AppointmentStatus.Cancelled,
     cancellable: isCancellable(entity, now),
   };
 }

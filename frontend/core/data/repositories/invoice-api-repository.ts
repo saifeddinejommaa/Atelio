@@ -3,7 +3,9 @@ import { ApiError, type ApiClient } from "../http/api-client";
 
 /** Réponse de GET /api/invoices/{id}. */
 export type InvoiceDto = Omit<Invoice, "status" | "paymentMethod" | "lines"> & {
-  status: string;
+  /** Id et libellé de la table invoice_status. */
+  statusId: number;
+  statusLabel: string;
   paymentMethod: string | null;
   lines: { kind: string; label: string; reference: string | null; quantity: number; unitPrice: number; total: number }[];
 };
@@ -15,11 +17,13 @@ function utc(date: string | null): string | null {
 }
 
 function toInvoice(dto: InvoiceDto): Invoice {
+  const { statusId, statusLabel, ...rest } = dto;
   return {
-    ...dto,
+    ...rest,
     issuedAt: utc(dto.issuedAt) ?? dto.issuedAt,
     dueDate: dto.dueDate ? dto.dueDate.slice(0, 10) : null,
-    status: dto.status.toLowerCase() as InvoiceStatus,
+    // Ids fixes, partagés avec le backend : la conversion vers le type d'id est sûre.
+    status: { id: statusId as InvoiceStatus, label: statusLabel },
     paymentMethod: (dto.paymentMethod?.toLowerCase() as PaymentMethod | undefined) ?? null,
     paidAt: utc(dto.paidAt),
     lines: (dto.lines ?? []).map((l) => ({ ...l, kind: l.kind === "part" ? "part" : "labour" })),

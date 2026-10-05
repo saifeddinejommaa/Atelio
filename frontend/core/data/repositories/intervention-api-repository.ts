@@ -16,7 +16,7 @@ export class InterventionApiRepository implements InterventionRepository {
   async getInterventions(filter: InterventionFilter): Promise<InterventionSummary[]> {
     const list = await this.api.get<InterventionSummaryDto[]>("/interventions", {
       garageId: filter.garageId,
-      status: filter.stage,
+      statusId: filter.statusId,
       search: filter.search,
     });
     return (list ?? []).map(toInterventionSummary);

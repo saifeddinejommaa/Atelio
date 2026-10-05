@@ -1,6 +1,4 @@
-import type { InterventionStage } from "./intervention";
-
-export type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+import { AppointmentStatus, type InterventionStatus, type Status } from "./status";
 
 export type Appointment = {
   id: number;
@@ -10,7 +8,7 @@ export type Appointment = {
   customerLastName: string;
   customerPhone: string | null;
   customerEmail: string | null;
-  status: AppointmentStatus;
+  status: Status<AppointmentStatus>;
   /** Début du rendez-vous, ISO 8601 en UTC. */
   scheduledAt: string;
   estimatedEndAt: string;
@@ -26,7 +24,7 @@ export type Appointment = {
   serviceNames: string[];
   /** Intervention ouverte à partir du rendez-vous (null si pas encore lancé). */
   interventionId: number | null;
-  interventionStage: InterventionStage | null;
+  interventionStatus: Status<InterventionStatus> | null;
 };
 
 /** Demande de rendez-vous. */
@@ -53,7 +51,8 @@ export type BookedAppointment = {
 
 /** Rendez-vous encore ouvert : en attente ou confirmé. */
 export function isOpen(appointment: Appointment): boolean {
-  return appointment.status === "pending" || appointment.status === "confirmed";
+  const id = appointment.status.id;
+  return id === AppointmentStatus.Pending || id === AppointmentStatus.Confirmed;
 }
 
 /** Un rendez-vous à venir, en attente ou confirmé, peut encore être annulé (par le client). */
@@ -79,7 +78,7 @@ export function canStart(appointment: Appointment, now = new Date()): boolean {
 }
 
 /** Abandon par le garage : annulé, ou client non venu. */
-export type AbandonStatus = "cancelled" | "no_show";
+export type AbandonStatus = typeof AppointmentStatus.Cancelled | typeof AppointmentStatus.NoShow;
 
 /** Vérification avant le lancement d'un rendez-vous à une heure donnée (non bloquante). */
 export type StartCheck = {
@@ -95,15 +94,15 @@ export type StartCheck = {
 };
 
 /**
- * Statut affiché au garage : celui du rendez-vous, sauf une fois l'intervention lancée,
- * « en intervention » tant qu'elle est en cours, puis « clôturé ».
+ * Statut affiché au garage : celui du rendez-vous, puis celui de son intervention une fois lancée
+ * (en cours, terminée, facturée, clôturée...). Les libellés viennent des tables de statuts.
  */
-export type AppointmentDisplayStatus = "pending" | "confirmed" | "in_intervention" | "closed" | "cancelled" | "no_show";
+export type AppointmentDisplayStatus =
+  | { kind: "appointment"; status: Status<AppointmentStatus> }
+  | { kind: "intervention"; status: Status<InterventionStatus> };
 
 export function appointmentDisplayStatus(appointment: Appointment): AppointmentDisplayStatus {
-  const stage = appointment.interventionStage;
-  if (stage === "closed") return "closed";
-  if (stage === "in_progress" || stage === "ready" || stage === "invoiced") return "in_intervention";
-  if (appointment.status === "completed") return "closed";
-  return appointment.status;
+  return appointment.interventionStatus
+    ? { kind: "intervention", status: appointment.interventionStatus }
+    : { kind: "appointment", status: appointment.status };
 }

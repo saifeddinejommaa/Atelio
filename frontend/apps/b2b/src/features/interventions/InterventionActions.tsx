@@ -1,5 +1,5 @@
 import { ApiError, InvoiceApiRepository } from '@atelio/core/data'
-import { FinishIntervention, IssueInvoice, PayInvoice, type Intervention, type PaymentMethod } from '@atelio/core/domain'
+import { FinishIntervention, InterventionStatus, IssueInvoice, PayInvoice, type Intervention, type PaymentMethod } from '@atelio/core/domain'
 import { useState } from 'react'
 import { Link, useRevalidator } from 'react-router'
 import { useBrand } from '../../brand/use-brand'
@@ -45,7 +45,7 @@ export default function InterventionActions({ intervention }: { intervention: In
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      {intervention.stage === 'in_progress' &&
+      {intervention.status.id === InterventionStatus.InProgress &&
         (confirming ? (
           <>
             <span className="text-sm text-zinc-600">Les travaux sont terminés ?</span>
@@ -62,7 +62,7 @@ export default function InterventionActions({ intervention }: { intervention: In
           </button>
         ))}
 
-      {intervention.stage === 'ready' &&
+      {intervention.status.id === InterventionStatus.Done &&
         (confirming ? (
           <>
             <span className="text-sm text-zinc-600">Après la facture, l'intervention ne pourra plus être modifiée.</span>
@@ -79,7 +79,7 @@ export default function InterventionActions({ intervention }: { intervention: In
           </button>
         ))}
 
-      {intervention.stage === 'invoiced' && (
+      {intervention.status.id === InterventionStatus.Invoiced && (
         <>
           {invoiceLink}
           <select
@@ -105,7 +105,7 @@ export default function InterventionActions({ intervention }: { intervention: In
         </>
       )}
 
-      {intervention.stage === 'closed' && (
+      {intervention.status.id === InterventionStatus.Closed && (
         <>
           {intervention.paidAt && (
             <span className="text-sm text-zinc-600">

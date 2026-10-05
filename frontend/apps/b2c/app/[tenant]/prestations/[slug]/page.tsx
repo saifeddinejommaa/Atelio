@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Icon from "@/components/Icon";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { getServiceBySlug, getServices } from "@/lib/garage-service/service-queries";
 import { formatEuro, priceLabel } from "@/lib/garage-service/services";
 import { resolveTenant } from "@/lib/tenant";
@@ -76,7 +78,7 @@ export default async function ServicePage({ params }: PageProps<"/[tenant]/prest
         </div>
 
         {/* Encadré prix + réservation */}
-        <aside className="h-fit rounded-brand border border-zinc-200 p-6 shadow-sm lg:sticky lg:top-32">
+        <Card as="aside" variant="outlined" sticky className="shadow-sm">
           {service.priceFrom !== null && <p className="text-sm text-zinc-500">À partir de</p>}
           <p className="text-4xl font-extrabold text-primary">{priceLabel(service, "")}</p>
           {service.discountPercent !== null && (
@@ -94,25 +96,19 @@ export default async function ServicePage({ params }: PageProps<"/[tenant]/prest
             Durée indicative : <strong>{service.duration}</strong>
           </p>
 
-          <Link
-            href={bookingHref}
-            className="mt-6 block rounded-brand bg-secondary py-3.5 text-center font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
-          >
+          <Button as={Link} href={bookingHref} size="lg" fullWidth className="mt-6">
             Prendre rendez-vous
-          </Link>
-          <Link
-            href={href(`/devis?prestation=${service.slug}`)}
-            className="mt-3 block rounded-brand border border-primary py-3.5 text-center font-semibold text-primary transition-colors hover:bg-muted"
-          >
+          </Button>
+          <Button as={Link} href={href(`/devis?prestation=${service.slug}`)} variant="outline" size="lg" fullWidth className="mt-3">
             Obtenir un devis précis
-          </Link>
+          </Button>
           <p className="mt-4 text-center text-sm text-zinc-500">
             Une question ?{" "}
             <a href={`tel:${tenant.contact.phone}`} className="font-semibold text-primary">
               {tenant.contact.phoneLabel}
             </a>
           </p>
-        </aside>
+        </Card>
       </section>
 
       <section className="bg-muted">
@@ -120,17 +116,13 @@ export default async function ServicePage({ params }: PageProps<"/[tenant]/prest
           <h2 className="text-2xl font-extrabold tracking-tight">Autres prestations</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {others.map((s) => (
-              <Link
-                key={s.slug}
-                href={href(`/prestations/${s.slug}`)}
-                className="rounded-brand border border-zinc-200 bg-white p-5 transition-colors hover:border-secondary"
-              >
+              <Card as={Link} key={s.slug} href={href(`/prestations/${s.slug}`)} variant="interactive" padding="sm">
                 <span className="flex items-center gap-3 font-bold">
                   <Icon name={s.icon} className="h-5 w-5 text-primary" />
                   {s.name}
                 </span>
                 <span className="mt-2 block text-sm text-zinc-600">{priceLabel(s)}</span>
-              </Link>
+              </Card>
             ))}
           </div>
         </div>

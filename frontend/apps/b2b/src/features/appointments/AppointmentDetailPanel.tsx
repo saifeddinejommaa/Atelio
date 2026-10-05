@@ -2,6 +2,7 @@ import { ApiError, AppointmentApiRepository } from '@atelio/core/data'
 import {
   AbandonAppointment,
   appointmentDisplayStatus,
+  AppointmentStatus,
   canMarkNoShow,
   canReschedule,
   canStart,
@@ -18,7 +19,7 @@ import SidePanel from '../../components/SidePanel'
 import SlotCheckMessage from './SlotCheckMessage'
 import StartAppointmentForm from './StartAppointmentForm'
 import { useSlotCheck } from './use-slot-check'
-import { appointmentStatuses } from './appointment-status'
+import { displayColors } from './appointment-status'
 
 const dayFormat = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 const timeFormat = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
@@ -60,7 +61,8 @@ export default function AppointmentDetailPanel({
   const changed = canReschedule(a) && newStart !== toInputValue(a.scheduledAt)
   const slotCheck = useSlotCheck(changed ? { garageId: a.garageId, scheduledAt: newStart, excludeAppointment: a.reference } : null)
 
-  const status = appointmentStatuses[appointmentDisplayStatus(a)]
+  const display = appointmentDisplayStatus(a)
+  const status = { label: display.status.label, ...displayColors(display) }
   const vehicle = [a.vehicleMake, a.vehicleModel].filter(Boolean).join(' ')
 
   async function run(action: () => Promise<void>) {
@@ -84,7 +86,7 @@ export default function AppointmentDetailPanel({
   const abandon = (choice: AbandonStatus) =>
     run(async () => {
       await new AbandonAppointment(repository).execute(a.reference, choice)
-      onChanged(choice === 'no_show' ? `Client noté absent (${a.reference}).` : `Rendez-vous ${a.reference} annulé.`)
+      onChanged(choice === AppointmentStatus.NoShow ? `Client noté absent (${a.reference}).` : `Rendez-vous ${a.reference} annulé.`)
     })
 
 
@@ -119,7 +121,7 @@ export default function AppointmentDetailPanel({
             {confirmAbandon ? (
               <div className="rounded-brand border border-red-200 bg-red-50 p-3">
                 <p className="text-sm text-red-800">
-                  {confirmAbandon === 'no_show' ? 'Noter le client comme absent ?' : 'Annuler ce rendez-vous ?'}
+                  {confirmAbandon === AppointmentStatus.NoShow ? 'Noter le client comme absent ?' : 'Annuler ce rendez-vous ?'}
                 </p>
                 <div className="mt-2 flex gap-2">
                   <button
@@ -139,7 +141,7 @@ export default function AppointmentDetailPanel({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setConfirmAbandon('cancelled')}
+                  onClick={() => setConfirmAbandon(AppointmentStatus.Cancelled)}
                   className="flex-1 rounded-brand border border-zinc-300 px-3 py-2 text-sm font-semibold hover:border-red-600 hover:text-red-700"
                 >
                   Annuler le rendez-vous
@@ -147,7 +149,7 @@ export default function AppointmentDetailPanel({
                 {canMarkNoShow(a) && (
                   <button
                     type="button"
-                    onClick={() => setConfirmAbandon('no_show')}
+                    onClick={() => setConfirmAbandon(AppointmentStatus.NoShow)}
                     className="flex-1 rounded-brand border border-zinc-300 px-3 py-2 text-sm font-semibold hover:border-red-600 hover:text-red-700"
                   >
                     Client non venu

@@ -152,6 +152,9 @@ public class IssueInvoiceCommandHandler : IRequestHandler<IssueInvoiceCommand, l
                 Lines = lines,
             };
             await _invoices.AddAsync(invoice, ct);
+
+            intervention.Status = InterventionStatus.Invoiced;
+            intervention.UpdatedAt = now;
         }, cancellationToken);
 
         return invoice.Id;
@@ -194,13 +197,20 @@ public class PayInvoiceCommandHandler : IRequestHandler<PayInvoiceCommand, Unit>
 {
     private readonly IInvoiceRepository _invoices;
     private readonly IPaymentRepository _payments;
+    private readonly IInterventionRepository _interventions;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
-    public PayInvoiceCommandHandler(IInvoiceRepository invoices, IPaymentRepository payments, IUnitOfWork unitOfWork, TimeProvider clock)
+    public PayInvoiceCommandHandler(
+        IInvoiceRepository invoices,
+        IPaymentRepository payments,
+        IInterventionRepository interventions,
+        IUnitOfWork unitOfWork,
+        TimeProvider clock)
     {
         _invoices = invoices;
         _payments = payments;
+        _interventions = interventions;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
@@ -230,6 +240,13 @@ public class PayInvoiceCommandHandler : IRequestHandler<PayInvoiceCommand, Unit>
         invoice.Status = InvoiceStatus.Paid;
         invoice.UpdatedAt = now;
         _invoices.Update(invoice);
+
+        var intervention = await _interventions.GetByIdAsync(invoice.InterventionId, cancellationToken)
+            ?? throw new NotFoundException($"Intervention {invoice.InterventionId} introuvable.");
+        intervention.Status = InterventionStatus.Closed;
+        intervention.UpdatedAt = now;
+        _interventions.Update(intervention);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;

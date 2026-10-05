@@ -12,7 +12,6 @@ export {
   type AppointmentDisplayStatus,
   type Appointment,
   type AppointmentRequest,
-  type AppointmentStatus,
   type BookedAppointment,
   type StartCheck,
 } from "./entities/appointment";
@@ -20,15 +19,22 @@ export type { Vehicle, VehicleCategory } from "./entities/vehicle";
 export type { CustomerVehicle, VehicleFuel } from "./entities/customer-vehicle";
 export type { Offer } from "./entities/offer";
 export {
-  interventionStages,
+  AppointmentStatus,
+  InterventionStatus,
+  InvoiceStatus,
+  PaymentStatus,
+  type Status,
+  type StatusOption,
+} from "./entities/status";
+export type { StatusRepository } from "./repositories/status-repository";
+export { GetAppointmentStatuses, GetInterventionStatuses } from "./usecases/statuses";
+export {
   interventionTotals,
   labourPrice,
   VAT_RATE,
   type Intervention,
   type InterventionFilter,
   type InterventionService,
-  type InterventionStage,
-  type InterventionStatus,
   type InterventionSummary,
   type KitItem,
   type PaymentMethod,
@@ -97,6 +103,6 @@ export {
 export type { TeamRepository } from "./repositories/team-repository";
 export { DeclareAbsence, DeleteAbsence, GetTeam, SaveEmployeeSchedule } from "./usecases/team";
 
-export type { Invoice, InvoiceLine, InvoiceStatus } from "./entities/invoice";
+export type { Invoice, InvoiceLine } from "./entities/invoice";
 export type { InvoiceRepository } from "./repositories/invoice-repository";
 export { FinishIntervention, GetInvoice, IssueInvoice, PayInvoice } from "./usecases/invoicing";

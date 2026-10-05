@@ -8,8 +8,8 @@ public class RescheduleAppointmentRequest
 
 public class AbandonAppointmentRequest
 {
-    // "cancelled" (annulé) ou "no_show" (client non venu).
-    public string Status { get; set; } = null!;
+    // Id du statut : 3 (Cancelled, annulé) ou 5 (NoShow, client non venu).
+    public int StatusId { get; set; }
 }
 
 public class StartAppointmentRequest

@@ -16,8 +16,10 @@ public class AppointmentResponse
 
     public string? CustomerEmail { get; set; }
 
-    // pending, confirmed, cancelled, completed, no_show
-    public string Status { get; set; } = null!;
+    // Statut (table appointment_status) : id = AppointmentStatus, libellé de la table.
+    public int StatusId { get; set; }
+
+    public string StatusLabel { get; set; } = null!;
 
     public DateTime ScheduledAt { get; set; }
 
@@ -46,8 +48,10 @@ public class AppointmentResponse
     // Intervention ouverte à partir du rendez-vous (null si pas encore lancé).
     public long? InterventionId { get; set; }
 
-    // Étape : in_progress, ready, invoiced, closed, cancelled
-    public string? InterventionStage { get; set; }
+    // Statut de l'intervention (table intervention_status), null si pas encore lancé.
+    public int? InterventionStatusId { get; set; }
+
+    public string? InterventionStatusLabel { get; set; }
 }
 
 public class AppointmentCreatedResponse

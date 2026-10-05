@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { getServices } from "@/lib/garage-service/service-queries";
 import ServicePrice from "@/components/ServicePrice";
 import { resolveTenant } from "@/lib/tenant";
@@ -47,18 +49,12 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
               plus proche et connaissez le prix avant de venir.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href={href("/rendez-vous")}
-                className="rounded-brand bg-secondary px-7 py-3.5 font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
-              >
+              <Button as={Link} href={href("/rendez-vous")} size="lg">
                 Prendre rendez-vous
-              </Link>
-              <Link
-                href={href("/devis")}
-                className="rounded-brand border border-on-primary/30 px-7 py-3.5 font-semibold transition-colors hover:bg-on-primary/10"
-              >
+              </Button>
+              <Button as={Link} href={href("/devis")} variant="inverse" size="lg">
                 Obtenir un devis
-              </Link>
+              </Button>
             </div>
           </div>
 
@@ -101,12 +97,9 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
               ))}
             </select>
 
-            <button
-              type="submit"
-              className="mt-6 w-full rounded-brand bg-secondary py-3.5 font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
-            >
+            <Button type="submit" size="lg" fullWidth className="mt-6">
               Voir mon prix
-            </button>
+            </Button>
           </form>
         </div>
       </section>
@@ -125,18 +118,14 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((s) => (
-            <Link
-              key={s.slug}
-              href={href(`/prestations/${s.slug}`)}
-              className="group rounded-brand border border-zinc-200 p-6 transition-colors hover:border-secondary"
-            >
+            <Card as={Link} key={s.slug} href={href(`/prestations/${s.slug}`)} variant="interactive" className="group">
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-primary group-hover:bg-secondary group-hover:text-on-secondary">
                 <Icon name={s.icon} />
               </span>
               <h3 className="mt-5 font-bold">{s.name}</h3>
               <p className="mt-2 text-sm leading-6 text-zinc-600">{s.description}</p>
               <ServicePrice service={s} />
-            </Link>
+            </Card>
           ))}
         </div>
       </section>
@@ -199,12 +188,9 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
                 className="w-full py-3.5 outline-none"
               />
             </div>
-            <button
-              type="submit"
-              className="rounded-brand bg-secondary px-7 py-3.5 font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
-            >
+            <Button type="submit" size="lg">
               Rechercher
-            </button>
+            </Button>
           </form>
         </div>
       </section>
@@ -218,7 +204,7 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {reviews.map((r) => (
-              <figure key={r.name} className="rounded-brand bg-white p-6 shadow-sm">
+              <Card as="figure" key={r.name}>
                 <div className="flex gap-0.5 text-secondary">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Icon key={i} name="star" filled className="h-4 w-4" />
@@ -228,7 +214,7 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
                 <figcaption className="mt-4 text-sm font-semibold">
                   {r.name} <span className="font-normal text-zinc-500">· {r.city}</span>
                 </figcaption>
-              </figure>
+              </Card>
             ))}
           </div>
         </div>

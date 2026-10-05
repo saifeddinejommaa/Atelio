@@ -1,6 +1,7 @@
 using Atelio.Application.Features.Interventions.Repositories;
 using Atelio.Application.Features.Interventions.Requests;
 using Atelio.Application.Features.Interventions.Responses;
+using Atelio.Domain.Enums;
 using Dapper;
 using System.Data;
 using System.Text;
@@ -15,8 +16,8 @@ public class InterventionQueryRepository : IInterventionQueryRepository
     private const string InterventionSelect = $"""
         SELECT
             i.id AS {nameof(InterventionResponse.Id)},
-            i.status AS {nameof(InterventionResponse.Status)},
-            {InterventionStageSql.Expression} AS {nameof(InterventionResponse.Stage)},
+            i.status_id AS {nameof(InterventionResponse.StatusId)},
+            ist.label AS {nameof(InterventionResponse.StatusLabel)},
             inv.id AS {nameof(InterventionResponse.InvoiceId)},
             inv.number AS {nameof(InterventionResponse.InvoiceNumber)},
             inv.total_ttc AS {nameof(InterventionResponse.InvoiceTotalTtc)},
@@ -49,12 +50,13 @@ public class InterventionQueryRepository : IInterventionQueryRepository
         INNER JOIN customer c ON c.id = i.customer_id
         INNER JOIN vehicle v ON v.id = i.vehicle_id
         INNER JOIN garage g ON g.id = i.garage_id
+        INNER JOIN intervention_status ist ON ist.id = i.status_id
         LEFT JOIN appointment a ON a.id = i.appointment_id
         LEFT JOIN employee e ON e.id = i.employee_id
         LEFT JOIN invoice inv ON inv.intervention_id = i.id
         LEFT JOIN LATERAL (
             SELECT p.method, p.paid_at FROM payment p
-            WHERE p.invoice_id = inv.id AND p.status = 'succeeded'
+            WHERE p.invoice_id = inv.id AND p.status_id = @PaymentSucceeded
             ORDER BY p.paid_at DESC
             LIMIT 1
         ) pay ON TRUE
@@ -117,7 +119,8 @@ public class InterventionQueryRepository : IInterventionQueryRepository
         SELECT
             i.id AS {nameof(InterventionSummaryResponse.Id)},
             a.reference AS {nameof(InterventionSummaryResponse.Reference)},
-            {InterventionStageSql.Expression} AS {nameof(InterventionSummaryResponse.Stage)},
+            i.status_id AS {nameof(InterventionSummaryResponse.StatusId)},
+            ist.label AS {nameof(InterventionSummaryResponse.StatusLabel)},
             i.started_at AS {nameof(InterventionSummaryResponse.StartedAt)},
             c.first_name AS {nameof(InterventionSummaryResponse.CustomerFirstName)},
             c.last_name AS {nameof(InterventionSummaryResponse.CustomerLastName)},
@@ -126,8 +129,8 @@ public class InterventionQueryRepository : IInterventionQueryRepository
         FROM intervention i
         INNER JOIN customer c ON c.id = i.customer_id
         INNER JOIN vehicle v ON v.id = i.vehicle_id
+        INNER JOIN intervention_status ist ON ist.id = i.status_id
         LEFT JOIN appointment a ON a.id = i.appointment_id
-        LEFT JOIN invoice inv ON inv.intervention_id = i.id
 
         WHERE 1 = 1
         """;
@@ -150,10 +153,10 @@ public class InterventionQueryRepository : IInterventionQueryRepository
             parameters.Add("GarageId", filter.GarageId.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(filter.Status))
+        if (filter.StatusId.HasValue)
         {
-            sql.Append($" AND ({InterventionStageSql.Expression}) = @Status");
-            parameters.Add("Status", filter.Status.Trim().ToLower());
+            sql.Append(" AND i.status_id = @StatusId");
+            parameters.Add("StatusId", filter.StatusId.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
@@ -186,7 +189,7 @@ public class InterventionQueryRepository : IInterventionQueryRepository
     public async Task<InterventionResponse?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         var intervention = await _connection.QuerySingleOrDefaultAsync<InterventionResponse>(
-            new CommandDefinition($"{InterventionSelect}\nWHERE i.id = @Id", new { Id = id }, cancellationToken: cancellationToken));
+            new CommandDefinition($"{InterventionSelect}\nWHERE i.id = @Id", new { Id = id, PaymentSucceeded = (int)PaymentStatus.Succeeded }, cancellationToken: cancellationToken));
 
         if (intervention is null)
         {

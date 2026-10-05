@@ -18,7 +18,7 @@ export class AppointmentApiRepository implements AppointmentRepository {
     const appointments = await this.api.get<AppointmentDto[]>("/appointments", {
       customerId: filter.customerId,
       garageId: filter.garageId,
-      status: filter.status,
+      statusId: filter.statusId,
       upcomingOnly: filter.upcomingOnly,
       from: filter.from,
       to: filter.to,
@@ -46,7 +46,7 @@ export class AppointmentApiRepository implements AppointmentRepository {
   }
 
   async abandon(reference: string, status: AbandonStatus): Promise<void> {
-    await this.api.post(`/appointments/${encodeURIComponent(reference)}/abandon`, { status });
+    await this.api.post(`/appointments/${encodeURIComponent(reference)}/abandon`, { statusId: status });
   }
 
   async start(reference: string, startAt?: string): Promise<number> {

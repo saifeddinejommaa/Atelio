@@ -2,6 +2,8 @@ using Atelio.Application.Features.Appointments.Commands;
 using Atelio.Application.Features.Appointments.Queries;
 using Atelio.Application.Features.Appointments.Repositories;
 using Atelio.Application.Features.Appointments.Requests;
+using Atelio.Domain.Enums;
+using Atelio.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -55,12 +57,12 @@ public class AppointmentsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Garage : abandonne le rendez-vous, annulé ("cancelled") ou client non venu ("no_show").</summary>
+    /// <summary>Garage : abandonne le rendez-vous : statusId 3 (annulé) ou 5 (client non venu).</summary>
     [HttpPost("{reference}/abandon")]
     public async Task<IActionResult> Abandon(string reference, [FromBody] AbandonAppointmentRequest request, CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new AbandonAppointmentCommand { Reference = reference, Status = request.Status },
+            new AbandonAppointmentCommand { Reference = reference, Status = (AppointmentStatus)request.StatusId },
             cancellationToken);
 
         return NoContent();
