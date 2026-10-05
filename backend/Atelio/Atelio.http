@@ -1,6 +1,0 @@
-@Atelio_HostAddress = http://localhost:5181
-
-GET {{Atelio_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

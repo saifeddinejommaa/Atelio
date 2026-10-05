@@ -1,0 +1,85 @@
+@import 'tailwindcss';
+
+/*
+ * Charte de la marque (core, brands/), injectée en variables CSS par components/Layout.tsx.
+ * Mêmes variables que le site b2c. Les valeurs ci-dessous ne servent que de repli neutre.
+ */
+:root {
+  --tenant-primary: #1f2937;
+  --tenant-secondary: #2563eb;
+  --tenant-on-primary: #ffffff;
+  --tenant-on-secondary: #ffffff;
+  --tenant-text: #111827;
+  --tenant-muted: #f3f4f6;
+  --tenant-font: system-ui, sans-serif;
+  --tenant-radius: 0.75rem;
+}
+
+@theme inline {
+  --color-foreground: var(--tenant-text);
+  --color-primary: var(--tenant-primary);
+  --color-secondary: var(--tenant-secondary);
+  --color-on-primary: var(--tenant-on-primary);
+  --color-on-secondary: var(--tenant-on-secondary);
+  --color-muted: var(--tenant-muted);
+  --font-sans: var(--tenant-font);
+  --radius-brand: var(--tenant-radius);
+}
+
+body {
+  font-family: var(--tenant-font);
+  @apply antialiased;
+}
+
+/* Calendrier (FullCalendar, thème classic) aux couleurs de la marque.
+ * Sur le conteneur du calendrier : les variables de la marque y sont définies (pas sur :root). */
+.brand-calendar {
+  --fc-classic-button: var(--tenant-primary);
+  --fc-classic-button-border: var(--tenant-primary);
+  --fc-classic-button-strong: var(--tenant-secondary);
+  --fc-classic-button-strong-border: var(--tenant-secondary);
+  --fc-classic-button-foreground: var(--tenant-on-primary);
+  --fc-classic-primary: var(--tenant-secondary);
+  --fc-classic-primary-foreground: var(--tenant-on-secondary);
+  --fc-classic-today: color-mix(in srgb, var(--tenant-secondary) 8%, transparent);
+  --fc-classic-now: var(--tenant-secondary);
+  /* Plages sans mécanicien libre. */
+  --fc-classic-background-event-opacity: 25%;
+}
+
+/*
+ * Rendez-vous : 70 % de la place, pour laisser visible et cliquable le fond de capacité
+ * (« 1 place libre sur 2 ») quand d'autres mécaniciens sont libres sur le créneau.
+ * Le conteneur posé par FullCalendar laisse passer les clics ; seul le rendez-vous les capte.
+ */
+.brand-calendar :has(> .appointment-event) {
+  pointer-events: none;
+}
+
+.brand-calendar .appointment-event {
+  pointer-events: auto;
+  margin-inline-end: 30%;
+}
+
+/* Impression (facture) : seul le contenu de la page, sans menu ni boutons. */
+@media print {
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  body,
+  .bg-muted {
+    background: #ffffff !important;
+  }
+
+  .invoice {
+    box-shadow: none !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}

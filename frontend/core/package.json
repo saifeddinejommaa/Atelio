@@ -1,0 +1,15 @@
+{
+  "name": "@atelio/core",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./domain": "./domain/index.ts",
+    "./data": "./data/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
