@@ -1,7 +1,6 @@
 using Atelio.Application.Common;
 using Atelio.Application.Features.Garages.Responses;
 using Atelio.Domain;
-using Atelio.Domain.Planning;
 using Atelio.Domain.Repositories;
 using FluentValidation;
 using MediatR;
@@ -63,28 +62,22 @@ public class GetGarageAvailabilityQueryHandler
             throw new NotFoundException($"Garage {request.GarageId} introuvable.");
         }
 
-        var duration = await BookingRules.GetDurationAsync(
-            _garages, _services, garage.Id, request.ServiceIds, cancellationToken);
+        var work = await BookingRules.GetWorkAsync(_garages, _services, garage.Id, request.ServiceIds, cancellationToken);
 
         var nowUtc = _clock.GetUtcNow().UtcDateTime;
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, _tenant.TimeZone));
         var from = request.From ?? today.AddDays(1);
         var to = from.AddDays(request.Days);
 
-        // Marge d'un jour de chaque côté pour couvrir les décalages horaires.
-        var fromUtc = from.AddDays(-1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var toUtc = to.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var planner = await BookingRules.CreatePlannerAsync(_planning, _tenant, garage, from, to, cancellationToken);
 
-        var planner = new SlotPlanner(
-            garage,
-            _tenant.TimeZone,
-            await _planning.GetMechanicsAsync(garage.Id, fromUtc, toUtc, cancellationToken),
-            await _planning.GetBookedPeriodsAsync(garage.Id, fromUtc, toUtc, cancellationToken));
+        // Site client : une prestation à durée incertaine (ex. « Autre ») ne se réserve que le matin.
+        var latestStart = work.Uncertain ? BookingRules.UncertainLatestStart : (TimeOnly?)null;
 
         var result = new List<GarageDayAvailabilityResponse>();
         for (var day = from; day < to; day = day.AddDays(1))
         {
-            var slots = planner.GetSlots(day, duration, nowUtc);
+            var slots = planner.GetSlots(day, work.Minutes, nowUtc, latestStart);
             if (slots.Count == 0)
             {
                 continue; // garage fermé ce jour-là

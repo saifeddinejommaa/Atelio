@@ -40,4 +40,6 @@ public class Invoice
 
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
+
+    public List<InvoiceLine> Lines { get; set; } = [];
 }

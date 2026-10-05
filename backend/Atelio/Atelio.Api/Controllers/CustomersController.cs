@@ -1,6 +1,8 @@
+using Atelio.Application.Common;
 using Atelio.Application.Features.Customers.Commands;
 using Atelio.Application.Features.Customers.Responses;
 using Atelio.Application.Features.Vehicles.Responses;
+using Atelio.Domain;
 using Atelio.Domain.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +42,24 @@ public class CustomersController : ControllerBase
         var customer = await _customerRepository.GetByEmailAsync(email, cancellationToken);
 
         return customer is null ? NotFound() : Ok(CustomerResponse.From(customer));
+    }
+
+    /// <summary>
+    /// Clients dont le numéro correspond, quel que soit le format (ex. "06 12 34 56 78" ou "+33612345678").
+    /// Plusieurs clients peuvent partager un numéro (famille) : renvoie une liste, vide si aucun.
+    /// </summary>
+    [HttpGet("by-phone")]
+    public async Task<IActionResult> GetByPhone([FromQuery] string phone, CancellationToken cancellationToken)
+    {
+        var key = TextRules.PhoneKey(phone);
+        if (key is null)
+        {
+            throw new BusinessException("Numéro de téléphone invalide.");
+        }
+
+        var customers = await _customerRepository.GetActiveByPhoneKeyAsync(key, cancellationToken);
+
+        return Ok(customers.Select(CustomerResponse.From));
     }
 
     [HttpPost]

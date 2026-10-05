@@ -4,7 +4,6 @@ using Atelio.Application.Features.Vehicles.Commands;
 using Atelio.Domain;
 using Atelio.Domain.Entities;
 using Atelio.Domain.Enums;
-using Atelio.Domain.Planning;
 using Atelio.Domain.Repositories;
 using FluentValidation;
 using MediatR;
@@ -103,8 +102,7 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
             throw new NotFoundException($"Garage {request.GarageId} introuvable.");
         }
 
-        var duration = await BookingRules.GetDurationAsync(
-            _garages, _services, garage.Id, request.ServiceIds, cancellationToken);
+        var work = await BookingRules.GetWorkAsync(_garages, _services, garage.Id, request.ServiceIds, cancellationToken);
 
         Appointment appointment = null!;
 
@@ -115,30 +113,17 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
 
             var localStart = DateTime.SpecifyKind(request.ScheduledAt, DateTimeKind.Unspecified);
             var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, _tenant.TimeZone);
-            var endUtc = startUtc.AddMinutes(duration);
+            var day = DateOnly.FromDateTime(localStart);
 
-            var planner = new SlotPlanner(
-                garage,
-                _tenant.TimeZone,
-                await _planning.GetMechanicsAsync(garage.Id, startUtc, endUtc, ct),
-                await _planning.GetBookedPeriodsAsync(garage.Id, startUtc, endUtc, ct));
-
-            if (!planner.IsWithinOpeningHours(localStart, duration))
+            // Répartition simulée entre les mécaniciens : fin estimée pauses comprises.
+            var planner = await BookingRules.CreatePlannerAsync(_planning, _tenant, garage, day, day, ct);
+            var placement = planner.TryPlace(localStart, work.Minutes, nowUtc);
+            if (!placement.Available)
             {
-                throw new BusinessException(
-                    $"Le garage est fermé à ce moment-là (ouvert de {garage.OpeningTime:HH\\:mm} à {garage.ClosingTime:HH\\:mm}, "
-                    + $"et le rendez-vous dure {duration} min).");
+                throw new BusinessException(placement.Reason!);
             }
 
-            if (startUtc <= nowUtc)
-            {
-                throw new BusinessException("Ce créneau est déjà passé.");
-            }
-
-            if (!planner.CanBook(localStart, duration, nowUtc))
-            {
-                throw new BusinessException("Ce créneau n'est plus disponible, merci d'en choisir un autre.");
-            }
+            var endUtc = placement.EndUtc!.Value;
 
             var vehicle = await ResolveVehicleAsync(request, nowUtc, ct);
 

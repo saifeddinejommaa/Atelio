@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Atelio.Domain.Entities;
 
-// Client de la marque (utilisateur du site web).
+// Client de la marque (utilisateur du site web, ou client enregistré par le garage).
 [Table("customer")]
 public class Customer
 {
@@ -15,8 +15,9 @@ public class Customer
     [Column("last_name")]
     public string LastName { get; set; } = null!;
 
+    // Facultatif : un client créé par le garage peut n'avoir qu'un téléphone.
     [Column("email")]
-    public string Email { get; set; } = null!;
+    public string? Email { get; set; }
 
     [Column("phone")]
     public string? Phone { get; set; }

@@ -22,6 +22,7 @@ public class AtelioDbContext : DbContext
     public DbSet<Garage> Garages => Set<Garage>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<EmployeeAbsence> EmployeeAbsences => Set<EmployeeAbsence>();
+    public DbSet<EmployeeSchedule> EmployeeSchedules => Set<EmployeeSchedule>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<Promotion> Promotions => Set<Promotion>();
     public DbSet<GarageService> GarageServices => Set<GarageService>();
@@ -30,8 +31,11 @@ public class AtelioDbContext : DbContext
     public DbSet<Intervention> Interventions => Set<Intervention>();
     public DbSet<InterventionService> InterventionServices => Set<InterventionService>();
     public DbSet<SparePart> SpareParts => Set<SparePart>();
+    public DbSet<ServicePart> ServiceParts => Set<ServicePart>();
+    public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -40,6 +44,7 @@ public class AtelioDbContext : DbContext
         configurationBuilder.Properties<Domain.Enums.InterventionStatus>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.InterventionStatus>>();
         configurationBuilder.Properties<Domain.Enums.InvoiceStatus>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.InvoiceStatus>>();
         configurationBuilder.Properties<Domain.Enums.PaymentMethod>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.PaymentMethod>>();
+        configurationBuilder.Properties<Domain.Enums.InvoiceLineKind>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.InvoiceLineKind>>();
         configurationBuilder.Properties<Domain.Enums.PaymentStatus>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.PaymentStatus>>();
         configurationBuilder.Properties<Domain.Enums.EmployeeRole>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.EmployeeRole>>();
         configurationBuilder.Properties<Domain.Enums.AbsenceReason>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.AbsenceReason>>();
@@ -64,6 +69,11 @@ public class AtelioDbContext : DbContext
             .HasMany(x => x.Services)
             .WithOne()
             .HasForeignKey(x => x.AppointmentId);
+
+        modelBuilder.Entity<Invoice>()
+            .HasMany(x => x.Lines)
+            .WithOne()
+            .HasForeignKey(x => x.InvoiceId);
 
         modelBuilder.Entity<Intervention>()
             .HasMany(x => x.Services)

@@ -1,4 +1,5 @@
 using Atelio.Application.Features.Appointments.Commands;
+using Atelio.Application.Features.Appointments.Queries;
 using Atelio.Application.Features.Appointments.Repositories;
 using Atelio.Application.Features.Appointments.Requests;
 using MediatR;
@@ -41,6 +42,49 @@ public class AppointmentsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateAppointmentCommand command, CancellationToken cancellationToken)
     {
         return Ok(await _mediator.Send(command, cancellationToken));
+    }
+
+    /// <summary>Garage : déplace le rendez-vous (même durée), si un mécanicien est disponible.</summary>
+    [HttpPost("{reference}/reschedule")]
+    public async Task<IActionResult> Reschedule(string reference, [FromBody] RescheduleAppointmentRequest request, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new RescheduleAppointmentCommand { Reference = reference, ScheduledAt = request.ScheduledAt },
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>Garage : abandonne le rendez-vous, annulé ("cancelled") ou client non venu ("no_show").</summary>
+    [HttpPost("{reference}/abandon")]
+    public async Task<IActionResult> Abandon(string reference, [FromBody] AbandonAppointmentRequest request, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new AbandonAppointmentCommand { Reference = reference, Status = request.Status },
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>Garage : le client est là, ouvre l'intervention. Renvoie { interventionId }.</summary>
+    [HttpPost("{reference}/start")]
+    public async Task<IActionResult> Start(string reference, [FromBody] StartAppointmentRequest? request, CancellationToken cancellationToken)
+    {
+        var interventionId = await _mediator.Send(
+            new StartAppointmentCommand { Reference = reference, StartAt = request?.StartAt },
+            cancellationToken);
+
+        return Ok(new { interventionId });
+    }
+
+    /// <summary>
+    /// Garage : avant de lancer à cette heure (heure locale, par défaut maintenant), premier mécanicien libre
+    /// et fin estimée. Non bloquant : le lancement reste possible si personne n'est libre.
+    /// </summary>
+    [HttpGet("{reference}/start-check")]
+    public async Task<IActionResult> StartCheck(string reference, [FromQuery] DateTime? startAt, CancellationToken cancellationToken)
+    {
+        return Ok(await _mediator.Send(new GetAppointmentStartCheckQuery { Reference = reference, StartAt = startAt }, cancellationToken));
     }
 
     [HttpPost("{reference}/cancel")]

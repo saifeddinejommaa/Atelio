@@ -1,6 +1,5 @@
 using Atelio.Domain.Entities;
 using Atelio.Domain.Enums;
-using Atelio.Domain.Planning;
 using Atelio.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 

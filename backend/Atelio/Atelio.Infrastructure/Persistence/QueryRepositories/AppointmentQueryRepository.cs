@@ -1,3 +1,4 @@
+using Atelio.Application.Common;
 using Atelio.Application.Features.Appointments.Repositories;
 using Atelio.Application.Features.Appointments.Requests;
 using Atelio.Application.Features.Appointments.Responses;
@@ -10,6 +11,7 @@ namespace Atelio.Infrastructure.Persistence.QueryRepositories;
 public class AppointmentQueryRepository : IAppointmentQueryRepository
 {
     private readonly IDbConnection _connection;
+    private readonly ITenantContext _tenant;
 
     // Rendez-vous avec garage, véhicule et services demandés.
     private const string AppointmentSelect = $"""
@@ -17,6 +19,10 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             a.id AS {nameof(AppointmentResponse.Id)},
             a.reference AS {nameof(AppointmentResponse.Reference)},
             a.customer_id AS {nameof(AppointmentResponse.CustomerId)},
+            c.first_name AS {nameof(AppointmentResponse.CustomerFirstName)},
+            c.last_name AS {nameof(AppointmentResponse.CustomerLastName)},
+            c.phone AS {nameof(AppointmentResponse.CustomerPhone)},
+            c.email AS {nameof(AppointmentResponse.CustomerEmail)},
             a.status AS {nameof(AppointmentResponse.Status)},
             a.scheduled_at AS {nameof(AppointmentResponse.ScheduledAt)},
             a.estimated_end_at AS {nameof(AppointmentResponse.EstimatedEndAt)},
@@ -26,10 +32,15 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             g.address_line || ', ' || g.postal_code || ' ' || g.city AS {nameof(AppointmentResponse.GarageAddress)},
             v.id AS {nameof(AppointmentResponse.VehicleId)},
             v.plate AS {nameof(AppointmentResponse.VehiclePlate)},
+            v.make AS {nameof(AppointmentResponse.VehicleMake)},
+            v.model AS {nameof(AppointmentResponse.VehicleModel)},
             COALESCE(srv.codes, ARRAY[]::text[]) AS {nameof(AppointmentResponse.ServiceCodes)},
-            COALESCE(srv.names, ARRAY[]::text[]) AS {nameof(AppointmentResponse.ServiceNames)}
+            COALESCE(srv.names, ARRAY[]::text[]) AS {nameof(AppointmentResponse.ServiceNames)},
+            itv.id AS {nameof(AppointmentResponse.InterventionId)},
+            itv.stage AS {nameof(AppointmentResponse.InterventionStage)}
 
         FROM appointment a
+        INNER JOIN customer c ON c.id = a.customer_id
         INNER JOIN garage g ON g.id = a.garage_id
         INNER JOIN vehicle v ON v.id = a.vehicle_id
 
@@ -41,11 +52,22 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             INNER JOIN service s ON s.id = aps.service_id
             WHERE aps.appointment_id = a.id
         ) srv ON TRUE
+
+        -- Dernière intervention ouverte à partir du rendez-vous.
+        LEFT JOIN LATERAL (
+            SELECT i.id, {InterventionStageSql.Expression} AS stage
+            FROM intervention i
+            LEFT JOIN invoice inv ON inv.intervention_id = i.id
+            WHERE i.appointment_id = a.id
+            ORDER BY i.id DESC
+            LIMIT 1
+        ) itv ON TRUE
         """;
 
-    public AppointmentQueryRepository(IDbConnection connection)
+    public AppointmentQueryRepository(IDbConnection connection, ITenantContext tenant)
     {
         _connection = connection;
+        _tenant = tenant;
     }
 
     public async Task<IReadOnlyList<AppointmentResponse>> GetAppointmentsAsync(
@@ -83,6 +105,19 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             sql.Append(" AND a.scheduled_at >= now()");
         }
 
+        // Jours à l'heure locale du garage, convertis en bornes UTC : [from 00:00, lendemain de to 00:00[.
+        if (filter.From is DateOnly from)
+        {
+            sql.Append(" AND a.scheduled_at >= @FromUtc");
+            parameters.Add("FromUtc", ToUtc(from));
+        }
+
+        if (filter.To is DateOnly to)
+        {
+            sql.Append(" AND a.scheduled_at < @ToUtc");
+            parameters.Add("ToUtc", ToUtc(to.AddDays(1)));
+        }
+
         sql.Append("""
 
             ORDER BY a.scheduled_at DESC
@@ -91,6 +126,9 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
         return (await _connection.QueryAsync<AppointmentResponse>(
             new CommandDefinition(sql.ToString(), parameters, cancellationToken: cancellationToken))).ToList();
     }
+
+    private DateTime ToUtc(DateOnly localDay) =>
+        TimeZoneInfo.ConvertTimeToUtc(localDay.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), _tenant.TimeZone);
 
     public async Task<AppointmentResponse?> GetByReferenceAsync(string reference, CancellationToken cancellationToken = default)
     {

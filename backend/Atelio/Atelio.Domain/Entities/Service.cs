@@ -27,6 +27,14 @@ public class Service
     [Column("duration_minutes")]
     public int DurationMinutes { get; set; }
 
+    // Catégorie : donne le taux horaire de main-d'œuvre.
+    [Column("category_id")]
+    public long? CategoryId { get; set; }
+
+    // Durée incertaine (ex. « Autre ») : à placer de préférence le matin.
+    [Column("uncertain_duration")]
+    public bool UncertainDuration { get; set; }
+
     [Column("is_active")]
     public bool IsActive { get; set; } = true;
 

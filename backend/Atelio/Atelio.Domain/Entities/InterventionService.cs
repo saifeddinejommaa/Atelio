@@ -16,6 +16,13 @@ public class InterventionService
     [Column("quantity")]
     public int Quantity { get; set; } = 1;
 
+    // Main-d'œuvre : temps passé et catégorie (prix unitaire = taux de la catégorie × temps).
+    [Column("labour_minutes")]
+    public int? LabourMinutes { get; set; }
+
+    [Column("category_id")]
+    public long? CategoryId { get; set; }
+
     // TTC.
     [Column("unit_price")]
     public decimal UnitPrice { get; set; }

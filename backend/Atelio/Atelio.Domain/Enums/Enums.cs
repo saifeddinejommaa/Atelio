@@ -20,3 +20,6 @@ public enum AbsenceReason { Leave, Sick, Training, Other }
 public enum VehicleFuel { Petrol, Diesel, Hybrid, Electric, Lpg, Other }
 
 public enum VehicleCategory { City, Compact, Suv, Utility }
+
+// Ligne de facture : main-d'œuvre ou pièce.
+public enum InvoiceLineKind { Labour, Part }

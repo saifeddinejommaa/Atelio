@@ -17,7 +17,8 @@ public class CreateCustomerCommand : IRequest<long>
 
     public string LastName { get; set; } = null!;
 
-    public string Email { get; set; } = null!;
+    // Facultatif (client enregistré par le garage), mais il faut au moins un e-mail ou un téléphone.
+    public string? Email { get; set; }
 
     public string? Phone { get; set; }
 }
@@ -28,8 +29,18 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
     {
         RuleFor(x => x.FirstName).NotEmpty().WithMessage("Le prénom est obligatoire.").MaximumLength(100);
         RuleFor(x => x.LastName).NotEmpty().WithMessage("Le nom est obligatoire.").MaximumLength(100);
-        RuleFor(x => x.Email).NotEmpty().EmailAddress().WithMessage("Adresse e-mail invalide.").MaximumLength(255);
+        RuleFor(x => x.Email)
+            .EmailAddress().WithMessage("Adresse e-mail invalide.")
+            .MaximumLength(255)
+            .When(x => !string.IsNullOrWhiteSpace(x.Email));
         RuleFor(x => x.Phone).MaximumLength(30);
+        RuleFor(x => x.Phone)
+            .Must(phone => TextRules.PhoneKey(phone) is not null)
+            .WithMessage("Numéro de téléphone invalide.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Phone));
+        RuleFor(x => x)
+            .Must(x => !string.IsNullOrWhiteSpace(x.Email) || !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("Indiquez un e-mail ou un numéro de téléphone.");
     }
 }
 
@@ -48,9 +59,9 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
 
     public async Task<long> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
     {
-        var email = request.Email.Trim();
+        var email = TextRules.Clean(request.Email);
 
-        if (await _repository.ExistsByEmailAsync(email, null, cancellationToken))
+        if (email is not null && await _repository.ExistsByEmailAsync(email, null, cancellationToken))
         {
             throw new BusinessException("Un compte existe déjà avec cette adresse e-mail.");
         }
@@ -107,8 +118,8 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
         var customer = await _repository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException($"Client {request.Id} introuvable.");
 
-        var email = request.Email.Trim();
-        if (await _repository.ExistsByEmailAsync(email, customer.Id, cancellationToken))
+        var email = TextRules.Clean(request.Email);
+        if (email is not null && await _repository.ExistsByEmailAsync(email, customer.Id, cancellationToken))
         {
             throw new BusinessException("Un compte existe déjà avec cette adresse e-mail.");
         }
