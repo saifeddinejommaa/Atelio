@@ -1,10 +1,9 @@
 /** Intervention telle que renvoyée par GET /api/interventions/{id}. */
 export type InterventionDto = {
   id: number;
-  /** planned, in_progress, done, cancelled */
-  status: string;
-  /** in_progress, ready, invoiced, closed, cancelled */
-  stage: string;
+  /** Id et libellé de la table intervention_status. */
+  statusId: number;
+  statusLabel: string;
   invoiceId: number | null;
   invoiceNumber: string | null;
   invoiceTotalTtc: number | null;
@@ -54,7 +53,8 @@ export type InterventionDto = {
 export type InterventionSummaryDto = {
   id: number;
   reference: string | null;
-  stage: string;
+  statusId: number;
+  statusLabel: string;
   startedAt: string | null;
   customerFirstName: string;
   customerLastName: string;

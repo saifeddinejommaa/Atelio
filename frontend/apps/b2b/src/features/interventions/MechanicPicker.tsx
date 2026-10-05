@@ -1,5 +1,5 @@
 import { ApiError, InterventionApiRepository } from '@atelio/core/data'
-import { AssignInterventionEmployee, type Intervention, type Mechanic } from '@atelio/core/domain'
+import { AssignInterventionEmployee, InterventionStatus, type Intervention, type Mechanic } from '@atelio/core/domain'
 import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { useBrand } from '../../brand/use-brand'
@@ -12,7 +12,7 @@ export default function MechanicPicker({ intervention, mechanics }: { interventi
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const closed = intervention.status === 'done' || intervention.status === 'cancelled'
+  const closed = intervention.status.id !== InterventionStatus.Planned && intervention.status.id !== InterventionStatus.InProgress
   const changed = selected !== 0 && selected !== intervention.employeeId
 
   async function save() {

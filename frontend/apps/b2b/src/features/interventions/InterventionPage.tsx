@@ -1,7 +1,8 @@
+import { InterventionStatus } from '@atelio/core/domain'
 import { Link, useLoaderData } from 'react-router'
 import type { InterventionData } from './intervention-loader'
 import InterventionActions from './InterventionActions'
-import { interventionStages } from './intervention-status'
+import { interventionStatusClasses } from './intervention-status'
 import LabourCard from './LabourCard'
 import MechanicPicker from './MechanicPicker'
 import SparePartsCard from './SparePartsCard'
@@ -13,9 +14,8 @@ const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digi
 /** Détail d'une intervention : client, véhicule, mécanicien chargé, main-d'œuvre, pièces, récapitulatif. */
 export default function InterventionPage() {
   const { intervention, mechanics, categories } = useLoaderData<InterventionData>()
-  const status = interventionStages[intervention.stage]
   // Facturée : la main-d'œuvre et les pièces ne se modifient plus.
-  const locked = intervention.stage === 'invoiced' || intervention.stage === 'closed'
+  const locked = intervention.status.id === InterventionStatus.Invoiced || intervention.status.id === InterventionStatus.Closed
   const vehicle = [intervention.vehicleMake, intervention.vehicleModel].filter(Boolean).join(' ')
 
   return (
@@ -28,7 +28,9 @@ export default function InterventionPage() {
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-extrabold tracking-tight">Intervention n°{intervention.id}</h1>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>{status.label}</span>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${interventionStatusClasses[intervention.status.id]}`}>
+              {intervention.status.label}
+            </span>
           </div>
           <p className="mt-1 text-sm text-zinc-600">
             {intervention.garageName}

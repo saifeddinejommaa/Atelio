@@ -7,8 +7,9 @@ export type AppointmentDto = {
   customerLastName: string;
   customerPhone: string | null;
   customerEmail: string | null;
-  /** pending, confirmed, cancelled, completed, no_show */
-  status: string;
+  /** Id et libellé de la table appointment_status. */
+  statusId: number;
+  statusLabel: string;
   scheduledAt: string;
   estimatedEndAt: string;
   customerNotes: string | null;
@@ -23,7 +24,9 @@ export type AppointmentDto = {
   serviceNames: string[];
   /** Intervention ouverte à partir du rendez-vous (null si pas encore lancé). */
   interventionId: number | null;
-  interventionStage: string | null;
+  /** Id et libellé de la table intervention_status. */
+  interventionStatusId: number | null;
+  interventionStatusLabel: string | null;
 };
 
 /** Corps de POST /api/appointments. */

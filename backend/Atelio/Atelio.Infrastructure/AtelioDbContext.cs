@@ -36,16 +36,17 @@ public class AtelioDbContext : DbContext
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
+    public DbSet<AppointmentStatusLookup> AppointmentStatuses => Set<AppointmentStatusLookup>();
+    public DbSet<InterventionStatusLookup> InterventionStatuses => Set<InterventionStatusLookup>();
+    public DbSet<InvoiceStatusLookup> InvoiceStatuses => Set<InvoiceStatusLookup>();
+    public DbSet<PaymentStatusLookup> PaymentStatuses => Set<PaymentStatusLookup>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         // Enums stockés en texte snake_case (contraintes CHECK du schéma).
-        configurationBuilder.Properties<Domain.Enums.AppointmentStatus>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.AppointmentStatus>>();
-        configurationBuilder.Properties<Domain.Enums.InterventionStatus>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.InterventionStatus>>();
-        configurationBuilder.Properties<Domain.Enums.InvoiceStatus>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.InvoiceStatus>>();
+        // Les statuts (AppointmentStatus, InterventionStatus...) sont stockés par leur id (conversion int par défaut).
         configurationBuilder.Properties<Domain.Enums.PaymentMethod>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.PaymentMethod>>();
         configurationBuilder.Properties<Domain.Enums.InvoiceLineKind>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.InvoiceLineKind>>();
-        configurationBuilder.Properties<Domain.Enums.PaymentStatus>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.PaymentStatus>>();
         configurationBuilder.Properties<Domain.Enums.EmployeeRole>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.EmployeeRole>>();
         configurationBuilder.Properties<Domain.Enums.AbsenceReason>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.AbsenceReason>>();
         configurationBuilder.Properties<Domain.Enums.VehicleFuel>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.VehicleFuel>>();

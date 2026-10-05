@@ -1,20 +1,27 @@
 import { InterventionApiRepository } from '@atelio/core/data'
-import { GetInterventions, type InterventionStage, type InterventionSummary } from '@atelio/core/domain'
+import {
+  GetInterventions,
+  InterventionStatus,
+  type InterventionSummary,
+  type StatusOption,
+} from '@atelio/core/domain'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLoaderData } from 'react-router'
 import { useBrand } from '../../brand/use-brand'
 import { useCurrentGarage } from '../../garage/use-current-garage'
-import { interventionStages } from './intervention-status'
+import { interventionStatusClasses } from './intervention-status'
 
 const dateTime = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 type ListState = { status: 'loading' } | { status: 'error' } | { status: 'ok'; items: InterventionSummary[] }
 
-/** Interventions du garage : recherche par référence ou client, filtre par étape. */
+/** Interventions du garage : recherche par référence ou client, filtre par statut (table intervention_status). */
 export default function InterventionsPage() {
   const { api } = useBrand()
   const garage = useCurrentGarage()
-  const [status, setStatus] = useState<InterventionStage | ''>('in_progress')
+  // Filtre : statuts actifs de la table, plus « Toutes » (0).
+  const statuses = useLoaderData<StatusOption<InterventionStatus>[]>().filter((s) => s.isActive)
+  const [status, setStatus] = useState<InterventionStatus | 0>(InterventionStatus.InProgress)
   const [search, setSearch] = useState('')
   const [debounced, setDebounced] = useState('')
   const [result, setResult] = useState<{ key: string; state: ListState } | null>(null)
@@ -29,7 +36,7 @@ export default function InterventionsPage() {
   useEffect(() => {
     let current = true
     new GetInterventions(new InterventionApiRepository(api))
-      .execute({ garageId: garage.id, stage: status || undefined, search: debounced })
+      .execute({ garageId: garage.id, statusId: status || undefined, search: debounced })
       .then((items): ListState => ({ status: 'ok', items }))
       .catch((): ListState => ({ status: 'error' }))
       .then((state) => {
@@ -56,15 +63,15 @@ export default function InterventionsPage() {
           className="w-72 rounded-brand border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-primary"
         />
         <div className="flex rounded-brand bg-white p-1 text-sm font-semibold shadow-sm">
-          {(['in_progress', 'ready', 'invoiced', 'closed', ''] as const).map((s) => (
+          {[...statuses, { id: 0 as const, label: 'Toutes' }].map((s) => (
             <button
-              key={s || 'all'}
+              key={s.id}
               type="button"
-              aria-pressed={status === s}
-              onClick={() => setStatus(s)}
-              className={`rounded-brand px-3 py-1.5 ${status === s ? 'bg-primary text-on-primary' : 'text-zinc-600 hover:bg-muted'}`}
+              aria-pressed={status === s.id}
+              onClick={() => setStatus(s.id)}
+              className={`rounded-brand px-3 py-1.5 ${status === s.id ? 'bg-primary text-on-primary' : 'text-zinc-600 hover:bg-muted'}`}
             >
-              {s ? interventionStages[s].label : 'Toutes'}
+              {s.label}
             </button>
           ))}
         </div>
@@ -86,7 +93,6 @@ export default function InterventionsPage() {
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {state.items.map((i) => {
-                const s = interventionStages[i.stage]
                 return (
                   <tr key={i.id} className="hover:bg-muted">
                     <td className="px-4 py-3">
@@ -99,7 +105,9 @@ export default function InterventionsPage() {
                       <span className="ml-2 font-mono text-xs text-zinc-500">{i.vehiclePlate}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${s.className}`}>{s.label}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${interventionStatusClasses[i.status.id]}`}>
+                        {i.status.label}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-zinc-600">{i.startedAt ? dateTime.format(new Date(i.startedAt)) : '—'}</td>
                   </tr>

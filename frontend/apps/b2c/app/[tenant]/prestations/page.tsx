@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Icon from "@/components/Icon";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { getServices } from "@/lib/garage-service/service-queries";
 import ServicePrice from "@/components/ServicePrice";
 import { resolveTenant } from "@/lib/tenant";
@@ -32,7 +34,7 @@ export default async function ServicesPage({ params }: PageProps<"/[tenant]/pres
 
       <section className="mx-auto grid max-w-7xl gap-5 px-4 py-14 sm:grid-cols-2 lg:grid-cols-3">
         {services.map((s) => (
-          <article key={s.slug} className="flex flex-col rounded-brand border border-zinc-200 p-6">
+          <Card as="article" key={s.slug} variant="outlined" className="flex flex-col">
             <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-primary">
               <Icon name={s.icon} />
             </span>
@@ -44,20 +46,14 @@ export default async function ServicesPage({ params }: PageProps<"/[tenant]/pres
             <p className="mt-2 flex-1 text-sm leading-6 text-zinc-600">{s.description}</p>
             <ServicePrice service={s} size="text-2xl" />
             <div className="mt-5 flex gap-2">
-              <Link
-                href={href(`/rendez-vous?prestation=${s.slug}`)}
-                className="flex-1 rounded-brand bg-secondary py-2.5 text-center text-sm font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
-              >
+              <Button as={Link} href={href(`/rendez-vous?prestation=${s.slug}`)} size="sm" className="flex-1">
                 Prendre rendez-vous
-              </Link>
-              <Link
-                href={href(`/prestations/${s.slug}`)}
-                className="rounded-brand border border-zinc-300 px-4 py-2.5 text-sm font-semibold transition-colors hover:border-primary"
-              >
+              </Button>
+              <Button as={Link} href={href(`/prestations/${s.slug}`)} variant="secondary" size="sm">
                 Détails
-              </Link>
+              </Button>
             </div>
-          </article>
+          </Card>
         ))}
       </section>
     </>

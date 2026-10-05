@@ -1,4 +1,4 @@
-export type InterventionStatus = "planned" | "in_progress" | "done" | "cancelled";
+import type { InterventionStatus, Status } from "./status";
 
 /** Prestation réalisée dans une intervention. */
 export type InterventionService = {
@@ -21,8 +21,8 @@ export type InterventionService = {
 /** Travail réalisé sur un véhicule, ouvert à partir d'un rendez-vous (ou non). */
 export type Intervention = {
   id: number;
-  status: InterventionStatus;
-  stage: InterventionStage;
+  /** En cours → terminée → facturée → clôturée (payée), ou annulée. */
+  status: Status<InterventionStatus>;
   /** Facture émise (null avant facturation). */
   invoiceId: number | null;
   invoiceNumber: string | null;
@@ -115,7 +115,7 @@ export type InterventionSummary = {
   id: number;
   /** Référence du rendez-vous d'origine (null sans rendez-vous). */
   reference: string | null;
-  stage: InterventionStage;
+  status: Status<InterventionStatus>;
   startedAt: string | null;
   customerFirstName: string;
   customerLastName: string;
@@ -124,14 +124,9 @@ export type InterventionSummary = {
 
 export type InterventionFilter = {
   garageId: number;
-  stage?: InterventionStage;
+  statusId?: InterventionStatus;
   /** Référence, n° d'intervention, nom ou prénom du client. */
   search?: string;
 };
-
-/** Étape de l'intervention : en cours → prête (travaux terminés) → facturée → clôturée (payée). */
-export type InterventionStage = "in_progress" | "ready" | "invoiced" | "closed" | "cancelled";
-
-export const interventionStages: InterventionStage[] = ["in_progress", "ready", "invoiced", "closed", "cancelled"];
 
 export type PaymentMethod = "card" | "cash" | "transfer" | "check";

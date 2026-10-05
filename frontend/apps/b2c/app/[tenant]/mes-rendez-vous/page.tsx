@@ -1,8 +1,11 @@
+import { AppointmentStatus } from "@atelio/core/domain";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import CancelAppointmentButton from "@/components/appointments/CancelAppointmentButton";
 import Icon from "@/components/Icon";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { getMyAppointments } from "@/lib/appointment/appointment-queries";
 import type { Appointment } from "@/lib/appointment/appointments";
 import { getSessionUser } from "@/lib/session";
@@ -27,12 +30,9 @@ export default async function MyAppointmentsPage({ params }: PageProps<"/[tenant
       <div className="mx-auto max-w-4xl px-4 py-10 lg:py-14">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h1 className="text-3xl font-extrabold tracking-tight">Mes rendez-vous</h1>
-          <Link
-            href={tenantPath(tenant, "/rendez-vous")}
-            className="rounded-brand bg-secondary px-6 py-3 font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
-          >
+          <Button as={Link} href={tenantPath(tenant, "/rendez-vous")}>
             Prendre rendez-vous
-          </Link>
+          </Button>
         </div>
 
         {result.status === "unavailable" && (
@@ -75,13 +75,17 @@ export default async function MyAppointmentsPage({ params }: PageProps<"/[tenant
 }
 
 function Notice({ children }: { children: React.ReactNode }) {
-  return <p className="mt-4 rounded-brand bg-white p-6 text-zinc-600 shadow-sm">{children}</p>;
+  return (
+    <Card as="p" className="mt-4 text-zinc-600">
+      {children}
+    </Card>
+  );
 }
 
 function AppointmentCard({ tenant, appointment: a }: { tenant: SiteTenant; appointment: Appointment }) {
-  const muted = a.status === "cancelled" || !a.upcoming;
+  const muted = a.status === AppointmentStatus.Cancelled || !a.upcoming;
   return (
-    <li className={`rounded-brand bg-white p-6 shadow-sm ${muted ? "text-zinc-500" : ""}`}>
+    <Card as="li" className={muted ? "text-zinc-500" : undefined}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-lg font-bold first-letter:uppercase text-foreground">
@@ -94,9 +98,9 @@ function AppointmentCard({ tenant, appointment: a }: { tenant: SiteTenant; appoi
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            a.status === "confirmed" || a.status === "pending"
+            a.status === AppointmentStatus.Confirmed || a.status === AppointmentStatus.Pending
               ? "bg-secondary text-on-secondary"
-              : a.status === "cancelled" || a.status === "no_show"
+              : a.status === AppointmentStatus.Cancelled || a.status === AppointmentStatus.NoShow
                 ? "bg-red-50 text-red-700"
                 : "bg-muted text-zinc-600"
           }`}
@@ -124,6 +128,6 @@ function AppointmentCard({ tenant, appointment: a }: { tenant: SiteTenant; appoi
           <CancelAppointmentButton tenant={tenant.slug} reference={a.reference} />
         </div>
       )}
-    </li>
+    </Card>
   );
 }

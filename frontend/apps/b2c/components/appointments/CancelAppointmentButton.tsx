@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import Button from "@/components/ui/Button";
 import { cancelAppointment } from "@/lib/appointment/appointment-actions";
 
 export default function CancelAppointmentButton({ tenant, reference }: { tenant: string; reference: string }) {
@@ -23,13 +24,9 @@ export default function CancelAppointmentButton({ tenant, reference }: { tenant:
   if (!confirming) {
     return (
       <div>
-        <button
-          type="button"
-          onClick={() => setConfirming(true)}
-          className="rounded-brand border border-zinc-300 px-4 py-2 text-sm font-semibold transition-colors hover:border-red-600 hover:text-red-700"
-        >
+        <Button variant="danger" size="sm" onClick={() => setConfirming(true)}>
           Annuler le rendez-vous
-        </button>
+        </Button>
         {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
       </div>
     );
@@ -46,14 +43,9 @@ export default function CancelAppointmentButton({ tenant, reference }: { tenant:
       >
         {pending ? "Annulation…" : "Oui, annuler"}
       </button>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => setConfirming(false)}
-        className="rounded-brand border border-zinc-300 px-4 py-2 text-sm font-semibold hover:border-primary"
-      >
+      <Button variant="secondary" size="sm" disabled={pending} onClick={() => setConfirming(false)}>
         Non
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,7 +1,10 @@
-import { interventionStages, type Intervention, type InterventionStage, type InterventionStatus, type InterventionSummary, type PaymentMethod } from "../../domain";
+import type { Intervention, InterventionStatus, InterventionSummary, PaymentMethod, Status } from "../../domain";
 import type { InterventionDto, InterventionSummaryDto } from "../dto/intervention-dto";
 
-const statuses: InterventionStatus[] = ["planned", "in_progress", "done", "cancelled"];
+/** Ids fixes, partagés avec le backend : la conversion vers le type d'id est sûre. */
+function toStatus(dto: { statusId: number; statusLabel: string }): Status<InterventionStatus> {
+  return { id: dto.statusId as InterventionStatus, label: dto.statusLabel };
+}
 
 /** L'API renvoie des dates UTC, parfois sans le suffixe "Z". */
 function utc(date: string | null): string | null {
@@ -10,11 +13,9 @@ function utc(date: string | null): string | null {
 }
 
 export function toInterventionEntity(dto: InterventionDto): Intervention {
-  const status = dto.status.toLowerCase() as InterventionStatus;
   return {
     id: dto.id,
-    status: statuses.includes(status) ? status : "planned",
-    stage: toStage(dto.stage),
+    status: toStatus(dto),
     invoiceId: dto.invoiceId ?? null,
     invoiceNumber: dto.invoiceNumber ?? null,
     invoiceTotalTtc: dto.invoiceTotalTtc ?? null,
@@ -69,15 +70,10 @@ export function toInterventionSummary(dto: InterventionSummaryDto): Intervention
   return {
     id: dto.id,
     reference: dto.reference,
-    stage: toStage(dto.stage),
+    status: toStatus(dto),
     startedAt: utc(dto.startedAt),
     customerFirstName: dto.customerFirstName,
     customerLastName: dto.customerLastName,
     vehiclePlate: dto.vehiclePlate,
   };
-}
-
-function toStage(stage: string | null | undefined): InterventionStage {
-  const value = stage?.toLowerCase() as InterventionStage | undefined;
-  return value && interventionStages.includes(value) ? value : "in_progress";
 }

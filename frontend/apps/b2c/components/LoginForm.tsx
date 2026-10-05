@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Button from "@/components/ui/Button";
 import { login } from "@/lib/auth-actions";
 
 export default function LoginForm({ tenant, redirectTo }: { tenant: string; redirectTo: string }) {
@@ -42,13 +43,9 @@ export default function LoginForm({ tenant, redirectTo }: { tenant: string; redi
           {state.error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-brand bg-secondary py-3.5 font-semibold text-on-secondary transition-colors hover:bg-secondary-dark disabled:opacity-60"
-      >
-        {pending ? "Connexion…" : "Se connecter"}
-      </button>
+      <Button type="submit" size="lg" fullWidth loading={pending} loadingText="Connexion…">
+        Se connecter
+      </Button>
     </form>
   );
 }

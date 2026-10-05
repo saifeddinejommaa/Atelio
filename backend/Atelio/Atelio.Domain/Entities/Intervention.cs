@@ -30,7 +30,7 @@ public class Intervention
     [Column("mileage")]
     public int? Mileage { get; set; }
 
-    [Column("status")]
+    [Column("status_id")]
     public InterventionStatus Status { get; set; } = InterventionStatus.Planned;
 
     [Column("started_at")]

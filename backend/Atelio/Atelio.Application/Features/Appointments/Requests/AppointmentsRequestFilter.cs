@@ -6,8 +6,8 @@ public class AppointmentsRequestFilter
 
     public long? GarageId { get; set; }
 
-    // pending, confirmed, cancelled, completed, no_show
-    public string? Status { get; set; }
+    // Id du statut (AppointmentStatus).
+    public int? StatusId { get; set; }
 
     // Uniquement les rendez-vous à venir.
     public bool UpcomingOnly { get; set; }

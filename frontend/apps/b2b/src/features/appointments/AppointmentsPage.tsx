@@ -1,17 +1,19 @@
-import type { Appointment, Service } from '@atelio/core/domain'
+import type { Appointment } from '@atelio/core/domain'
 import type { CalendarRef } from '@fullcalendar/react'
 import { useEffect, useRef, useState } from 'react'
 import { useLoaderData } from 'react-router'
 import { useCurrentGarage } from '../../garage/use-current-garage'
 import AppointmentDetailPanel from './AppointmentDetailPanel'
-import { appointmentStatuses } from './appointment-status'
+import { calendarLegend } from './appointment-status'
+import type { AppointmentsData } from './appointments-loader'
 import AppointmentsCalendar from './AppointmentsCalendar'
 import NewAppointmentPanel from './NewAppointmentPanel'
 
 export default function AppointmentsPage() {
   const garage = useCurrentGarage()
-  const allServices = useLoaderData<Service[]>()
+  const { services: allServices, appointmentStatuses, interventionStatuses } = useLoaderData<AppointmentsData>()
   const services = allServices.filter((s) => garage.serviceCodes.includes(s.code))
+  const legend = calendarLegend(appointmentStatuses, interventionStatuses)
   const calendarRef = useRef<CalendarRef>(null)
   // Créneau cliqué : ouvre le panneau de création.
   const [newStart, setNewStart] = useState<Date | null>(null)
@@ -43,7 +45,7 @@ export default function AppointmentsPage() {
           </p>
         </div>
         <ul className="flex flex-wrap gap-3 text-xs text-zinc-600">
-          {Object.values(appointmentStatuses).map((s) => (
+          {legend.map((s) => (
             <li key={s.label} className="flex items-center gap-1.5">
               <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: s.color }} />
               {s.label}

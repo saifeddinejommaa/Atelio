@@ -5,6 +5,8 @@ import { useState } from "react";
 import { lookupVehicle } from "@atelio/core/data";
 import { computeQuote, formatPlate, vehicleCategories, type Vehicle, type VehicleCategory } from "@atelio/core/domain";
 import Icon from "@/components/Icon";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import type { Service } from "@/lib/garage-service/services";
 import { tenantPath, type SiteTenant } from "@/tenants";
 
@@ -63,7 +65,7 @@ export default function QuoteBuilder({
     <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
       <div className="space-y-6">
         {/* 1. Véhicule */}
-        <div className="rounded-brand bg-white p-6 shadow-sm sm:p-8">
+        <Card padding="responsive">
           <h2 className="flex items-center gap-3 text-xl font-bold">
             <StepNumber n={1} /> Votre véhicule
           </h2>
@@ -82,12 +84,7 @@ export default function QuoteBuilder({
                     className="w-full px-3 py-3 text-lg font-bold tracking-widest outline-none"
                   />
                 </div>
-                <button
-                  type="submit"
-                  className="rounded-brand bg-primary px-6 py-3 font-semibold text-on-primary transition-opacity hover:opacity-90"
-                >
-                  Identifier
-                </button>
+                <Button type="submit">Identifier</Button>
               </div>
               {plateError && <p className="mt-2 text-sm text-red-600">{plateError}</p>}
             </form>
@@ -139,10 +136,10 @@ export default function QuoteBuilder({
           >
             {manual ? "Saisir mon immatriculation" : "Je n'ai pas mon immatriculation"}
           </button>
-        </div>
+        </Card>
 
         {/* 2. Prestations */}
-        <div className={`rounded-brand bg-white p-6 shadow-sm sm:p-8 ${vehicleKnown ? "" : "pointer-events-none opacity-50"}`}>
+        <Card padding="responsive" className={vehicleKnown ? undefined : "pointer-events-none opacity-50"}>
           <h2 className="flex items-center gap-3 text-xl font-bold">
             <StepNumber n={2} /> Vos prestations
           </h2>
@@ -172,11 +169,11 @@ export default function QuoteBuilder({
               );
             })}
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Devis */}
-      <aside className="h-fit rounded-brand bg-white p-6 shadow-sm lg:sticky lg:top-32">
+      <Card as="aside" sticky>
         <h2 className="text-lg font-bold">Votre devis</h2>
         <p className="text-sm text-zinc-500">
           {vehicle ? `${vehicle.make} ${vehicle.model} · ${plate}` : manual ? categoryLabel : "Véhicule non renseigné"}
@@ -217,22 +214,15 @@ export default function QuoteBuilder({
               Prix garanti 30 jours chez {tenant.name}, pièces et main-d&apos;œuvre comprises.
             </p>
 
-            <Link
-              href={bookingHref}
-              className="mt-6 block rounded-brand bg-secondary py-3.5 text-center font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
-            >
+            <Button as={Link} href={bookingHref} size="lg" fullWidth className="mt-6">
               Prendre rendez-vous
-            </Link>
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="mt-3 w-full rounded-brand border border-zinc-300 py-3 text-sm font-semibold transition-colors hover:border-primary"
-            >
+            </Button>
+            <Button variant="secondary" size="sm" fullWidth className="mt-3" onClick={() => window.print()}>
               Imprimer le devis
-            </button>
+            </Button>
           </>
         )}
-      </aside>
+      </Card>
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { useState, useTransition } from "react";
 import { lookupVehicle } from "@atelio/core/data";
 import { computeQuote, garageOffers, isValidPlate, MAX_NOTES_LENGTH, type DayAvailability } from "@atelio/core/domain";
 import Icon from "@/components/Icon";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { confirmBooking, loadAvailability } from "@/lib/appointment/appointment-actions";
 import type { Garage } from "@/lib/garage/garages";
 import type { Service } from "@/lib/garage-service/services";
@@ -139,7 +141,7 @@ export default function BookingFlow({
 
   if (reference) {
     return (
-      <div className="mt-8 rounded-brand bg-white p-8 text-center shadow-sm">
+      <Card padding="lg" className="mt-8 text-center">
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-on-secondary">
           <Icon name="check" className="h-8 w-8" />
         </span>
@@ -153,26 +155,20 @@ export default function BookingFlow({
           {tenant.name} {garage?.name}, {garage?.address}, {garage?.postalCode} {garage?.city}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link
-            href={tenantPath(tenant, "/mes-rendez-vous")}
-            className="inline-block rounded-brand bg-secondary px-7 py-3 font-semibold text-on-secondary hover:bg-secondary-dark"
-          >
+          <Button as={Link} href={tenantPath(tenant, "/mes-rendez-vous")}>
             Voir mes rendez-vous
-          </Link>
-          <Link
-            href={tenantPath(tenant)}
-            className="inline-block rounded-brand border border-zinc-300 px-7 py-3 font-semibold hover:border-primary"
-          >
+          </Button>
+          <Button as={Link} href={tenantPath(tenant)} variant="secondary">
             Retour à l&apos;accueil
-          </Link>
+          </Button>
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_18rem]">
-      <div className="rounded-brand bg-white p-6 shadow-sm sm:p-8">
+      <Card padding="responsive">
         {/* Étapes */}
         <ol className="mb-8 flex gap-2">
           {steps.map((label, i) => (
@@ -417,40 +413,31 @@ export default function BookingFlow({
         )}
 
         <div className="mt-8 flex justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => setStep(step - 1)}
-            className={`rounded-brand border border-zinc-300 px-6 py-3 font-semibold hover:border-primary ${step === 0 ? "invisible" : ""}`}
-          >
+          <Button variant="secondary" onClick={() => setStep(step - 1)} className={step === 0 ? "invisible" : undefined}>
             Retour
-          </button>
+          </Button>
           {step < steps.length - 1 ? (
-            <button
-              type="button"
-              disabled={!canContinue || loadingSlots}
+            <Button
+              disabled={!canContinue}
+              loading={loadingSlots}
+              loadingText="Chargement…"
               onClick={() => {
                 if (step === 2) showSlots();
                 else setStep(step + 1);
               }}
-              className="rounded-brand bg-secondary px-8 py-3 font-semibold text-on-secondary transition-colors hover:bg-secondary-dark disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {loadingSlots ? "Chargement…" : "Continuer"}
-            </button>
+              Continuer
+            </Button>
           ) : (
-            <button
-              type="button"
-              disabled={!canContinue || pending}
-              onClick={submit}
-              className="rounded-brand bg-secondary px-8 py-3 font-semibold text-on-secondary transition-colors hover:bg-secondary-dark disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {pending ? "Confirmation…" : "Confirmer le rendez-vous"}
-            </button>
+            <Button disabled={!canContinue} loading={pending} loadingText="Confirmation…" onClick={submit}>
+              Confirmer le rendez-vous
+            </Button>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Récapitulatif */}
-      <aside className="h-fit rounded-brand bg-white p-6 shadow-sm lg:sticky lg:top-32">
+      <Card as="aside" sticky>
         <h2 className="font-bold">Récapitulatif</h2>
         <dl className="mt-4 space-y-4 text-sm">
           <div>
@@ -504,7 +491,7 @@ export default function BookingFlow({
           <span className="text-2xl font-extrabold text-primary">{pricePrefix}{total} €</span>
         </div>
         <p className="mt-2 text-xs text-zinc-500">Paiement au garage, après l&apos;intervention.</p>
-      </aside>
+      </Card>
     </div>
   );
 }

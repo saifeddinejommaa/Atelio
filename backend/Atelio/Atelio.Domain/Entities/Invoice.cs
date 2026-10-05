@@ -32,7 +32,7 @@ public class Invoice
     [Column("total_ttc")]
     public decimal TotalTtc { get; set; }
 
-    [Column("status")]
+    [Column("status_id")]
     public InvoiceStatus Status { get; set; } = InvoiceStatus.Issued;
 
     [Column("created_at")]

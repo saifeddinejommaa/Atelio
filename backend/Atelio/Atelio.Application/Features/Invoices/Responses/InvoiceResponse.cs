@@ -18,8 +18,10 @@ public class InvoiceResponse
 
     public decimal TotalTtc { get; set; }
 
-    // issued, paid, partially_paid, cancelled
-    public string Status { get; set; } = null!;
+    // Statut (table invoice_status) : id = InvoiceStatus, libellé de la table.
+    public int StatusId { get; set; }
+
+    public string StatusLabel { get; set; } = null!;
 
     public long InterventionId { get; set; }
 

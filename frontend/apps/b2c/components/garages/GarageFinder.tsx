@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import Icon from "@/components/Icon";
+import Button from "@/components/ui/Button";
 import type { Garage } from "@/lib/garage/garages";
 
 import { tenantPath, type SiteTenant } from "@/tenants";
@@ -97,19 +98,13 @@ export default function GarageFinder({
                             : "Contactez le garage"}
                         </p>
                         <div className="mt-4 flex gap-2">
-                          <Link
-                            href={`${tenantPath(tenant, "/rendez-vous")}?garage=${g.id}`}
-                            className="flex-1 rounded-brand bg-secondary py-2.5 text-center text-sm font-semibold text-on-secondary transition-colors hover:bg-secondary-dark"
-                          >
+                          <Button as={Link} href={`${tenantPath(tenant, "/rendez-vous")}?garage=${g.id}`} size="sm" className="flex-1">
                             Prendre rendez-vous
-                          </Link>
+                          </Button>
                           {g.phone && (
-                            <a
-                              href={`tel:${g.phone.replace(/\s/g, "")}`}
-                              className="rounded-brand border border-zinc-300 px-4 py-2.5 text-sm font-semibold transition-colors hover:border-primary"
-                            >
+                            <Button as="a" href={`tel:${g.phone.replace(/\s/g, "")}`} variant="secondary" size="sm">
                               Appeler
-                            </a>
+                            </Button>
                           )}
                         </div>
                       </div>

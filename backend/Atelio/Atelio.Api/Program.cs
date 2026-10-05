@@ -31,7 +31,7 @@ builder.Services
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-        // Enums en texte : "confirmed", "no_show"...
+        // Enums en texte : "card", "mechanic"... (les statuts sont renvoyés par id et libellé de leur table).
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.SnakeCaseLower));
     });
 

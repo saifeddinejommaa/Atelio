@@ -4,11 +4,10 @@ public class InterventionResponse
 {
     public long Id { get; set; }
 
-    // planned, in_progress, done, cancelled
-    public string Status { get; set; } = null!;
+    // Statut (table intervention_status) : id = InterventionStatus, libellé de la table.
+    public int StatusId { get; set; }
 
-    // Étape : in_progress (en cours), ready (prête), invoiced (facturée), closed (payée), cancelled.
-    public string Stage { get; set; } = null!;
+    public string StatusLabel { get; set; } = null!;
 
     // Facture émise (null avant facturation).
     public long? InvoiceId { get; set; }
@@ -136,8 +135,10 @@ public class InterventionSummaryResponse
     // Référence du rendez-vous d'origine (null pour une intervention sans rendez-vous).
     public string? Reference { get; set; }
 
-    // Étape : in_progress, ready, invoiced, closed, cancelled.
-    public string Stage { get; set; } = null!;
+    // Statut (table intervention_status).
+    public int StatusId { get; set; }
+
+    public string StatusLabel { get; set; } = null!;
 
     public DateTime? StartedAt { get; set; }
 

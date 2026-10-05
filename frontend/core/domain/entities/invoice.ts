@@ -1,6 +1,5 @@
 import type { PaymentMethod } from "./intervention";
-
-export type InvoiceStatus = "issued" | "paid" | "partially_paid" | "cancelled";
+import type { InvoiceStatus, Status } from "./status";
 
 /** Ligne figée de la facture (prix TTC). */
 export type InvoiceLine = {
@@ -23,7 +22,7 @@ export type Invoice = {
   totalHt: number;
   totalVat: number;
   totalTtc: number;
-  status: InvoiceStatus;
+  status: Status<InvoiceStatus>;
   interventionId: number;
   appointmentReference: string | null;
   garageName: string;
