@@ -42,7 +42,7 @@ export default function InvoicePage() {
       <article className="invoice mx-auto max-w-[210mm] bg-white p-10 text-sm text-zinc-800 shadow-sm">
         <header className="flex items-start justify-between gap-6">
           <div className="flex items-start gap-3">
-            <img src={brand.logo} alt="" className="h-12 w-12" />
+            <img src={brand.logo} alt="" className="h-12 w-auto" />
             <div>
               <p className="text-base font-bold">{brand.legal.companyName}</p>
               <p className="text-zinc-600">{brand.legal.address}</p>

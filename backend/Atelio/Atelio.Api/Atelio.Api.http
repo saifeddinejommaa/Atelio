@@ -1,5 +1,5 @@
 @Api = http://localhost:5063/api
-@Tenant = garage-dupont
+@Tenant = gmg
 
 ### Services avec leur prix « à partir de »
 GET {{Api}}/services

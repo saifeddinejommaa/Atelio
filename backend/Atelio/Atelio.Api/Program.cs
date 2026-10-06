@@ -45,7 +45,7 @@ builder.Services.AddSwaggerGen(options =>
         Name = TenantMiddleware.HeaderName,
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
-        Description = "Marque blanche (ex. garage-dupont)",
+        Description = "Marque blanche (ex. gmg, sej)",
     });
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {

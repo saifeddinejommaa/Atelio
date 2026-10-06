@@ -17,7 +17,7 @@ export { InterventionApiRepository } from "./repositories/intervention-api-repos
 export { OfferMockRepository } from "./mocks/offer-mock-repository";
 export { lookupVehicle } from "./mocks/vehicle-lookup";
 
-export { autoExpress, brands, garageDupont, getBrand } from "./brands";
+export { brands, getBrand, gmg78, sej } from "./brands";
 
 export type { AbsenceDto, DayScheduleDto, TeamMemberDto } from "./dto/team-dto";
 export { TeamApiRepository } from "./repositories/team-api-repository";

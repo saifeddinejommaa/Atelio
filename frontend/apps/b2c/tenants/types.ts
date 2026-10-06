@@ -5,7 +5,7 @@ import type { Brand } from "@atelio/core/domain";
 // partagée avec le back-office b2b. Ce fichier n'ajoute que ce qui est propre au site client.
 export type TenantConfig = Brand & {
   /**
-   * Domaines propres au client, sans "www." (ex. "auto-express.com").
+   * Domaines propres au client, sans "www." (ex. "mon-garage.fr").
    * Le site reste aussi accessible via <slug>.<TENANT_BASE_DOMAIN> et <domaine commun>/<slug>.
    */
   domains: string[];

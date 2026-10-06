@@ -1,13 +1,11 @@
 import { getBrand } from '@atelio/core/data'
 import type { Brand } from '@atelio/core/domain'
 
-// Chaque société ouvre le back-office sur son propre domaine, ex. https://pro.garage-dupont.fr.
-// En dev (ou sur un domaine commun), <slug>.<VITE_BRAND_BASE_DOMAIN> marche aussi : garage-dupont.localhost.
+// Chaque société ouvre le back-office sur son propre domaine, ex. https://pro.mon-garage.fr.
+// En dev (ou sur un domaine commun), <slug>.<VITE_BRAND_BASE_DOMAIN> marche aussi : gmg78.localhost, sej.localhost.
 // Pour une nouvelle société : ajouter son domaine ici (la marque elle-même est dans core, brands/).
-const domains: { slug: string; domain: string }[] = [
-  { slug: 'garage-dupont', domain: 'pro.garage-dupont.fr' },
-  { slug: 'auto-express', domain: 'pro.auto-express.com' },
-]
+// À compléter avec le domaine de chaque société, ex. { slug: 'gmg78', domain: 'pro.mon-garage.fr' }.
+const domains: { slug: string; domain: string }[] = []
 
 /** Marque correspondant au nom d'hôte, ou null si le domaine n'est pas reconnu. */
 export function resolveBrandByHost(hostname: string, baseDomain = import.meta.env.VITE_BRAND_BASE_DOMAIN): Brand | null {

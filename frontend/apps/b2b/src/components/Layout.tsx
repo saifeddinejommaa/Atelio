@@ -31,7 +31,7 @@ export default function Layout() {
     <div style={themeStyle(brand)} className="flex min-h-screen bg-muted font-sans text-foreground">
       <aside className="flex w-60 shrink-0 flex-col bg-primary px-4 py-6 text-on-primary">
         <div className="flex items-center gap-3 px-3">
-          <img src={brand.logo} alt="" className="h-9 w-9 rounded-brand" />
+          <img src={brand.logo} alt="" className="h-9 w-auto rounded-brand" />
           <div>
             <p className="font-extrabold leading-tight tracking-tight">{brand.name}</p>
             <p className="text-xs text-on-primary/70">Espace pro</p>

@@ -17,7 +17,7 @@ public class TenancyOptions
 
 public class TenantSettings
 {
-    /// <summary>Identifiant envoyé par le site dans l'en-tête X-Tenant (ex. "garage-dupont").</summary>
+    /// <summary>Identifiant envoyé par le site dans l'en-tête X-Tenant (ex. "gmg").</summary>
     public string Slug { get; set; } = null!;
 
     /// <summary>Nom de la base de la marque blanche (ex. "atelio_garage_dupont").</summary>

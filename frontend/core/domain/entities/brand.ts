@@ -22,13 +22,13 @@ export type BrandTheme = {
 
 /** Marque blanche. */
 export type Brand = {
-  /** Identifiant de la marque, ex. "garage-dupont". */
+  /** Identifiant de la marque, ex. "gmg78". */
   slug: string;
   /** Identifiant de la marque côté API (en-tête X-Tenant, voir Tenancy:Tenants de l'API). */
   apiTenant: string;
   /** Nom affiché partout. */
   name: string;
-  /** URL du logo (SVG ou PNG), ex. "/tenants/garage-dupont/logo.svg". */
+  /** URL du logo (SVG ou PNG), ex. "/tenants/gmg78/logo.svg". */
   logo: string;
   theme: BrandTheme;
   /** Mentions légales de la société (factures). */
@@ -37,7 +37,7 @@ export type Brand = {
 
 /** Mentions légales de la société, imprimées sur les factures. */
 export type BrandLegal = {
-  /** Raison sociale et forme juridique, ex. "Garage Dupont SAS". */
+  /** Raison sociale et forme juridique, ex. "Garage Martin SAS". */
   companyName: string;
   /** Adresse du siège. */
   address: string;

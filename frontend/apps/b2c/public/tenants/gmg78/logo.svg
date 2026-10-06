@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 940" role="img" aria-label="G.M.G.78">
+  <!-- Logo GMG78 redessiné en vectoriel d'après https://gmg78.com/images/logo.png -->
+  <rect width="1900" height="940" rx="48" fill="#2f86c8"/>
+
+  <!-- Silhouette de la voiture (blanc) -->
+  <g fill="none" stroke="#f5f5f2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M262 432 C226 352 330 280 560 222 C800 160 1060 128 1290 182 C1500 232 1700 300 1838 384" stroke-width="42"/>
+    <path d="M1040 236 C1120 260 1330 268 1560 296" stroke-width="22"/>
+    <path d="M590 238 C650 252 710 262 752 266" stroke-width="22"/>
+    <path d="M770 362 L828 420 L1248 410" stroke-width="18"/>
+  </g>
+
+  <!-- Accents (jaune) -->
+  <g fill="none" stroke="#f2e93a" stroke-linecap="round">
+    <path d="M388 406 C440 344 560 334 612 400" stroke-width="26"/>
+    <path d="M1412 384 C1470 308 1610 300 1660 364" stroke-width="26"/>
+    <path d="M676 322 L690 408" stroke-width="18"/>
+  </g>
+  <path d="M588 296 L1212 304 L668 330 Z" fill="#f2e93a"/>
+
+  <!-- Écusson GMG -->
+  <path d="M1280 306 L1345 286 L1410 306 L1404 368 C1394 398 1372 418 1345 432 C1318 418 1296 398 1286 368 Z"
+        fill="none" stroke="#f2e93a" stroke-width="9" stroke-linejoin="round"/>
+  <text x="1345" y="356" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="42"
+        font-weight="700" fill="#f2e93a">GMG</text>
+
+  <!-- Nom -->
+  <text x="950" y="896" text-anchor="middle" textLength="1830" lengthAdjust="spacingAndGlyphs"
+        font-family="'Arial Rounded MT Bold', Nunito, 'Varela Round', Arial, sans-serif" font-size="430"
+        font-weight="700" fill="#f2e93a">G.M.G.78</text>
+</svg>
