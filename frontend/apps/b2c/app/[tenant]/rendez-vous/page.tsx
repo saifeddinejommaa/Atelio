@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { formatPlate, isValidPlate } from "@atelio/core/domain";
 import BookingFlow from "@/components/booking/BookingFlow";
-import { getGarages } from "@/lib/garage/garage-queries";
-import { getServices } from "@/lib/garage-service/service-queries";
+import { getGarages } from "@/lib/garage/GarageQueries";
+import { getServices } from "@/lib/garageService/ServiceQueries";
 import { getSessionUser } from "@/lib/session";
 import { resolveTenant } from "@/lib/tenant";
-import { getSessionVehicles } from "@/lib/vehicle/vehicle-queries";
+import { getSessionVehicles } from "@/lib/vehicle/VehicleQueries";
 import { tenantPath } from "@/tenants";
 
 export const metadata: Metadata = { title: "Prendre rendez-vous" };

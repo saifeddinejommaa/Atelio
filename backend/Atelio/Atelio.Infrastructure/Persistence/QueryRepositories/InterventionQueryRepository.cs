@@ -1,3 +1,4 @@
+using Atelio.Application.Common;
 using Atelio.Application.Features.Interventions.Repositories;
 using Atelio.Application.Features.Interventions.Requests;
 using Atelio.Application.Features.Interventions.Responses;
@@ -11,6 +12,7 @@ namespace Atelio.Infrastructure.Persistence.QueryRepositories;
 public class InterventionQueryRepository : IInterventionQueryRepository
 {
     private readonly IDbConnection _connection;
+    private readonly ITenantContext _tenant;
 
     // Intervention avec client, véhicule, garage et rendez-vous d'origine.
     private const string InterventionSelect = $"""
@@ -114,8 +116,8 @@ public class InterventionQueryRepository : IInterventionQueryRepository
         ORDER BY s.name, sp.sort_order, sp.name
         """;
 
-    // Liste : référence du rendez-vous, client, véhicule, statut.
-    private const string SummarySelect = $"""
+    // Liste : référence du rendez-vous, client, véhicule, statut (filtres et pagination ajoutés à la suite).
+    private const string SummaryColumns = $"""
         SELECT
             i.id AS {nameof(InterventionSummaryResponse.Id)},
             a.reference AS {nameof(InterventionSummaryResponse.Reference)},
@@ -125,66 +127,112 @@ public class InterventionQueryRepository : IInterventionQueryRepository
             c.first_name AS {nameof(InterventionSummaryResponse.CustomerFirstName)},
             c.last_name AS {nameof(InterventionSummaryResponse.CustomerLastName)},
             v.plate AS {nameof(InterventionSummaryResponse.VehiclePlate)}
+        """;
+
+    private const string SummaryFrom = """
 
         FROM intervention i
         INNER JOIN customer c ON c.id = i.customer_id
         INNER JOIN vehicle v ON v.id = i.vehicle_id
         INNER JOIN intervention_status ist ON ist.id = i.status_id
         LEFT JOIN appointment a ON a.id = i.appointment_id
-
-        WHERE 1 = 1
         """;
 
-    public InterventionQueryRepository(IDbConnection connection)
+    public InterventionQueryRepository(IDbConnection connection, ITenantContext tenant)
     {
         _connection = connection;
+        _tenant = tenant;
     }
 
-    public async Task<IReadOnlyList<InterventionSummaryResponse>> GetInterventionsAsync(
+    public async Task<PagedResponse<InterventionSummaryResponse>> GetInterventionsAsync(
         InterventionsRequestFilter filter,
         CancellationToken cancellationToken = default)
     {
-        var sql = new StringBuilder(SummarySelect);
+        var where = new StringBuilder("""
+
+            WHERE 1 = 1
+            """);
         var parameters = new DynamicParameters();
 
         if (filter.GarageId.HasValue)
         {
-            sql.Append(" AND i.garage_id = @GarageId");
+            where.Append(" AND i.garage_id = @GarageId");
             parameters.Add("GarageId", filter.GarageId.Value);
         }
 
         if (filter.StatusId.HasValue)
         {
-            sql.Append(" AND i.status_id = @StatusId");
+            where.Append(" AND i.status_id = @StatusId");
             parameters.Add("StatusId", filter.StatusId.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(filter.Search))
+        // Client : « Dupont », « Jean Dupont » ou « Dupont Jean ».
+        if (!string.IsNullOrWhiteSpace(filter.Customer))
         {
-            // Référence du rendez-vous, n° d'intervention, ou nom / prénom du client.
-            sql.Append("""
+            where.Append("""
 
                 AND (
-                    a.reference ILIKE @Search
-                    OR i.id::text = @SearchExact
-                    OR c.last_name ILIKE @Search
-                    OR c.first_name ILIKE @Search
-                    OR (c.first_name || ' ' || c.last_name) ILIKE @Search
+                    (c.first_name || ' ' || c.last_name) ILIKE @Customer ESCAPE '\'
+                    OR (c.last_name || ' ' || c.first_name) ILIKE @Customer ESCAPE '\'
                 )
                 """);
-            parameters.Add("Search", $"%{filter.Search.Trim()}%");
-            parameters.Add("SearchExact", filter.Search.Trim().TrimStart('n', 'N', '°', ' '));
+            parameters.Add("Customer", $"%{EscapeLike(filter.Customer.Trim())}%");
         }
 
-        sql.Append("""
+        // Immatriculation : « AB-123 », « ab123 » ou « AB 123 » trouvent AB-123-CD.
+        var plate = Normalize(filter.Plate);
+        if (plate.Length > 0)
+        {
+            where.Append(" AND replace(replace(upper(v.plate), '-', ''), ' ', '') LIKE @Plate ESCAPE '\\'");
+            parameters.Add("Plate", $"%{EscapeLike(plate)}%");
+        }
 
-            ORDER BY i.started_at DESC NULLS LAST, i.id DESC
-            LIMIT 200
-            """);
+        // Jour de début, heure locale du garage : [jour 00:00, lendemain 00:00[ en UTC.
+        if (filter.Date is DateOnly day)
+        {
+            where.Append(" AND i.started_at >= @FromUtc AND i.started_at < @ToUtc");
+            parameters.Add("FromUtc", ToUtc(day));
+            parameters.Add("ToUtc", ToUtc(day.AddDays(1)));
+        }
 
-        return (await _connection.QueryAsync<InterventionSummaryResponse>(
-            new CommandDefinition(sql.ToString(), parameters, cancellationToken: cancellationToken))).ToList();
+        var page = Math.Max(1, filter.Page);
+        var pageSize = Math.Clamp(filter.PageSize, 1, InterventionsRequestFilter.MaxPageSize);
+        parameters.Add("Limit", pageSize);
+        parameters.Add("Offset", (page - 1) * pageSize);
+
+        var total = await _connection.ExecuteScalarAsync<int>(
+            new CommandDefinition($"SELECT count(*){SummaryFrom}{where}", parameters, cancellationToken: cancellationToken));
+
+        var items = await _connection.QueryAsync<InterventionSummaryResponse>(
+            new CommandDefinition(
+                $"""
+                {SummaryColumns}{SummaryFrom}{where}
+
+                ORDER BY i.started_at DESC NULLS LAST, i.id DESC
+                LIMIT @Limit OFFSET @Offset
+                """,
+                parameters,
+                cancellationToken: cancellationToken));
+
+        return new PagedResponse<InterventionSummaryResponse>
+        {
+            Items = items.ToList(),
+            Total = total,
+            Page = page,
+            PageSize = pageSize,
+        };
     }
+
+    private DateTime ToUtc(DateOnly localDay) =>
+        TimeZoneInfo.ConvertTimeToUtc(localDay.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), _tenant.TimeZone);
+
+    /// <summary>Immatriculation sans tirets ni espaces, en majuscules.</summary>
+    private static string Normalize(string? plate) =>
+        (plate ?? string.Empty).ToUpperInvariant().Replace("-", "").Replace(" ", "");
+
+    /// <summary>Caractères spéciaux de LIKE pris au pied de la lettre.</summary>
+    private static string EscapeLike(string value) =>
+        value.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
 
     public async Task<InterventionResponse?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {

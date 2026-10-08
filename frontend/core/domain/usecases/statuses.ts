@@ -1,8 +1,8 @@
 import type { AppointmentStatus, InterventionStatus, StatusOption } from "../entities/status";
-import type { StatusRepository } from "../repositories/status-repository";
+import type { IStatusRepository } from "../repositories/IStatusRepository";
 
 export class GetAppointmentStatuses {
-  constructor(private readonly repository: StatusRepository) {}
+  constructor(private readonly repository: IStatusRepository) {}
 
   execute(): Promise<StatusOption<AppointmentStatus>[]> {
     return this.repository.getAppointmentStatuses();
@@ -10,7 +10,7 @@ export class GetAppointmentStatuses {
 }
 
 export class GetInterventionStatuses {
-  constructor(private readonly repository: StatusRepository) {}
+  constructor(private readonly repository: IStatusRepository) {}
 
   execute(): Promise<StatusOption<InterventionStatus>[]> {
     return this.repository.getInterventionStatuses();

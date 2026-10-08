@@ -9,7 +9,7 @@ import {
 } from '@atelio/core/domain'
 import { useState } from 'react'
 import { useRevalidator } from 'react-router'
-import { useBrand } from '../../brand/use-brand'
+import { useBrand } from '../../brand/useBrand'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 

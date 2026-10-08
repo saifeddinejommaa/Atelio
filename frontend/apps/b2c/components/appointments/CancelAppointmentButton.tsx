@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Button from "@/components/ui/Button";
-import { cancelAppointment } from "@/lib/appointment/appointment-actions";
+import { cancelAppointment } from "@/lib/appointment/AppointmentActions";
 
 export default function CancelAppointmentButton({ tenant, reference }: { tenant: string; reference: string }) {
   const router = useRouter();

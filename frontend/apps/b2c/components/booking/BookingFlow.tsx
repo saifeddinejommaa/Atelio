@@ -7,9 +7,9 @@ import { computeQuote, garageOffers, isValidPlate, MAX_NOTES_LENGTH, type DayAva
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { confirmBooking, loadAvailability } from "@/lib/appointment/appointment-actions";
+import { confirmBooking, loadAvailability } from "@/lib/appointment/AppointmentActions";
 import type { Garage } from "@/lib/garage/garages";
-import type { Service } from "@/lib/garage-service/services";
+import type { Service } from "@/lib/garageService/services";
 import type { SessionUser } from "@/lib/session";
 import type { Vehicle } from "@/lib/vehicle/vehicles";
 import { tenantPath, type SiteTenant } from "@/tenants";

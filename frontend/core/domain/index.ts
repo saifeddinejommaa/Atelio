@@ -16,7 +16,7 @@ export {
   type StartCheck,
 } from "./entities/appointment";
 export type { Vehicle, VehicleCategory } from "./entities/vehicle";
-export type { CustomerVehicle, VehicleFuel } from "./entities/customer-vehicle";
+export type { CustomerVehicle, VehicleFuel } from "./entities/CustomerVehicle";
 export type { Offer } from "./entities/offer";
 export {
   AppointmentStatus,
@@ -26,7 +26,7 @@ export {
   type Status,
   type StatusOption,
 } from "./entities/status";
-export type { StatusRepository } from "./repositories/status-repository";
+export type { IStatusRepository } from "./repositories/IStatusRepository";
 export { GetAppointmentStatuses, GetInterventionStatuses } from "./usecases/statuses";
 export {
   interventionTotals,
@@ -49,33 +49,33 @@ export { formatPlate, isValidPlate, PLATE_PATTERN } from "./rules/plate";
 export { isValidPhone } from "./rules/phone";
 export { computeQuote, vehicleCategories, type Quote, type QuoteLine } from "./rules/quote";
 
-export type { ServiceRepository } from "./repositories/service-repository";
-export type { AvailabilityQuery, GarageFilter, GarageRepository, SlotCheckQuery } from "./repositories/garage-repository";
-export type { AppointmentFilter, AppointmentRepository } from "./repositories/appointment-repository";
-export type { CustomerRepository } from "./repositories/customer-repository";
-export type { OfferRepository } from "./repositories/offer-repository";
-export type { VehicleRepository } from "./repositories/vehicle-repository";
-export type { InterventionRepository } from "./repositories/intervention-repository";
+export type { IServiceRepository } from "./repositories/IServiceRepository";
+export type { AvailabilityQuery, GarageFilter, IGarageRepository, SlotCheckQuery } from "./repositories/IGarageRepository";
+export type { AppointmentFilter, IAppointmentRepository } from "./repositories/IAppointmentRepository";
+export type { ICustomerRepository } from "./repositories/ICustomerRepository";
+export type { IOfferRepository } from "./repositories/IOfferRepository";
+export type { IVehicleRepository } from "./repositories/IVehicleRepository";
+export type { IInterventionRepository } from "./repositories/IInterventionRepository";
 
-export { GetServices } from "./usecases/get-services";
-export { GetServiceByCode } from "./usecases/get-service-by-code";
-export { GetGarages } from "./usecases/get-garages";
-export { GetGarageAvailability } from "./usecases/get-garage-availability";
-export { BookAppointment, MAX_NOTES_LENGTH } from "./usecases/book-appointment";
-export { GetCustomerAppointments } from "./usecases/get-customer-appointments";
-export { CancelAppointment } from "./usecases/cancel-appointment";
-export { GetCustomerByEmail } from "./usecases/get-customer-by-email";
-export { GetActiveOffers } from "./usecases/get-active-offers";
-export { GetCustomerVehicles } from "./usecases/get-customer-vehicles";
-export { GetGarageAppointments } from "./usecases/get-garage-appointments";
-export { FindCustomersByPhone } from "./usecases/find-customers-by-phone";
-export { CreateCustomer } from "./usecases/create-customer";
+export { GetServices } from "./usecases/GetServices";
+export { GetServiceByCode } from "./usecases/GetServiceByCode";
+export { GetGarages } from "./usecases/GetGarages";
+export { GetGarageAvailability } from "./usecases/GetGarageAvailability";
+export { BookAppointment, MAX_NOTES_LENGTH } from "./usecases/BookAppointment";
+export { GetCustomerAppointments } from "./usecases/GetCustomerAppointments";
+export { CancelAppointment } from "./usecases/CancelAppointment";
+export { GetCustomerByEmail } from "./usecases/GetCustomerByEmail";
+export { GetActiveOffers } from "./usecases/GetActiveOffers";
+export { GetCustomerVehicles } from "./usecases/GetCustomerVehicles";
+export { GetGarageAppointments } from "./usecases/GetGarageAppointments";
+export { FindCustomersByPhone } from "./usecases/FindCustomersByPhone";
+export { CreateCustomer } from "./usecases/CreateCustomer";
 export {
   AbandonAppointment,
   CheckAppointmentStart,
   RescheduleAppointment,
   StartAppointment,
-} from "./usecases/garage-appointment-actions";
+} from "./usecases/GarageAppointmentActions";
 export {
   AddSparePart,
   AssignInterventionEmployee,
@@ -85,8 +85,8 @@ export {
   GetServiceCategories,
   UpdateServiceLabour,
   UpdateSparePart,
-} from "./usecases/get-intervention";
-export { CheckSlot, GetGarageCapacity, GetGarageMechanics } from "./usecases/garage-planning";
+} from "./usecases/GetIntervention";
+export { CheckSlot, GetGarageCapacity, GetGarageMechanics } from "./usecases/GaragePlanning";
 
 export {
   dayMinutes,
@@ -100,9 +100,10 @@ export {
   type NewAbsence,
   type TeamMember,
 } from "./entities/team";
-export type { TeamRepository } from "./repositories/team-repository";
+export type { ITeamRepository } from "./repositories/ITeamRepository";
 export { DeclareAbsence, DeleteAbsence, GetTeam, SaveEmployeeSchedule } from "./usecases/team";
 
 export type { Invoice, InvoiceLine } from "./entities/invoice";
-export type { InvoiceRepository } from "./repositories/invoice-repository";
+export { pageCount, type Page } from "./entities/page";
+export type { IInvoiceRepository } from "./repositories/IInvoiceRepository";
 export { FinishIntervention, GetInvoice, IssueInvoice, PayInvoice } from "./usecases/invoicing";

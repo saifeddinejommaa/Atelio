@@ -6,7 +6,7 @@ import CancelAppointmentButton from "@/components/appointments/CancelAppointment
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { getMyAppointments } from "@/lib/appointment/appointment-queries";
+import { getMyAppointments } from "@/lib/appointment/AppointmentQueries";
 import type { Appointment } from "@/lib/appointment/appointments";
 import { getSessionUser } from "@/lib/session";
 import { resolveTenant } from "@/lib/tenant";

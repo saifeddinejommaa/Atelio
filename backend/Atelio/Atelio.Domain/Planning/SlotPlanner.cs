@@ -44,6 +44,9 @@ public class SlotPlanner
 {
     public const int StepMinutes = 30;
 
+    /// <summary>Délai minimal entre maintenant et le début d'un rendez-vous (réservation ou déplacement).</summary>
+    public const int MinLeadMinutes = 180;
+
     private readonly Garage _garage;
     private readonly TimeZoneInfo _timeZone;
     private readonly IReadOnlyList<Mechanic> _mechanics;
@@ -72,9 +75,9 @@ public class SlotPlanner
         }
 
         var startUtc = ToUtc(localStart);
-        if (startUtc <= nowUtc)
+        if (startUtc < nowUtc.AddMinutes(MinLeadMinutes))
         {
-            return Refused("Ce créneau est déjà passé.");
+            return Refused($"Un rendez-vous se prend au moins {MinLeadMinutes / 60} h à l'avance.");
         }
 
         var plan = Plan(day);

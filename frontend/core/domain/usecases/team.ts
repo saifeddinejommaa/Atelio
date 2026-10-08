@@ -1,13 +1,13 @@
 import type { Absence, DaySchedule, NewAbsence, TeamMember } from "../entities/team";
 import { ValidationError } from "../errors";
-import type { TeamRepository } from "../repositories/team-repository";
+import type { ITeamRepository } from "../repositories/ITeamRepository";
 
 const dayNames = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
 const TIME = /^\d{2}:\d{2}$/;
 
 /** Équipe du garage sur une période (absences comprises). */
 export class GetTeam {
-  constructor(private readonly repository: TeamRepository) {}
+  constructor(private readonly repository: ITeamRepository) {}
 
   execute(garageId: number, from: string, to: string): Promise<TeamMember[]> {
     return this.repository.getTeam(garageId, from, to);
@@ -16,7 +16,7 @@ export class GetTeam {
 
 /** Enregistre le planning type : une journée par jour travaillé, avec une pause facultative. */
 export class SaveEmployeeSchedule {
-  constructor(private readonly repository: TeamRepository) {}
+  constructor(private readonly repository: ITeamRepository) {}
 
   async execute(employeeId: number, days: DaySchedule[]): Promise<DaySchedule[]> {
     for (const day of days) {
@@ -39,7 +39,7 @@ export class SaveEmployeeSchedule {
 
 /** Déclare une absence en jours entiers. */
 export class DeclareAbsence {
-  constructor(private readonly repository: TeamRepository) {}
+  constructor(private readonly repository: ITeamRepository) {}
 
   async execute(employeeId: number, absence: NewAbsence): Promise<Absence> {
     if (!absence.startDate || !absence.endDate) throw new ValidationError("Indiquez le premier et le dernier jour.");
@@ -49,7 +49,7 @@ export class DeclareAbsence {
 }
 
 export class DeleteAbsence {
-  constructor(private readonly repository: TeamRepository) {}
+  constructor(private readonly repository: ITeamRepository) {}
 
   execute(employeeId: number, absenceId: number): Promise<void> {
     return this.repository.deleteAbsence(employeeId, absenceId);

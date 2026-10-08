@@ -2,8 +2,8 @@ import { ApiError, InvoiceApiRepository } from '@atelio/core/data'
 import { FinishIntervention, InterventionStatus, IssueInvoice, PayInvoice, type Intervention, type PaymentMethod } from '@atelio/core/domain'
 import { useState } from 'react'
 import { Link, useRevalidator } from 'react-router'
-import { useBrand } from '../../brand/use-brand'
-import { paymentMethods } from './intervention-status'
+import { useBrand } from '../../brand/useBrand'
+import { paymentMethods } from './InterventionStatus'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 const dateTime = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })

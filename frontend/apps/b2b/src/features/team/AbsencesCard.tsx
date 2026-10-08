@@ -1,8 +1,8 @@
 import { ApiError, TeamApiRepository } from '@atelio/core/data'
 import { DeclareAbsence, DeleteAbsence, ValidationError, type AbsenceReason, type TeamMember } from '@atelio/core/domain'
 import { useState, type FormEvent } from 'react'
-import { useBrand } from '../../brand/use-brand'
-import { formatDay, isoDate, reasonLabels } from './team-labels'
+import { useBrand } from '../../brand/useBrand'
+import { formatDay, isoDate, reasonLabels } from './TeamLabels'
 
 function errorText(err: unknown): string {
   return err instanceof ValidationError || (err instanceof ApiError && err.status < 500) ? err.message : "L'action a échoué, réessayez."

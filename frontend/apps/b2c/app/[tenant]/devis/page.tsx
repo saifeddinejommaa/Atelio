@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import QuoteBuilder from "@/components/quote/QuoteBuilder";
-import { getServices } from "@/lib/garage-service/service-queries";
+import { getServices } from "@/lib/garageService/ServiceQueries";
 import { resolveTenant } from "@/lib/tenant";
 
 export const metadata: Metadata = { title: "Devis en ligne" };

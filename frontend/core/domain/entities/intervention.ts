@@ -125,8 +125,15 @@ export type InterventionSummary = {
 export type InterventionFilter = {
   garageId: number;
   statusId?: InterventionStatus;
-  /** Référence, n° d'intervention, nom ou prénom du client. */
-  search?: string;
+  /** Nom et/ou prénom du client (recherche partielle). */
+  customer?: string;
+  /** Immatriculation, partielle (tirets et espaces ignorés). */
+  plate?: string;
+  /** Jour de début de l'intervention, heure locale du garage, "2026-10-06". */
+  date?: string;
+  /** Page demandée, à partir de 1. */
+  page?: number;
+  pageSize?: number;
 };
 
 export type PaymentMethod = "card" | "cash" | "transfer" | "check";

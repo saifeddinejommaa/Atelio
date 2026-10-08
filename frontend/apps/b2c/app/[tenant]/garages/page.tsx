@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import GarageFinder from "@/components/garages/GarageFinder";
-import { getServices } from "@/lib/garage-service/service-queries";
-import { getGarages } from "@/lib/garage/garage-queries";
+import { getServices } from "@/lib/garageService/ServiceQueries";
+import { getGarages } from "@/lib/garage/GarageQueries";
 import { resolveTenant } from "@/lib/tenant";
 
 export const metadata: Metadata = { title: "Trouver un garage" };

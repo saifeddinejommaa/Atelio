@@ -2,10 +2,10 @@ import type { Appointment } from '@atelio/core/domain'
 import type { CalendarRef } from '@fullcalendar/react'
 import { useEffect, useRef, useState } from 'react'
 import { useLoaderData } from 'react-router'
-import { useCurrentGarage } from '../../garage/use-current-garage'
+import { useCurrentGarage } from '../../garage/useCurrentGarage'
 import AppointmentDetailPanel from './AppointmentDetailPanel'
-import { calendarLegend } from './appointment-status'
-import type { AppointmentsData } from './appointments-loader'
+import { calendarLegend, LOCKED_BACKGROUND, MIN_LEAD_HOURS } from './AppointmentStatus'
+import type { AppointmentsData } from './AppointmentsLoader'
 import AppointmentsCalendar from './AppointmentsCalendar'
 import NewAppointmentPanel from './NewAppointmentPanel'
 
@@ -13,7 +13,10 @@ export default function AppointmentsPage() {
   const garage = useCurrentGarage()
   const { services: allServices, appointmentStatuses, interventionStatuses } = useLoaderData<AppointmentsData>()
   const services = allServices.filter((s) => garage.serviceCodes.includes(s.code))
-  const legend = calendarLegend(appointmentStatuses, interventionStatuses)
+  const legend = [
+    ...calendarLegend(appointmentStatuses, interventionStatuses),
+    { label: `Plus réservable (moins de ${MIN_LEAD_HOURS} h)`, color: LOCKED_BACKGROUND },
+  ]
   const calendarRef = useRef<CalendarRef>(null)
   // Créneau cliqué : ouvre le panneau de création.
   const [newStart, setNewStart] = useState<Date | null>(null)
@@ -47,7 +50,10 @@ export default function AppointmentsPage() {
         <ul className="flex flex-wrap gap-3 text-xs text-zinc-600">
           {legend.map((s) => (
             <li key={s.label} className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: s.color }} />
+              <span
+                className={`h-3 w-3 rounded-sm ${s.color === LOCKED_BACKGROUND ? 'ring-1 ring-inset ring-zinc-300' : ''}`}
+                style={{ background: s.color }}
+              />
               {s.label}
             </li>
           ))}

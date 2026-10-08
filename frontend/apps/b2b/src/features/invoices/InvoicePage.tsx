@@ -1,7 +1,7 @@
 import { InvoiceStatus, VAT_RATE, type Invoice, type InvoiceLine } from '@atelio/core/domain'
 import { Link, useLoaderData } from 'react-router'
-import { useBrand } from '../../brand/use-brand'
-import { paymentMethods } from '../interventions/intervention-status'
+import { useBrand } from '../../brand/useBrand'
+import { paymentMethods } from '../interventions/InterventionStatus'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 const qty = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })

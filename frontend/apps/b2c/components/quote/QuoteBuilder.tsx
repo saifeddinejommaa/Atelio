@@ -7,7 +7,7 @@ import { computeQuote, formatPlate, vehicleCategories, type Vehicle, type Vehicl
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import type { Service } from "@/lib/garage-service/services";
+import type { Service } from "@/lib/garageService/services";
 import { tenantPath, type SiteTenant } from "@/tenants";
 
 // Prestation sans prix « à partir de » : comptée à 0, à chiffrer par le garage.

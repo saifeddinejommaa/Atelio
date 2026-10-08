@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import LoginForm from "@/components/LoginForm";
 import Card from "@/components/ui/Card";
-import { safeRedirect } from "@/lib/safe-redirect";
+import { safeRedirect } from "@/lib/SafeRedirect";
 import { getSessionUser } from "@/lib/session";
 import { resolveTenant } from "@/lib/tenant";
 import { tenantPath } from "@/tenants";

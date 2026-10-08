@@ -1,9 +1,9 @@
 import { memberDay, weeklyHours, type TeamMember } from '@atelio/core/domain'
 import { useState } from 'react'
-import { useCurrentGarage } from '../../garage/use-current-garage'
+import { useCurrentGarage } from '../../garage/useCurrentGarage'
 import EditEmployeePanel from './EditEmployeePanel'
-import { addDays, dayLabels, formatDay, isoDate, mondayOf, reasonLabels, roleLabels } from './team-labels'
-import { useTeam } from './use-team'
+import { addDays, dayLabels, formatDay, isoDate, mondayOf, reasonLabels, roleLabels } from './TeamLabels'
+import { useTeam } from './useTeam'
 
 /** Équipes : une carte dépliable par employé, avec sa semaine jour par jour. */
 export default function TeamPage() {

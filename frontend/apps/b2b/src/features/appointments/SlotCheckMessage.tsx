@@ -1,4 +1,4 @@
-import type { SlotCheckState } from './use-slot-check'
+import type { SlotCheckState } from './useSlotCheck'
 
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 

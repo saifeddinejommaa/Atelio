@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import type { Service } from "@/lib/garage-service/services";
+import type { Service } from "@/lib/garageService/services";
 import { tenantPath, type SiteTenant } from "@/tenants";
 
 export default function Footer({ tenant, services }: { tenant: SiteTenant; services: Service[] }) {
