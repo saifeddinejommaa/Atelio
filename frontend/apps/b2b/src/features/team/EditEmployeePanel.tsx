@@ -2,8 +2,8 @@ import { useState } from 'react'
 import SidePanel from '../../components/SidePanel'
 import AbsencesCard from './AbsencesCard'
 import ScheduleCard from './ScheduleCard'
-import { addDays, isoDate, roleLabels } from './team-labels'
-import { useTeam } from './use-team'
+import { addDays, isoDate, roleLabels } from './TeamLabels'
+import { useTeam } from './useTeam'
 
 type Tab = 'schedule' | 'absences'
 

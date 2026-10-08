@@ -10,7 +10,7 @@ import {
 } from '@atelio/core/domain'
 import { useState, type FormEvent } from 'react'
 import { useRevalidator } from 'react-router'
-import { useBrand } from '../../brand/use-brand'
+import { useBrand } from '../../brand/useBrand'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 const qty = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })

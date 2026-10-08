@@ -2,7 +2,7 @@ import { ApiError, AppointmentApiRepository } from '@atelio/core/data'
 import { CheckAppointmentStart, StartAppointment, ValidationError, type Appointment, type StartCheck } from '@atelio/core/domain'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useBrand } from '../../brand/use-brand'
+import { useBrand } from '../../brand/useBrand'
 
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 

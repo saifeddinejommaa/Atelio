@@ -1,7 +1,7 @@
 import { InvoiceStatus, VAT_RATE, type Invoice, type InvoiceLine } from '@atelio/core/domain'
 import { Link, useLoaderData } from 'react-router'
-import { useBrand } from '../../brand/use-brand'
-import { paymentMethods } from '../interventions/intervention-status'
+import { useBrand } from '../../brand/useBrand'
+import { paymentMethods } from '../interventions/InterventionStatus'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 const qty = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
@@ -42,7 +42,7 @@ export default function InvoicePage() {
       <article className="invoice mx-auto max-w-[210mm] bg-white p-10 text-sm text-zinc-800 shadow-sm">
         <header className="flex items-start justify-between gap-6">
           <div className="flex items-start gap-3">
-            <img src={brand.logo} alt="" className="h-12 w-12" />
+            <img src={brand.logo} alt="" className="h-12 w-auto" />
             <div>
               <p className="text-base font-bold">{brand.legal.companyName}</p>
               <p className="text-zinc-600">{brand.legal.address}</p>

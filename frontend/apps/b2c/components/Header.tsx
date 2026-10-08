@@ -5,8 +5,8 @@ import { useState } from "react";
 import Icon from "@/components/Icon";
 import Logo from "@/components/Logo";
 import Button from "@/components/ui/Button";
-import { logout } from "@/lib/auth-actions";
-import { priceLabel, type Service } from "@/lib/garage-service/services";
+import { logout } from "@/lib/AuthActions";
+import { priceLabel, type Service } from "@/lib/garageService/services";
 import type { SessionUser } from "@/lib/session";
 import { tenantPath, type SiteTenant } from "@/tenants";
 

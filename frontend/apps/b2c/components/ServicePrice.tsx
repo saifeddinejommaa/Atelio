@@ -1,4 +1,4 @@
-import { formatEuro, priceLabel, type Service } from "@/lib/garage-service/services";
+import { formatEuro, priceLabel, type Service } from "@/lib/garageService/services";
 
 /** Prix d'un service : « à partir de 71,20 € », avec l'ancien prix barré et la remise s'il y a une promotion. */
 export default function ServicePrice({ service, size = "text-xl" }: { service: Service; size?: string }) {

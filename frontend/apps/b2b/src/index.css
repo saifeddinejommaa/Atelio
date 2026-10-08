@@ -48,17 +48,27 @@ body {
 }
 
 /*
- * Rendez-vous : 70 % de la place, pour laisser visible et cliquable le fond de capacité
- * (« 1 place libre sur 2 ») quand d'autres mécaniciens sont libres sur le créneau.
+ * Rendez-vous côte à côte (slotEventOverlap désactivé). Une bande reste libre à droite du créneau,
+ * cliquable pour ajouter un rendez-vous quand d'autres mécaniciens sont libres.
  * Le conteneur posé par FullCalendar laisse passer les clics ; seul le rendez-vous les capte.
  */
 .brand-calendar :has(> .appointment-event) {
   pointer-events: none;
 }
 
+/* Carte claire : fond teinté et bordure gauche de la couleur du statut, texte foncé de la même teinte. */
 .brand-calendar .appointment-event {
   pointer-events: auto;
-  margin-inline-end: 30%;
+  margin-inline-end: 12%;
+  background: color-mix(in srgb, var(--fc-event-color) 16%, white);
+  border: 0;
+  border-inline-start: 3px solid var(--fc-event-color);
+  border-radius: 2px;
+  color: color-mix(in srgb, var(--fc-event-color) 60%, black);
+}
+
+.brand-calendar .appointment-event * {
+  color: inherit;
 }
 
 /* Impression (facture) : seul le contenu de la page, sans menu ni boutons. */
@@ -82,4 +92,19 @@ body {
     max-width: none !important;
     padding: 0 !important;
   }
+}
+
+/* Créneaux plus réservables (passés ou trop proches) : hachures gris très clair. Partagé avec la légende. */
+:root {
+  --slot-locked: repeating-linear-gradient(135deg, #e4e4e7 0 2px, #f8f8f9 2px 8px);
+}
+
+.brand-calendar .slot-locked {
+  background: var(--slot-locked) !important;
+  opacity: 1 !important;
+}
+
+/* Vue jour : pas de teinte sur la colonne du jour courant (toute la journée affichée est blanche). */
+.brand-calendar .calendar-day-view {
+  --fc-classic-today: transparent;
 }

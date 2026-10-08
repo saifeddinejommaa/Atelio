@@ -1,8 +1,8 @@
 import { ApiError, TeamApiRepository } from '@atelio/core/data'
 import { dayMinutes, SaveEmployeeSchedule, ValidationError, type DaySchedule, type TeamMember } from '@atelio/core/domain'
 import { useState } from 'react'
-import { useBrand } from '../../brand/use-brand'
-import { dayLabels } from './team-labels'
+import { useBrand } from '../../brand/useBrand'
+import { dayLabels } from './TeamLabels'
 
 type Row = { works: boolean; start: string; breakStart: string; breakEnd: string; end: string }
 

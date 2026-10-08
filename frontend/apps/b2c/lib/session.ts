@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { findMockUserByEmail } from "@/lib/mock-users";
+import { findMockUserByEmail } from "@/lib/MockUsers";
 
 // Session de démonstration en attendant l'authentification de l'API .NET :
 // l'e-mail du compte est stocké dans un cookie propre à chaque marque blanche.

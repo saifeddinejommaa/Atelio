@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { getServiceBySlug, getServices } from "@/lib/garage-service/service-queries";
-import { formatEuro, priceLabel } from "@/lib/garage-service/services";
+import { getServiceBySlug, getServices } from "@/lib/garageService/ServiceQueries";
+import { formatEuro, priceLabel } from "@/lib/garageService/services";
 import { resolveTenant } from "@/lib/tenant";
 import { tenantPath } from "@/tenants";
 

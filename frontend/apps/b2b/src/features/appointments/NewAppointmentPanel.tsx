@@ -13,10 +13,10 @@ import {
   type Service,
 } from '@atelio/core/domain'
 import { useState, type FormEvent } from 'react'
-import { useBrand } from '../../brand/use-brand'
+import { useBrand } from '../../brand/useBrand'
 import SidePanel from '../../components/SidePanel'
 import SlotCheckMessage from './SlotCheckMessage'
-import { useSlotCheck } from './use-slot-check'
+import { useSlotCheck } from './useSlotCheck'
 
 const startFormat = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
 

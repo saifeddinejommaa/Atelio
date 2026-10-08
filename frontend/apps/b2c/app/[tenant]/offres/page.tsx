@@ -3,8 +3,8 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { getActiveOffers } from "@/lib/offer/offer-queries";
-import { getServices } from "@/lib/garage-service/service-queries";
+import { getActiveOffers } from "@/lib/offer/OfferQueries";
+import { getServices } from "@/lib/garageService/ServiceQueries";
 import { resolveTenant } from "@/lib/tenant";
 import { tenantPath } from "@/tenants";
 

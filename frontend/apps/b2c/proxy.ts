@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getTenantByHost, TENANT_BASE_HEADER } from "@/tenants";
 
-// Accès à un client par son domaine (auto-express.com) ou un sous-domaine
-// (auto-express.<TENANT_BASE_DOMAIN>) : on réécrit l'URL vers /<slug>/... sans
+// Accès à un client par son domaine (mon-garage.fr) ou un sous-domaine
+// (sej.<TENANT_BASE_DOMAIN>) : on réécrit l'URL vers /<slug>/... sans
 // changer ce que voit le visiteur. Sur le domaine commun, l'accès /<slug>/... reste possible.
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";

@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Button from "@/components/ui/Button";
-import { login } from "@/lib/auth-actions";
+import { login } from "@/lib/AuthActions";
 
 export default function LoginForm({ tenant, redirectTo }: { tenant: string; redirectTo: string }) {
   const [state, action, pending] = useActionState(login, null);

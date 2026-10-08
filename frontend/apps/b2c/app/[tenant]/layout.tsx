@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { fonts } from "@/lib/fonts";
-import { getServices } from "@/lib/garage-service/service-queries";
+import { getServices } from "@/lib/garageService/ServiceQueries";
 import { getSessionUser } from "@/lib/session";
 import { resolveTenant } from "@/lib/tenant";
 import { getTenant } from "@/tenants";

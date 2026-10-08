@@ -21,8 +21,8 @@ public class InterventionsController : ControllerBase
     }
 
     /// <summary>
-    /// Interventions du garage, des plus récentes aux plus anciennes (200 au plus).
-    /// Ex. : GET /api/interventions?garageId=2&amp;statusId=2&amp;search=dupont
+    /// Interventions du garage, des plus récentes aux plus anciennes, par pages (total inclus).
+    /// Page de 20 : GET /api/interventions?garageId=2&amp;statusId=2&amp;customer=dupont&amp;plate=AB123&amp;date=2026-10-06&amp;page=1
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] InterventionsRequestFilter filter, CancellationToken cancellationToken)

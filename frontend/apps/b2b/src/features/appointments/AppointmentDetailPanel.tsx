@@ -14,12 +14,12 @@ import {
 } from '@atelio/core/domain'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { useBrand } from '../../brand/use-brand'
+import { useBrand } from '../../brand/useBrand'
 import SidePanel from '../../components/SidePanel'
 import SlotCheckMessage from './SlotCheckMessage'
 import StartAppointmentForm from './StartAppointmentForm'
-import { useSlotCheck } from './use-slot-check'
-import { displayColors } from './appointment-status'
+import { useSlotCheck } from './useSlotCheck'
+import { displayColors } from './AppointmentStatus'
 
 const dayFormat = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 const timeFormat = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })

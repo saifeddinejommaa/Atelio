@@ -5,7 +5,7 @@ namespace Atelio.Api.Middleware;
 
 /// <summary>
 /// Sélectionne la base de la marque blanche à partir de l'en-tête X-Tenant
-/// (ex. "X-Tenant: garage-dupont"), envoyé par le site à chaque appel.
+/// (ex. "X-Tenant: gmg"), envoyé par le site à chaque appel.
 /// </summary>
 public class TenantMiddleware
 {

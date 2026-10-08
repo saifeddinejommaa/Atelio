@@ -1,4 +1,4 @@
-import type { IconName } from "@/lib/garage-service/services";
+import type { IconName } from "@/lib/garageService/services";
 
 type Name =
   | IconName

@@ -1,26 +1,27 @@
-export { ApiClient, ApiError, type ApiConfig, type QueryParams } from "./http/api-client";
+export { ApiClient, ApiError, type ApiConfig, type QueryParams } from "./http/ApiClient";
 
-export type { ServiceDto } from "./dto/service-dto";
-export type { CapacityPeriodDto, DayAvailabilityDto, GarageDto, MechanicDto, SlotCheckDto } from "./dto/garage-dto";
-export type { AppointmentCreatedDto, AppointmentDto, CreateAppointmentDto, StartCheckDto } from "./dto/appointment-dto";
-export type { CustomerDto } from "./dto/customer-dto";
-export type { VehicleDto } from "./dto/vehicle-dto";
-export type { InterventionDto, InterventionSummaryDto } from "./dto/intervention-dto";
+export type { ServiceDto } from "./dto/ServiceDto";
+export type { CapacityPeriodDto, DayAvailabilityDto, GarageDto, MechanicDto, SlotCheckDto } from "./dto/GarageDto";
+export type { AppointmentCreatedDto, AppointmentDto, CreateAppointmentDto, StartCheckDto } from "./dto/AppointmentDto";
+export type { CustomerDto } from "./dto/CustomerDto";
+export type { VehicleDto } from "./dto/VehicleDto";
+export type { InterventionDto, InterventionSummaryDto } from "./dto/InterventionDto";
 
-export { ServiceApiRepository } from "./repositories/service-api-repository";
-export { GarageApiRepository } from "./repositories/garage-api-repository";
-export { AppointmentApiRepository } from "./repositories/appointment-api-repository";
-export { CustomerApiRepository } from "./repositories/customer-api-repository";
-export { VehicleApiRepository } from "./repositories/vehicle-api-repository";
-export { InterventionApiRepository } from "./repositories/intervention-api-repository";
+export { ServiceApiRepository } from "./repositories/ServiceApiRepository";
+export { GarageApiRepository } from "./repositories/GarageApiRepository";
+export { AppointmentApiRepository } from "./repositories/AppointmentApiRepository";
+export { CustomerApiRepository } from "./repositories/CustomerApiRepository";
+export { VehicleApiRepository } from "./repositories/VehicleApiRepository";
+export { InterventionApiRepository } from "./repositories/InterventionApiRepository";
 
-export { OfferMockRepository } from "./mocks/offer-mock-repository";
-export { lookupVehicle } from "./mocks/vehicle-lookup";
+export { OfferMockRepository } from "./mocks/OfferMockRepository";
+export { lookupVehicle } from "./mocks/VehicleLookup";
 
-export { autoExpress, brands, garageDupont, getBrand } from "./brands";
+export { brands, getBrand, gmg78, sej } from "./brands";
 
-export type { AbsenceDto, DayScheduleDto, TeamMemberDto } from "./dto/team-dto";
-export { TeamApiRepository } from "./repositories/team-api-repository";
-export { InvoiceApiRepository, type InvoiceDto } from "./repositories/invoice-api-repository";
-export type { StatusDto } from "./dto/status-dto";
-export { StatusApiRepository } from "./repositories/status-api-repository";
+export type { AbsenceDto, DayScheduleDto, TeamMemberDto } from "./dto/TeamDto";
+export { TeamApiRepository } from "./repositories/TeamApiRepository";
+export { InvoiceApiRepository, type InvoiceDto } from "./repositories/InvoiceApiRepository";
+export type { StatusDto } from "./dto/StatusDto";
+export type { PageDto } from "./dto/PageDto";
+export { StatusApiRepository } from "./repositories/StatusApiRepository";

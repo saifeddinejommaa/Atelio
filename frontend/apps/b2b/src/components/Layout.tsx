@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLoaderData } from 'react-router'
-import { applyBrandToDocument, themeStyle } from '../brand/brand-theme'
-import { useBrand } from '../brand/use-brand'
+import { applyBrandToDocument, themeStyle } from '../brand/BrandTheme'
+import { useBrand } from '../brand/useBrand'
 import GarageSwitcher from '../garage/GarageSwitcher'
-import type { GaragesData } from '../garage/garages-loader'
-import type { CurrentGarageContext } from '../garage/use-current-garage'
+import type { GaragesData } from '../garage/GaragesLoader'
+import type { CurrentGarageContext } from '../garage/useCurrentGarage'
 
 const links = [
   { to: '/rendez-vous', label: 'Rendez-vous' },
@@ -29,9 +29,10 @@ export default function Layout() {
 
   return (
     <div style={themeStyle(brand)} className="flex min-h-screen bg-muted font-sans text-foreground">
-      <aside className="flex w-60 shrink-0 flex-col bg-primary px-4 py-6 text-on-primary">
+      {/* Menu fixe à l'écran : seul le contenu de la page défile. */}
+      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col overflow-y-auto bg-primary px-4 py-6 text-on-primary">
         <div className="flex items-center gap-3 px-3">
-          <img src={brand.logo} alt="" className="h-9 w-9 rounded-brand" />
+          <img src={brand.logo} alt="" className="h-9 w-auto rounded-brand" />
           <div>
             <p className="font-extrabold leading-tight tracking-tight">{brand.name}</p>
             <p className="text-xs text-on-primary/70">Espace pro</p>
