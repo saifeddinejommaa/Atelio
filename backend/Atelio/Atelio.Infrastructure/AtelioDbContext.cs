@@ -18,6 +18,7 @@ public class AtelioDbContext : DbContext
     }
 
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerLoginCode> CustomerLoginCodes => Set<CustomerLoginCode>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<Garage> Garages => Set<Garage>();
     public DbSet<Employee> Employees => Set<Employee>();
@@ -31,10 +32,15 @@ public class AtelioDbContext : DbContext
     public DbSet<Intervention> Interventions => Set<Intervention>();
     public DbSet<InterventionService> InterventionServices => Set<InterventionService>();
     public DbSet<SparePart> SpareParts => Set<SparePart>();
+    public DbSet<Article> Articles => Set<Article>();
+    public DbSet<Quote> Quotes => Set<Quote>();
+    public DbSet<QuoteLine> QuoteLines => Set<QuoteLine>();
+    public DbSet<InterventionArticle> InterventionArticles => Set<InterventionArticle>();
     public DbSet<ServicePart> ServiceParts => Set<ServicePart>();
     public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<InvoiceDocument> InvoiceDocuments => Set<InvoiceDocument>();
     public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
     public DbSet<AppointmentStatusLookup> AppointmentStatuses => Set<AppointmentStatusLookup>();
     public DbSet<InterventionStatusLookup> InterventionStatuses => Set<InterventionStatusLookup>();
@@ -51,6 +57,7 @@ public class AtelioDbContext : DbContext
         configurationBuilder.Properties<Domain.Enums.AbsenceReason>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.AbsenceReason>>();
         configurationBuilder.Properties<Domain.Enums.VehicleFuel>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.VehicleFuel>>();
         configurationBuilder.Properties<Domain.Enums.VehicleCategory>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.VehicleCategory>>();
+        configurationBuilder.Properties<Domain.Enums.VehicleGearbox>().HaveConversion<SnakeCaseEnumConverter<Domain.Enums.VehicleGearbox>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -83,6 +90,16 @@ public class AtelioDbContext : DbContext
 
         modelBuilder.Entity<Intervention>()
             .HasMany(x => x.SpareParts)
+            .WithOne()
+            .HasForeignKey(x => x.InterventionId);
+
+        modelBuilder.Entity<Quote>()
+            .HasMany(x => x.Lines)
+            .WithOne()
+            .HasForeignKey(x => x.QuoteId);
+
+        modelBuilder.Entity<Intervention>()
+            .HasMany(x => x.Articles)
             .WithOne()
             .HasForeignKey(x => x.InterventionId);
     }

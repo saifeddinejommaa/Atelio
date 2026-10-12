@@ -2,9 +2,11 @@ using Atelio.Api.Middleware;
 using Atelio.Application;
 using Atelio.Application.Common;
 using Atelio.Infrastructure;
+using Atelio.Infrastructure.Auth;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi;
 using System.Text.Json.Serialization;
 
@@ -70,6 +72,24 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Appli
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPipelineBehavior<,>));
 
 // ============================================================
+// Authentification des clients b2c (jeton émis par /api/auth/customer)
+// ============================================================
+
+var customerAuth = builder.Configuration.GetSection(CustomerAuthOptions.SectionName).Get<CustomerAuthOptions>()
+    ?? throw new InvalidOperationException("Section CustomerAuth manquante dans la configuration.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // Claims gardés tels quels (cid, tenant).
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = CustomerTokenService.ValidationParameters(customerAuth.SigningKey, CustomerClaims.SessionAudience);
+    });
+
+builder.Services.AddAuthorization(options => options.AddPolicy(CustomerAuthPolicy.Name, CustomerAuthPolicy.Configure));
+
+// ============================================================
 // CORS
 // ============================================================
 
@@ -103,6 +123,7 @@ app.UseMiddleware<TenantMiddleware>();
 
 app.UseMiddleware<ApiResponseMiddleware>();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -6,6 +6,8 @@ export type ApiConfig = {
   baseUrl: string;
   /** Identifiant de la marque côté API (en-tête X-Tenant). */
   tenant: string;
+  /** Jeton de session du client connecté (en-tête Authorization), pour les routes /me. */
+  token?: string;
 };
 
 /** Paramètres de query string. Un tableau donne un paramètre répété (?id=1&id=2). */
@@ -33,6 +35,14 @@ export class ApiClient {
     return this.read<T>(res, path);
   }
 
+  /** Fichier (ex. PDF) renvoyé tel quel par l'API. Renvoie null s'il n'existe pas (404). */
+  async getFile(path: string, query?: QueryParams): Promise<Blob | null> {
+    const res = await this.send("GET", path, query);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new ApiError(res.status, `Erreur API ${res.status} sur ${path}`);
+    return res.blob();
+  }
+
   /** POST sur l'API. Renvoie null si l'API ne renvoie pas de contenu (204). */
   async post<T>(path: string, body: unknown): Promise<T | null> {
     return this.read<T>(await this.send("POST", path, undefined, body), path);
@@ -51,6 +61,7 @@ export class ApiClient {
   private send(method: string, path: string, query?: QueryParams, body?: unknown): Promise<Response> {
     const headers: Record<string, string> = { "X-Tenant": this.config.tenant, Accept: "application/json" };
     if (body !== undefined) headers["Content-Type"] = "application/json";
+    if (this.config.token) headers.Authorization = `Bearer ${this.config.token}`;
 
     return fetch(this.url(path, query), {
       method,

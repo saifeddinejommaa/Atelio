@@ -9,6 +9,13 @@ import ErrorPage from './components/ErrorPage.tsx'
 import Layout from './components/Layout.tsx'
 import UnknownSitePage from './components/UnknownSitePage.tsx'
 import AppointmentsPage from './features/appointments/AppointmentsPage.tsx'
+import { articlesLoader } from './features/articles/ArticlesLoader'
+import ArticlesPage from './features/articles/ArticlesPage.tsx'
+import { customerLoader } from './features/customers/CustomerLoader'
+import CustomerPage from './features/customers/CustomerPage.tsx'
+import CustomersPage from './features/customers/CustomersPage.tsx'
+import { quoteLoader } from './features/quotes/QuoteLoader'
+import QuotePage from './features/quotes/QuotePage.tsx'
 import TeamPage from './features/team/TeamPage.tsx'
 import { appointmentsLoader } from './features/appointments/AppointmentsLoader'
 import { interventionLoader } from './features/interventions/InterventionLoader'
@@ -17,6 +24,7 @@ import InterventionsPage from './features/interventions/InterventionsPage.tsx'
 import InterventionPage from './features/interventions/InterventionPage.tsx'
 import { invoiceLoader } from './features/invoices/InvoiceLoader'
 import InvoicePage from './features/invoices/InvoicePage.tsx'
+import InvoicesPage from './features/invoices/InvoicesPage.tsx'
 import { garagesLoader } from './garage/GaragesLoader'
 import { apiClientFor } from './lib/api.ts'
 import './index.css'
@@ -36,7 +44,12 @@ function createRouter(api: ApiClient) {
             { path: 'rendez-vous', element: <AppointmentsPage />, loader: appointmentsLoader(api) },
             { path: 'interventions', element: <InterventionsPage />, loader: interventionStatusesLoader(api) },
             { path: 'interventions/:id', element: <InterventionPage />, loader: interventionLoader(api) },
+            { path: 'factures', element: <InvoicesPage /> },
             { path: 'factures/:id', element: <InvoicePage />, loader: invoiceLoader(api) },
+            { path: 'clients', element: <CustomersPage /> },
+            { path: 'clients/:id', element: <CustomerPage />, loader: customerLoader(api) },
+            { path: 'devis/:id', element: <QuotePage />, loader: quoteLoader(api) },
+            { path: 'articles', element: <ArticlesPage />, loader: articlesLoader(api) },
             { path: 'equipes', element: <TeamPage /> },
             { path: '*', element: <ErrorPage /> },
           ],

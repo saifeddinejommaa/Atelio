@@ -1,4 +1,5 @@
 using Atelio.Domain.Entities;
+using Atelio.Domain.Enums;
 using Atelio.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,9 @@ public class InvoiceRepository : Repository<Invoice>, IInvoiceRepository
         : base(context)
     {
     }
+
+    public Task<Invoice?> GetWithLinesAsync(long id, CancellationToken cancellationToken = default) =>
+        DbSet.Include(i => i.Lines).FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
 
     public Task<Invoice?> GetByInterventionAsync(long interventionId, CancellationToken cancellationToken = default) =>
         DbSet.FirstOrDefaultAsync(i => i.InterventionId == interventionId, cancellationToken);
@@ -40,4 +44,21 @@ public class PaymentRepository : Repository<Payment>, IPaymentRepository
         : base(context)
     {
     }
+
+    public Task<List<Payment>> GetSucceededAsync(long invoiceId, CancellationToken cancellationToken = default) =>
+        DbSet.Where(p => p.InvoiceId == invoiceId && p.Status == PaymentStatus.Succeeded)
+            .OrderBy(p => p.PaidAt)
+            .ThenBy(p => p.Id)
+            .ToListAsync(cancellationToken);
+}
+
+public class InvoiceDocumentRepository : Repository<InvoiceDocument>, IInvoiceDocumentRepository
+{
+    public InvoiceDocumentRepository(AtelioDbContext context)
+        : base(context)
+    {
+    }
+
+    public Task<List<InvoiceDocument>> GetByInvoiceAsync(long invoiceId, CancellationToken cancellationToken = default) =>
+        DbSet.AsNoTracking().Where(d => d.InvoiceId == invoiceId).OrderByDescending(d => d.Version).ToListAsync(cancellationToken);
 }

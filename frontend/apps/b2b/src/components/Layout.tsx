@@ -9,6 +9,9 @@ import type { CurrentGarageContext } from '../garage/useCurrentGarage'
 const links = [
   { to: '/rendez-vous', label: 'Rendez-vous' },
   { to: '/interventions', label: 'Interventions' },
+  { to: '/factures', label: 'Factures' },
+  { to: '/clients', label: 'Clients' },
+  { to: '/articles', label: 'Articles' },
   { to: '/equipes', label: 'Équipes' },
 ]
 

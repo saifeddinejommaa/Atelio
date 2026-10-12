@@ -247,6 +247,251 @@ internal static class SparePartRules
 }
 
 // ============================================================
+// ARTICLES (importés du catalogue : nom, description et prix HT copiés, seule la quantité se saisit)
+// ============================================================
+
+public class AddInterventionArticleCommand : IRequest<long>
+{
+    public long InterventionId { get; set; }
+
+    public long ArticleId { get; set; }
+
+    // Décimale possible (ex. 4,5 L).
+    public decimal Quantity { get; set; }
+}
+
+public class AddInterventionArticleCommandValidator : AbstractValidator<AddInterventionArticleCommand>
+{
+    public AddInterventionArticleCommandValidator()
+    {
+        RuleFor(x => x.ArticleId).GreaterThan(0).WithMessage("Choisissez un article.");
+        RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("La quantité doit être supérieure à 0.");
+    }
+}
+
+public class AddInterventionArticleCommandHandler : IRequestHandler<AddInterventionArticleCommand, long>
+{
+    private readonly IInterventionRepository _interventions;
+    private readonly IInvoiceRepository _invoices;
+    private readonly IArticleRepository _articles;
+    private readonly IInterventionArticleRepository _lines;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _clock;
+
+    public AddInterventionArticleCommandHandler(
+        IInterventionRepository interventions,
+        IInvoiceRepository invoices,
+        IArticleRepository articles,
+        IInterventionArticleRepository lines,
+        IUnitOfWork unitOfWork,
+        TimeProvider clock)
+    {
+        _interventions = interventions;
+        _invoices = invoices;
+        _articles = articles;
+        _lines = lines;
+        _unitOfWork = unitOfWork;
+        _clock = clock;
+    }
+
+    public async Task<long> Handle(AddInterventionArticleCommand request, CancellationToken cancellationToken)
+    {
+        await SparePartRules.EnsureEditableAsync(_interventions, _invoices, request.InterventionId, cancellationToken);
+
+        var article = await _articles.GetByIdAsync(request.ArticleId, cancellationToken);
+        if (article is null || !article.IsActive)
+        {
+            throw new BusinessException("Cet article n'existe pas ou n'est plus proposé.");
+        }
+
+        var line = new InterventionArticle
+        {
+            InterventionId = request.InterventionId,
+            ArticleId = article.Id,
+            Name = article.Name,
+            Description = article.Description,
+            UnitPriceHt = article.UnitPriceHt,
+            Quantity = request.Quantity,
+            CreatedAt = _clock.GetUtcNow().UtcDateTime,
+        };
+
+        await _lines.AddAsync(line, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return line.Id;
+    }
+}
+
+public class UpdateInterventionArticleCommand : IRequest<Unit>
+{
+    public long InterventionId { get; set; }
+
+    public long LineId { get; set; }
+
+    public decimal Quantity { get; set; }
+}
+
+public class UpdateInterventionArticleCommandValidator : AbstractValidator<UpdateInterventionArticleCommand>
+{
+    public UpdateInterventionArticleCommandValidator()
+    {
+        RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("La quantité doit être supérieure à 0.");
+    }
+}
+
+public class UpdateInterventionArticleCommandHandler : IRequestHandler<UpdateInterventionArticleCommand, Unit>
+{
+    private readonly IInterventionRepository _interventions;
+    private readonly IInvoiceRepository _invoices;
+    private readonly IInterventionArticleRepository _lines;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UpdateInterventionArticleCommandHandler(
+        IInterventionRepository interventions, IInvoiceRepository invoices, IInterventionArticleRepository lines, IUnitOfWork unitOfWork)
+    {
+        _interventions = interventions;
+        _invoices = invoices;
+        _lines = lines;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<Unit> Handle(UpdateInterventionArticleCommand request, CancellationToken cancellationToken)
+    {
+        await SparePartRules.EnsureEditableAsync(_interventions, _invoices, request.InterventionId, cancellationToken);
+        var line = await InterventionArticleRules.GetAsync(_lines, request.InterventionId, request.LineId, cancellationToken);
+
+        line.Quantity = request.Quantity;
+        _lines.Update(line);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
+    }
+}
+
+public class DeleteInterventionArticleCommand : IRequest<Unit>
+{
+    public long InterventionId { get; set; }
+
+    public long LineId { get; set; }
+}
+
+public class DeleteInterventionArticleCommandHandler : IRequestHandler<DeleteInterventionArticleCommand, Unit>
+{
+    private readonly IInterventionRepository _interventions;
+    private readonly IInvoiceRepository _invoices;
+    private readonly IInterventionArticleRepository _lines;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public DeleteInterventionArticleCommandHandler(
+        IInterventionRepository interventions, IInvoiceRepository invoices, IInterventionArticleRepository lines, IUnitOfWork unitOfWork)
+    {
+        _interventions = interventions;
+        _invoices = invoices;
+        _lines = lines;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<Unit> Handle(DeleteInterventionArticleCommand request, CancellationToken cancellationToken)
+    {
+        await SparePartRules.EnsureEditableAsync(_interventions, _invoices, request.InterventionId, cancellationToken);
+        var line = await InterventionArticleRules.GetAsync(_lines, request.InterventionId, request.LineId, cancellationToken);
+
+        _lines.Remove(line);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
+    }
+}
+
+/// <summary>
+/// Importe un devis du client de l'intervention : ses lignes s'ajoutent aux articles, telles qu'au devis
+/// (nom, description, prix HT, quantité). Un devis ne s'importe qu'une fois.
+/// </summary>
+public class ImportQuoteCommand : IRequest<Unit>
+{
+    public long InterventionId { get; set; }
+
+    public long QuoteId { get; set; }
+}
+
+public class ImportQuoteCommandHandler : IRequestHandler<ImportQuoteCommand, Unit>
+{
+    private readonly IInterventionRepository _interventions;
+    private readonly IInvoiceRepository _invoices;
+    private readonly IQuoteRepository _quotes;
+    private readonly IInterventionArticleRepository _lines;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _clock;
+
+    public ImportQuoteCommandHandler(
+        IInterventionRepository interventions,
+        IInvoiceRepository invoices,
+        IQuoteRepository quotes,
+        IInterventionArticleRepository lines,
+        IUnitOfWork unitOfWork,
+        TimeProvider clock)
+    {
+        _interventions = interventions;
+        _invoices = invoices;
+        _quotes = quotes;
+        _lines = lines;
+        _unitOfWork = unitOfWork;
+        _clock = clock;
+    }
+
+    public async Task<Unit> Handle(ImportQuoteCommand request, CancellationToken cancellationToken)
+    {
+        var intervention = await _interventions.GetByIdAsync(request.InterventionId, cancellationToken)
+            ?? throw new NotFoundException($"Intervention {request.InterventionId} introuvable.");
+        await InvoiceRules.EnsureNotInvoicedAsync(_invoices, intervention.Id, cancellationToken);
+
+        var quote = await _quotes.GetWithLinesAsync(request.QuoteId, cancellationToken)
+            ?? throw new NotFoundException($"Devis {request.QuoteId} introuvable.");
+        if (quote.CustomerId != intervention.CustomerId)
+        {
+            throw new BusinessException("Ce devis a été établi pour un autre client.");
+        }
+
+        if (await _lines.HasQuoteAsync(intervention.Id, quote.Id, cancellationToken))
+        {
+            throw new BusinessException($"Le devis {quote.Number} est déjà importé sur cette intervention.");
+        }
+
+        var now = _clock.GetUtcNow().UtcDateTime;
+        foreach (var line in quote.Lines.OrderBy(l => l.SortOrder).ThenBy(l => l.Id))
+        {
+            await _lines.AddAsync(new InterventionArticle
+            {
+                InterventionId = intervention.Id,
+                ArticleId = line.ArticleId,
+                QuoteId = quote.Id,
+                Name = line.Name,
+                Description = line.Description,
+                UnitPriceHt = line.UnitPriceHt,
+                Quantity = line.Quantity,
+                CreatedAt = now,
+            }, cancellationToken);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
+    }
+}
+
+internal static class InterventionArticleRules
+{
+    public static async Task<InterventionArticle> GetAsync(
+        IInterventionArticleRepository lines, long interventionId, long lineId, CancellationToken cancellationToken)
+    {
+        var line = await lines.GetByIdAsync(lineId, cancellationToken);
+        return line is not null && line.InterventionId == interventionId
+            ? line
+            : throw new NotFoundException($"Article {lineId} introuvable sur l'intervention {interventionId}.");
+    }
+}
+
+// ============================================================
 // MAIN-D'ŒUVRE D'UNE PRESTATION (ex. « Autre » : temps passé et type indiqués par le mécanicien)
 // ============================================================
 

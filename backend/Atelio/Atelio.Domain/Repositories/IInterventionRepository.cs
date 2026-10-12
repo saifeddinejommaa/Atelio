@@ -7,7 +7,7 @@ public interface IInterventionRepository : IRepository<Intervention>
     /// <summary>Ligne de prestation de l'intervention (suivie pour modification).</summary>
     Task<InterventionService?> GetServiceLineAsync(long interventionId, long serviceId, CancellationToken cancellationToken = default);
 
-    /// <summary>Intervention avec ses prestations et ses pièces.</summary>
+    /// <summary>Intervention avec ses prestations, ses pièces et ses articles.</summary>
     Task<Intervention?> GetWithLinesAsync(long interventionId, CancellationToken cancellationToken = default);
 }
 

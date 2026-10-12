@@ -19,6 +19,9 @@ public interface ITenantContext
 
     /// <summary>Fuseau horaire des garages de la marque (heures d'ouverture, créneaux).</summary>
     TimeZoneInfo TimeZone { get; }
+
+    /// <summary>Identité légale de la marque, imprimée sur les factures.</summary>
+    TenantLegal Legal { get; }
 }
 
 public static class TextRules

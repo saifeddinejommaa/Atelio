@@ -24,6 +24,9 @@ public class TenantSettings
     public string Database { get; set; } = null!;
 
     public string TimeZone { get; set; } = "Europe/Paris";
+
+    /// <summary>Identité légale imprimée sur les factures (raison sociale, SIRET, TVA...).</summary>
+    public TenantLegal? Legal { get; set; }
 }
 
 /// <summary>
@@ -45,6 +48,9 @@ public class TenantContext : ITenantContext
     public string Slug => Current.Slug;
 
     public TimeZoneInfo TimeZone => TimeZoneInfo.FindSystemTimeZoneById(Current.TimeZone);
+
+    public TenantLegal Legal =>
+        Current.Legal ?? throw new InvalidOperationException($"Tenancy : mentions légales (Legal) manquantes pour la marque « {Current.Slug} ».");
 
     /// <summary>Chaîne de connexion vers la base de la marque blanche.</summary>
     public string ConnectionString =>

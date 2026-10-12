@@ -7,6 +7,7 @@ export type InterventionDto = {
   invoiceId: number | null;
   invoiceNumber: string | null;
   invoiceTotalTtc: number | null;
+  invoiceAmountPaid: number;
   paymentMethod: string | null;
   paidAt: string | null;
   startedAt: string | null;
@@ -46,6 +47,7 @@ export type InterventionDto = {
     unitPrice: number;
   }[];
   spareParts: { id: number; reference: string | null; name: string; quantity: number; unitPrice: number }[];
+  articles: { id: number; articleId: number; quoteId: number | null; quoteNumber: string | null; name: string; description: string | null; quantity: number; unitPriceHt: number }[];
   kit: { serviceName: string; name: string }[];
 };
 

@@ -1,5 +1,6 @@
 using Atelio.Application.Features.Interventions.Commands;
 using Atelio.Application.Features.Invoices.Commands;
+using Atelio.Application.Features.Invoices.Requests;
 using Atelio.Application.Features.Interventions.Repositories;
 using Atelio.Application.Features.Interventions.Requests;
 using MediatR;
@@ -58,11 +59,16 @@ public class InterventionsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Émet la facture de l'intervention prête. Renvoie { invoiceId }.</summary>
+    /// <summary>
+    /// Émet la facture de l'intervention prête avec le montant reçu : { amountPaid, method? }.
+    /// Le PDF est généré et stocké. Renvoie { invoiceId }.
+    /// </summary>
     [HttpPost("{id:long}/invoice")]
-    public async Task<IActionResult> Invoice(long id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Invoice(long id, [FromBody] IssueInvoiceRequest request, CancellationToken cancellationToken)
     {
-        var invoiceId = await _mediator.Send(new IssueInvoiceCommand { InterventionId = id }, cancellationToken);
+        var invoiceId = await _mediator.Send(
+            new IssueInvoiceCommand { InterventionId = id, AmountPaid = request.AmountPaid, Method = request.Method },
+            cancellationToken);
 
         return Ok(new { invoiceId });
     }
@@ -120,6 +126,45 @@ public class InterventionsController : ControllerBase
                 UnitPrice = request.UnitPrice,
             },
             cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>Importe un article du catalogue : { articleId, quantity }. Renvoie { id } de la ligne.</summary>
+    [HttpPost("{id:long}/articles")]
+    public async Task<IActionResult> AddArticle(long id, [FromBody] InterventionArticleRequest request, CancellationToken cancellationToken)
+    {
+        var lineId = await _mediator.Send(
+            new AddInterventionArticleCommand { InterventionId = id, ArticleId = request.ArticleId, Quantity = request.Quantity },
+            cancellationToken);
+
+        return Ok(new { id = lineId });
+    }
+
+    /// <summary>Change la quantité d'un article : { quantity }.</summary>
+    [HttpPut("{id:long}/articles/{lineId:long}")]
+    public async Task<IActionResult> UpdateArticle(long id, long lineId, [FromBody] InterventionArticleRequest request, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new UpdateInterventionArticleCommand { InterventionId = id, LineId = lineId, Quantity = request.Quantity },
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>Importe les lignes d'un devis du même client (une seule fois par devis).</summary>
+    [HttpPost("{id:long}/quotes/{quoteId:long}/import")]
+    public async Task<IActionResult> ImportQuote(long id, long quoteId, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new ImportQuoteCommand { InterventionId = id, QuoteId = quoteId }, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:long}/articles/{lineId:long}")]
+    public async Task<IActionResult> DeleteArticle(long id, long lineId, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new DeleteInterventionArticleCommand { InterventionId = id, LineId = lineId }, cancellationToken);
 
         return NoContent();
     }

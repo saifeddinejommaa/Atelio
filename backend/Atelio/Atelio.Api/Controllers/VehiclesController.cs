@@ -27,6 +27,19 @@ public class VehiclesController : ControllerBase
         return vehicle is null ? NotFound() : Ok(VehicleResponse.From(vehicle));
     }
 
+    /// <summary>
+    /// Informations du véhicule saisies par le garage avant l'entrée en atelier :
+    /// { make, model, version, firstRegistration: "2009-05-12", fuel: "diesel", gearbox: "manual" }.
+    /// </summary>
+    [HttpPut("{id:long}/details")]
+    public async Task<IActionResult> UpdateDetails(long id, [FromBody] UpdateVehicleDetailsCommand command, CancellationToken cancellationToken)
+    {
+        command.VehicleId = id;
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
     /// <summary>Ajoute un véhicule au client, ou met à jour celui qui a la même immatriculation.</summary>
     [HttpPost]
     public async Task<IActionResult> Save([FromBody] SaveVehicleCommand command, CancellationToken cancellationToken)

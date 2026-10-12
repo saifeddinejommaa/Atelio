@@ -1,22 +1,21 @@
 import { InterventionStatus } from '@atelio/core/domain'
 import { Link, useLoaderData } from 'react-router'
+import ArticlesCard from './ArticlesCard'
 import type { InterventionData } from './InterventionLoader'
 import InterventionActions from './InterventionActions'
 import { interventionStatusClasses } from './InterventionStatus'
-import LabourCard from './LabourCard'
 import MechanicPicker from './MechanicPicker'
-import SparePartsCard from './SparePartsCard'
 import TotalsCard from './TotalsCard'
+import VehicleCard from './VehicleCard'
 
 const day = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
-/** Détail d'une intervention : client, véhicule, mécanicien chargé, main-d'œuvre, pièces, récapitulatif. */
+/** Détail d'une intervention : client, véhicule, mécanicien chargé, prestations demandées, articles, récapitulatif. */
 export default function InterventionPage() {
-  const { intervention, mechanics, categories } = useLoaderData<InterventionData>()
-  // Facturée : la main-d'œuvre et les pièces ne se modifient plus.
+  const { intervention, vehicle, mechanics, catalog, quotes } = useLoaderData<InterventionData>()
+  // Facturée : les articles ne se modifient plus.
   const locked = intervention.status.id === InterventionStatus.Invoiced || intervention.status.id === InterventionStatus.Closed
-  const vehicle = [intervention.vehicleMake, intervention.vehicleModel].filter(Boolean).join(' ')
 
   return (
     <>
@@ -66,15 +65,7 @@ export default function InterventionPage() {
           {intervention.customerEmail && <p className="text-sm text-zinc-600">{intervention.customerEmail}</p>}
         </Card>
 
-        <Card title="Véhicule">
-          <span className="rounded border border-zinc-300 px-1.5 py-0.5 font-mono text-sm font-semibold tracking-wider">
-            {intervention.vehiclePlate}
-          </span>
-          {vehicle && <p className="mt-2 text-sm text-zinc-600">{vehicle}</p>}
-          {intervention.mileage !== null && (
-            <p className="mt-1 text-sm text-zinc-600">{intervention.mileage.toLocaleString('fr-FR')} km</p>
-          )}
-        </Card>
+        <VehicleCard vehicle={vehicle} mileage={intervention.mileage} />
 
         <Card title="Mécanicien">
           <MechanicPicker key={intervention.employeeId ?? 0} intervention={intervention} mechanics={mechanics} />
@@ -85,7 +76,17 @@ export default function InterventionPage() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <LabourCard intervention={intervention} categories={categories} readOnly={locked} />
+        <Card title="Prestations demandées">
+          {intervention.services.length > 0 ? (
+            <ul className="list-inside list-disc text-sm">
+              {intervention.services.map((s) => (
+                <li key={s.serviceId}>{s.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-zinc-400">Aucune prestation.</p>
+          )}
+        </Card>
 
         <Card title="Message du client">
           {intervention.customerNotes ? (
@@ -97,7 +98,7 @@ export default function InterventionPage() {
       </div>
 
       <div className="mt-4 grid items-start gap-4 xl:grid-cols-[3fr_1fr]">
-        <SparePartsCard intervention={intervention} readOnly={locked} />
+        <ArticlesCard intervention={intervention} catalog={catalog} quotes={quotes} readOnly={locked} />
         <TotalsCard intervention={intervention} />
       </div>
     </>

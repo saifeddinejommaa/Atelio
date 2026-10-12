@@ -1,3 +1,5 @@
+using Atelio.Application.Common;
+using Atelio.Infrastructure.Documents;
 using Atelio.Infrastructure.Tenancy;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,8 @@ public static class InfrastructureServicesConfiguration
         IConfiguration configuration)
     {
         services.Configure<TenancyOptions>(configuration.GetSection(TenancyOptions.SectionName));
+        services.Configure<CustomerAuthOptions>(configuration.GetSection(CustomerAuthOptions.SectionName));
+        services.Configure<DocumentStorageOptions>(configuration.GetSection(DocumentStorageOptions.SectionName));
 
         // EF Core et Dapper se connectent à la base de la marque blanche de la requête.
         services.AddDbContext<AtelioDbContext>((provider, options) =>

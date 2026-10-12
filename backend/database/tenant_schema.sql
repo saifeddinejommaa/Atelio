@@ -437,7 +437,8 @@ CREATE TABLE public.invoice_line (
     unit_price numeric(10,2) NOT NULL,
     total numeric(10,2) NOT NULL,
     sort_order smallint DEFAULT 0 NOT NULL,
-    CONSTRAINT invoice_line_kind_check CHECK (((kind)::text = ANY ((ARRAY['labour'::character varying, 'part'::character varying])::text[]))),
+    description text,
+    CONSTRAINT invoice_line_kind_check CHECK (((kind)::text = ANY ((ARRAY['labour'::character varying, 'part'::character varying, 'article'::character varying])::text[]))),
     CONSTRAINT invoice_line_quantity_check CHECK ((quantity > (0)::numeric)),
     CONSTRAINT invoice_line_total_check CHECK ((total >= (0)::numeric)),
     CONSTRAINT invoice_line_unit_price_check CHECK ((unit_price >= (0)::numeric))
@@ -714,8 +715,14 @@ CREATE TABLE public.vehicle (
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    version character varying(80),
+    first_registration date,
+    gearbox character varying(20),
+    weight_kg integer,
+    CONSTRAINT vehicle_weight_kg_check CHECK (((weight_kg >= 100) AND (weight_kg <= 60000))),
+    CONSTRAINT vehicle_gearbox_check CHECK (((gearbox)::text = ANY ((ARRAY['manual'::character varying, 'automatic'::character varying])::text[]))),
     CONSTRAINT vehicle_category_check CHECK (((category)::text = ANY ((ARRAY['city'::character varying, 'compact'::character varying, 'suv'::character varying, 'utility'::character varying])::text[]))),
-    CONSTRAINT vehicle_fuel_check CHECK (((fuel)::text = ANY ((ARRAY['petrol'::character varying, 'diesel'::character varying, 'hybrid'::character varying, 'electric'::character varying, 'lpg'::character varying, 'other'::character varying])::text[]))),
+    CONSTRAINT vehicle_fuel_check CHECK (((fuel)::text = ANY ((ARRAY['petrol'::character varying, 'diesel'::character varying, 'hybrid_petrol'::character varying, 'hybrid_diesel'::character varying, 'electric'::character varying, 'lpg'::character varying, 'other'::character varying])::text[]))),
     CONSTRAINT vehicle_mileage_check CHECK ((mileage >= 0)),
     CONSTRAINT vehicle_year_check CHECK (((year >= 1950) AND (year <= 2100)))
 );
@@ -1515,6 +1522,118 @@ ALTER TABLE ONLY public.spare_part
 
 ALTER TABLE ONLY public.vehicle
     ADD CONSTRAINT vehicle_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customer(id);
+
+
+--
+-- Catalogue d'articles de la marque (prix HT), importés sur les interventions.
+--
+
+CREATE TABLE public.article (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name character varying(200) NOT NULL,
+    description text,
+    unit_price_ht numeric(10,2) NOT NULL CHECK (unit_price_ht >= (0)::numeric),
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.article OWNER TO postgres;
+
+CREATE UNIQUE INDEX article_name_key ON public.article USING btree (lower((name)::text));
+
+--
+-- Articles importés sur une intervention : copie figée du nom, de la description et du prix HT.
+--
+
+CREATE TABLE public.intervention_article (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    intervention_id bigint NOT NULL REFERENCES public.intervention(id) ON DELETE CASCADE,
+    article_id bigint NOT NULL REFERENCES public.article(id),
+    name character varying(200) NOT NULL,
+    description text,
+    unit_price_ht numeric(10,2) NOT NULL CHECK (unit_price_ht >= (0)::numeric),
+    quantity numeric(10,2) DEFAULT 1 NOT NULL CHECK (quantity > (0)::numeric),
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.intervention_article OWNER TO postgres;
+
+CREATE INDEX ix_intervention_article_intervention ON public.intervention_article USING btree (intervention_id);
+
+--
+-- Devis établis par un garage pour un véhicule d'un client (articles du catalogue, prix HT copiés).
+--
+
+CREATE TABLE public.quote (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    number character varying(30) NOT NULL UNIQUE,
+    customer_id bigint NOT NULL REFERENCES public.customer(id),
+    vehicle_id bigint NOT NULL REFERENCES public.vehicle(id),
+    garage_id bigint NOT NULL REFERENCES public.garage(id),
+    total_ht numeric(10,2) NOT NULL CHECK (total_ht >= (0)::numeric),
+    total_vat numeric(10,2) NOT NULL CHECK (total_vat >= (0)::numeric),
+    total_ttc numeric(10,2) NOT NULL CHECK (total_ttc >= (0)::numeric),
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.quote OWNER TO postgres;
+
+CREATE INDEX ix_quote_customer ON public.quote USING btree (customer_id, created_at DESC);
+
+CREATE TABLE public.quote_line (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    quote_id bigint NOT NULL REFERENCES public.quote(id) ON DELETE CASCADE,
+    article_id bigint NOT NULL REFERENCES public.article(id),
+    name character varying(200) NOT NULL,
+    description text,
+    unit_price_ht numeric(10,2) NOT NULL CHECK (unit_price_ht >= (0)::numeric),
+    quantity numeric(10,2) NOT NULL CHECK (quantity > (0)::numeric),
+    total numeric(10,2) NOT NULL CHECK (total >= (0)::numeric),
+    sort_order smallint DEFAULT 0 NOT NULL
+);
+
+ALTER TABLE public.quote_line OWNER TO postgres;
+
+CREATE INDEX ix_quote_line_quote ON public.quote_line USING btree (quote_id);
+
+-- Article d'intervention importé d'un devis : devis d'origine (un devis ne s'importe qu'une fois).
+ALTER TABLE public.intervention_article ADD COLUMN quote_id bigint REFERENCES public.quote(id);
+
+--
+-- Versions PDF des factures, stockées dans Azure Blob Storage (une nouvelle version à chaque règlement).
+--
+
+CREATE TABLE public.invoice_document (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    invoice_id bigint NOT NULL REFERENCES public.invoice(id),
+    version smallint NOT NULL CHECK (version > 0),
+    blob_path character varying(300) NOT NULL UNIQUE,
+    sha256 character(64) NOT NULL,
+    size_bytes integer NOT NULL CHECK (size_bytes > 0),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    UNIQUE (invoice_id, version)
+);
+
+ALTER TABLE public.invoice_document OWNER TO postgres;
+
+--
+-- Codes de connexion des clients (site b2c), envoyés par e-mail. Seule l'empreinte du code est stockée.
+--
+
+CREATE TABLE public.customer_login_code (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    email character varying(255) NOT NULL,
+    code_hash character varying(64) NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    attempts smallint DEFAULT 0 NOT NULL,
+    consumed_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.customer_login_code OWNER TO postgres;
+
+CREATE INDEX ix_customer_login_code_email ON public.customer_login_code USING btree (email, created_at DESC);
 
 
 -- Completed on 2026-10-05 16:35:24

@@ -1,8 +1,17 @@
-import { ApiError, AppointmentApiRepository } from '@atelio/core/data'
-import { CheckAppointmentStart, StartAppointment, ValidationError, type Appointment, type StartCheck } from '@atelio/core/domain'
-import { useEffect, useState } from 'react'
+import { ApiError, AppointmentApiRepository, VehicleApiRepository } from '@atelio/core/data'
+import {
+  CheckAppointmentStart,
+  GetVehicle,
+  StartAppointment,
+  ValidationError,
+  type Appointment,
+  type CustomerVehicle,
+  type StartCheck,
+} from '@atelio/core/domain'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useBrand } from '../../brand/useBrand'
+import VehicleDetailsForm from '../vehicles/VehicleDetailsForm'
 
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
@@ -22,6 +31,8 @@ function localDateTime(time: string): string {
 
 type CheckState = { status: 'checking' } | { status: 'done'; check: StartCheck } | { status: 'error'; message: string }
 
+type VehicleState = { status: 'loading' } | { status: 'ok'; vehicle: CustomerVehicle } | { status: 'error'; message: string }
+
 function errorMessage(error: unknown): string {
   if (error instanceof ValidationError) return error.message
   if (error instanceof ApiError && error.status < 500) return error.message
@@ -31,14 +42,28 @@ function errorMessage(error: unknown): string {
 /**
  * Lancement d'un rendez-vous le jour même : heure réelle de début (maintenant par défaut), vérification
  * (premier mécanicien libre, fin estimée). Si personne n'est libre, on peut lancer quand même.
+ * Le véhicule doit être identifié (marque, modèle, version...) : sinon le formulaire s'ouvre et le lancement attend.
  */
 export default function StartAppointmentForm({ appointment, onCancel }: { appointment: Appointment; onCancel: () => void }) {
   const { api } = useBrand()
   const navigate = useNavigate()
   const [startTime, setStartTime] = useState(nowRounded)
   const [result, setResult] = useState<{ time: string; state: CheckState } | null>(null)
+  const [vehicleState, setVehicleState] = useState<VehicleState>({ status: 'loading' })
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState('')
+
+  const loadVehicle = useCallback(() => {
+    new GetVehicle(new VehicleApiRepository(api))
+      .execute(appointment.vehicleId)
+      .then((vehicle): VehicleState => (vehicle ? { status: 'ok', vehicle } : { status: 'error', message: 'Véhicule introuvable.' }))
+      .catch((err): VehicleState => ({ status: 'error', message: errorMessage(err) }))
+      .then(setVehicleState)
+  }, [api, appointment.vehicleId])
+
+  useEffect(loadVehicle, [loadVehicle])
+
+  const vehicleComplete = vehicleState.status === 'ok' && vehicleState.vehicle.missingDetails.length === 0
 
   useEffect(() => {
     if (!/^\d{2}:\d{2}$/.test(startTime)) return
@@ -103,6 +128,18 @@ export default function StartAppointmentForm({ appointment, onCancel }: { appoin
         </p>
       )}
 
+      {vehicleState.status === 'loading' && <p className="text-sm text-zinc-500">Vérification du véhicule…</p>}
+      {vehicleState.status === 'error' && <p className="rounded-brand bg-red-50 px-3 py-2 text-sm text-red-700">{vehicleState.message}</p>}
+      {vehicleState.status === 'ok' && !vehicleComplete && (
+        <div className="space-y-3 rounded-brand border border-amber-300 bg-amber-50 p-4">
+          <p className="text-sm font-medium text-amber-900">
+            ⚠ Ce véhicule ({vehicleState.vehicle.plate}) manque d'informations : {vehicleState.vehicle.missingDetails.join(', ')}.
+            Complétez-les avant de lancer l'intervention.
+          </p>
+          <VehicleDetailsForm vehicle={vehicleState.vehicle} onSaved={loadVehicle} />
+        </div>
+      )}
+
       {error && <p className="rounded-brand bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <div className="flex justify-end gap-2">
@@ -111,7 +148,7 @@ export default function StartAppointmentForm({ appointment, onCancel }: { appoin
         </button>
         <button
           type="button"
-          disabled={starting || state.status !== 'done'}
+          disabled={starting || state.status !== 'done' || !vehicleComplete}
           onClick={start}
           className="rounded-brand bg-secondary px-5 py-2 text-sm font-semibold text-on-secondary disabled:opacity-40"
         >

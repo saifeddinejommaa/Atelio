@@ -43,6 +43,16 @@ public class ApiResponseMiddleware
             }
 
             memoryStream.Position = 0;
+
+            // Fichier (ex. PDF de facture) : renvoyé tel quel, sans enveloppe JSON.
+            if (context.Response.ContentType is { } contentType && !contentType.Contains("json", StringComparison.OrdinalIgnoreCase)
+                && context.Response.StatusCode is >= 200 and < 300)
+            {
+                context.Response.Body = originalBodyStream;
+                await memoryStream.CopyToAsync(originalBodyStream);
+                return;
+            }
+
             var body = await new StreamReader(memoryStream).ReadToEndAsync();
 
             object? data = string.IsNullOrWhiteSpace(body) ? null : JsonSerializer.Deserialize<JsonElement>(body);

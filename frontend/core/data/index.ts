@@ -13,6 +13,10 @@ export { AppointmentApiRepository } from "./repositories/AppointmentApiRepositor
 export { CustomerApiRepository } from "./repositories/CustomerApiRepository";
 export { VehicleApiRepository } from "./repositories/VehicleApiRepository";
 export { InterventionApiRepository } from "./repositories/InterventionApiRepository";
+export { ArticleApiRepository, type ArticleDto } from "./repositories/ArticleApiRepository";
+export { CustomerAuthApiRepository } from "./repositories/CustomerAuthApiRepository";
+export { MyAccountApiRepository } from "./repositories/MyAccountApiRepository";
+export { QuoteApiRepository } from "./repositories/QuoteApiRepository";
 
 export { OfferMockRepository } from "./mocks/OfferMockRepository";
 export { lookupVehicle } from "./mocks/VehicleLookup";

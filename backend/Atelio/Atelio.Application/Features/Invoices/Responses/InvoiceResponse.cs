@@ -55,20 +55,52 @@ public class InvoiceResponse
     public DateTime? PaidAt { get; set; }
 
     public IReadOnlyList<InvoiceLineResponse> Lines { get; set; } = [];
+
+    // Règlements reçus (réussis), du plus ancien au plus récent.
+    public IReadOnlyList<InvoicePaymentResponse> Payments { get; set; } = [];
+
+    public decimal AmountPaid { get; set; }
+
+    public decimal Remaining { get; set; }
+
+    // Versions PDF stockées, de la plus récente à la plus ancienne (vide : facture émise avant les PDF).
+    public IReadOnlyList<InvoiceDocumentResponse> Documents { get; set; } = [];
+}
+
+public class InvoicePaymentResponse
+{
+    // UTC.
+    public DateTime PaidAt { get; set; }
+
+    // card, cash, transfer, check
+    public string Method { get; set; } = null!;
+
+    public decimal Amount { get; set; }
+}
+
+public class InvoiceDocumentResponse
+{
+    public short Version { get; set; }
+
+    // UTC.
+    public DateTime CreatedAt { get; set; }
 }
 
 public class InvoiceLineResponse
 {
-    // labour (main-d'œuvre) ou part (pièce).
+    // article, ou labour (main-d'œuvre) / part (pièce) sur les anciennes factures.
     public string Kind { get; set; } = null!;
 
     public string Label { get; set; } = null!;
 
     public string? Reference { get; set; }
 
+    // Opérations de l'article.
+    public string? Description { get; set; }
+
     public decimal Quantity { get; set; }
 
-    // TTC.
+    // HT pour un article, TTC pour la main-d'œuvre et les pièces.
     public decimal UnitPrice { get; set; }
 
     public decimal Total { get; set; }

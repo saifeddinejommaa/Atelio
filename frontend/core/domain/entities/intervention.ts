@@ -27,6 +27,8 @@ export type Intervention = {
   invoiceId: number | null;
   invoiceNumber: string | null;
   invoiceTotalTtc: number | null;
+  /** Total des règlements reçus (reste à payer = invoiceTotalTtc - invoiceAmountPaid). */
+  invoiceAmountPaid: number;
   /** Règlement (null tant que non réglée). */
   paymentMethod: PaymentMethod | null;
   paidAt: string | null;
@@ -59,8 +61,24 @@ export type Intervention = {
   vehicleModel: string | null;
   services: InterventionService[];
   spareParts: SparePart[];
+  /** Articles importés du catalogue : seuls facturés. */
+  articles: InterventionArticle[];
   /** Pièces à prévoir selon les prestations (kits). */
   kit: KitItem[];
+};
+
+/** Article importé sur l'intervention : copie du catalogue (nom, description, prix HT), seule la quantité change. */
+export type InterventionArticle = {
+  id: number;
+  articleId: number;
+  /** Devis d'où vient la ligne (import), sinon null. */
+  quoteId: number | null;
+  quoteNumber: string | null;
+  name: string;
+  description: string | null;
+  /** Décimale possible (ex. 4,5 L). */
+  quantity: number;
+  unitPriceHt: number;
 };
 
 
@@ -88,13 +106,16 @@ export const VAT_RATE = 0.2;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Totaux TTC (prestations, pièces), et ventilation HT / TVA. */
-export function interventionTotals(intervention: Pick<Intervention, "services" | "spareParts">) {
-  const labour = round2(intervention.services.reduce((sum, s) => sum + s.quantity * s.unitPrice, 0));
-  const parts = round2(intervention.spareParts.reduce((sum, p) => sum + p.quantity * p.unitPrice, 0));
-  const ttc = round2(labour + parts);
-  const ht = round2(ttc / (1 + VAT_RATE));
-  return { labour, parts, ttc, ht, vat: round2(ttc - ht) };
+/** Total d'une ligne d'article (HT), arrondi au centime comme sur la facture. */
+export function articleTotal(article: Pick<InterventionArticle, "quantity" | "unitPriceHt">): number {
+  return round2(article.quantity * article.unitPriceHt);
+}
+
+/** Totaux des articles : HT (somme des lignes), TVA, TTC — même calcul que la facture. */
+export function interventionTotals(intervention: Pick<Intervention, "articles">) {
+  const ht = round2(intervention.articles.reduce((sum, a) => sum + articleTotal(a), 0));
+  const vat = round2(ht * VAT_RATE);
+  return { ht, vat, ttc: round2(ht + vat) };
 }
 
 /** Catégorie de prestations (entretien, mécanique...) et son taux horaire de main-d'œuvre TTC. */

@@ -160,6 +160,7 @@ public class StartAppointmentCommand : IRequest<long>
 public class StartAppointmentCommandHandler : IRequestHandler<StartAppointmentCommand, long>
 {
     private readonly IAppointmentRepository _appointments;
+    private readonly IVehicleRepository _vehicles;
     private readonly IInterventionRepository _interventions;
     private readonly IServiceRepository _services;
     private readonly IServiceCategoryRepository _categories;
@@ -171,6 +172,7 @@ public class StartAppointmentCommandHandler : IRequestHandler<StartAppointmentCo
 
     public StartAppointmentCommandHandler(
         IAppointmentRepository appointments,
+        IVehicleRepository vehicles,
         IInterventionRepository interventions,
         IServiceRepository services,
         IServiceCategoryRepository categories,
@@ -181,6 +183,7 @@ public class StartAppointmentCommandHandler : IRequestHandler<StartAppointmentCo
         TimeProvider clock)
     {
         _appointments = appointments;
+        _vehicles = vehicles;
         _interventions = interventions;
         _services = services;
         _categories = categories;
@@ -200,6 +203,16 @@ public class StartAppointmentCommandHandler : IRequestHandler<StartAppointmentCo
     {
         var nowUtc = _clock.GetUtcNow().UtcDateTime;
         var appointment = await GarageAppointmentRules.GetOpenAsync(_appointments, request.Reference, cancellationToken);
+
+        // Le véhicule doit être identifié (marque, modèle, version...) avant d'entrer en atelier.
+        var vehicle = await _vehicles.GetByIdAsync(appointment.VehicleId, cancellationToken)
+            ?? throw new NotFoundException($"Véhicule {appointment.VehicleId} introuvable.");
+        var missing = vehicle.MissingDetails();
+        if (missing.Count > 0)
+        {
+            throw new BusinessException($"Complétez les informations du véhicule avant de lancer l'intervention : {string.Join(", ", missing)}.");
+        }
+
         var start = await GarageAppointmentRules.EvaluateStartAsync(
             appointment, request.StartAt, _services, _garages, _planning, _tenant, nowUtc, cancellationToken);
 

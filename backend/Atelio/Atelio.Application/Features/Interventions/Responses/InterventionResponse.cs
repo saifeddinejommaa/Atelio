@@ -16,6 +16,9 @@ public class InterventionResponse
 
     public decimal? InvoiceTotalTtc { get; set; }
 
+    // Total des règlements reçus (0 tant que rien n'est réglé).
+    public decimal InvoiceAmountPaid { get; set; }
+
     // Paiement (null tant que non réglée) : card, cash, transfer, check.
     public string? PaymentMethod { get; set; }
 
@@ -73,6 +76,8 @@ public class InterventionResponse
 
     public IReadOnlyList<SparePartResponse> SpareParts { get; set; } = [];
 
+    public IReadOnlyList<InterventionArticleResponse> Articles { get; set; } = [];
+
     // Pièces à prévoir selon les prestations (kits).
     public IReadOnlyList<KitItemResponse> Kit { get; set; } = [];
 
@@ -117,6 +122,28 @@ public class SparePartResponse
 
     // Prix unitaire TTC.
     public decimal UnitPrice { get; set; }
+}
+
+/// <summary>Article importé sur l'intervention (copie du catalogue).</summary>
+public class InterventionArticleResponse
+{
+    public long Id { get; set; }
+
+    public long ArticleId { get; set; }
+
+    // Devis d'où vient la ligne (import), sinon null.
+    public long? QuoteId { get; set; }
+
+    public string? QuoteNumber { get; set; }
+
+    public string Name { get; set; } = null!;
+
+    public string? Description { get; set; }
+
+    public decimal Quantity { get; set; }
+
+    // Prix unitaire HT.
+    public decimal UnitPriceHt { get; set; }
 }
 
 /// <summary>Pièce à prévoir pour une prestation de l'intervention (kit, aide-mémoire).</summary>

@@ -23,6 +23,8 @@ public class InterventionQueryRepository : IInterventionQueryRepository
             inv.id AS {nameof(InterventionResponse.InvoiceId)},
             inv.number AS {nameof(InterventionResponse.InvoiceNumber)},
             inv.total_ttc AS {nameof(InterventionResponse.InvoiceTotalTtc)},
+            (SELECT coalesce(sum(p.amount), 0) FROM payment p WHERE p.invoice_id = inv.id AND p.status_id = @PaymentSucceeded)
+                AS {nameof(InterventionResponse.InvoiceAmountPaid)},
             pay.method AS {nameof(InterventionResponse.PaymentMethod)},
             pay.paid_at AS {nameof(InterventionResponse.PaidAt)},
             i.started_at AS {nameof(InterventionResponse.StartedAt)},
@@ -99,6 +101,25 @@ public class InterventionQueryRepository : IInterventionQueryRepository
         WHERE p.intervention_id = @Id
 
         ORDER BY p.created_at, p.id
+        """;
+
+    private const string ArticlesSelect = $"""
+        SELECT
+            a.id AS {nameof(InterventionArticleResponse.Id)},
+            a.article_id AS {nameof(InterventionArticleResponse.ArticleId)},
+            a.quote_id AS {nameof(InterventionArticleResponse.QuoteId)},
+            q.number AS {nameof(InterventionArticleResponse.QuoteNumber)},
+            a.name AS {nameof(InterventionArticleResponse.Name)},
+            a.description AS {nameof(InterventionArticleResponse.Description)},
+            a.quantity AS {nameof(InterventionArticleResponse.Quantity)},
+            a.unit_price_ht AS {nameof(InterventionArticleResponse.UnitPriceHt)}
+
+        FROM intervention_article a
+        LEFT JOIN quote q ON q.id = a.quote_id
+
+        WHERE a.intervention_id = @Id
+
+        ORDER BY a.created_at, a.id
         """;
 
     // Kits des prestations de l'intervention.
@@ -249,6 +270,9 @@ public class InterventionQueryRepository : IInterventionQueryRepository
 
         intervention.SpareParts = (await _connection.QueryAsync<SparePartResponse>(
             new CommandDefinition(SparePartsSelect, new { Id = id }, cancellationToken: cancellationToken))).ToList();
+
+        intervention.Articles = (await _connection.QueryAsync<InterventionArticleResponse>(
+            new CommandDefinition(ArticlesSelect, new { Id = id }, cancellationToken: cancellationToken))).ToList();
 
         intervention.Kit = (await _connection.QueryAsync<KitItemResponse>(
             new CommandDefinition(KitSelect, new { Id = id }, cancellationToken: cancellationToken))).ToList();

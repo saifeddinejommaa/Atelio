@@ -19,9 +19,9 @@ export const gmg78: Brand = {
     radius: "1rem",
   },
   legal: {
-    companyName: "GMG78",
-    address: "11 Rue des Longues Raies 78440  Gargenville",
-    siret: "À compléter",
+    companyName: "Garage Mécanique Gargenville 78",
+    address: "11 rue des Longues Raies 78440 Gargenville",
+    siret: "104 984 638",
     vatNumber: "À compléter",
     capital: "À compléter",
     rcs: "À compléter",

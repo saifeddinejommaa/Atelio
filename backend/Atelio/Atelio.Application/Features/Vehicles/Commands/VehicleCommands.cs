@@ -75,6 +75,81 @@ public class SaveVehicleCommandHandler : IRequestHandler<SaveVehicleCommand, lon
     }
 }
 
+// ============================================================
+// INFORMATIONS DU VÉHICULE (saisies par le garage avant l'entrée en atelier)
+// ============================================================
+
+public class UpdateVehicleDetailsCommand : IRequest<Unit>
+{
+    public long VehicleId { get; set; }
+
+    public string Make { get; set; } = null!;
+
+    public string Model { get; set; } = null!;
+
+    public string Version { get; set; } = null!;
+
+    // Date de 1re mise en circulation (carte grise, case B).
+    public DateOnly FirstRegistration { get; set; }
+
+    public VehicleFuel Fuel { get; set; }
+
+    public VehicleGearbox Gearbox { get; set; }
+
+    // Poids en kg, facultatif.
+    public int? WeightKg { get; set; }
+}
+
+public class UpdateVehicleDetailsCommandValidator : AbstractValidator<UpdateVehicleDetailsCommand>
+{
+    public UpdateVehicleDetailsCommandValidator(TimeProvider clock)
+    {
+        RuleFor(x => x.Make).NotEmpty().WithMessage("Indiquez la marque.").MaximumLength(50);
+        RuleFor(x => x.Model).NotEmpty().WithMessage("Indiquez le modèle.").MaximumLength(80);
+        RuleFor(x => x.Version).NotEmpty().WithMessage("Indiquez la version.").MaximumLength(80);
+        RuleFor(x => x.FirstRegistration)
+            .Must(d => d.Year >= 1950 && d <= DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime))
+            .WithMessage("Date de 1re mise en circulation invalide.");
+        RuleFor(x => x.Fuel).IsInEnum().WithMessage("Choisissez l'énergie.");
+        RuleFor(x => x.Gearbox).IsInEnum().WithMessage("Choisissez la boîte de vitesses.");
+        RuleFor(x => x.WeightKg).InclusiveBetween(100, 60000).WithMessage("Poids invalide (en kg).").When(x => x.WeightKg.HasValue);
+    }
+}
+
+public class UpdateVehicleDetailsCommandHandler : IRequestHandler<UpdateVehicleDetailsCommand, Unit>
+{
+    private readonly IVehicleRepository _vehicles;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _clock;
+
+    public UpdateVehicleDetailsCommandHandler(IVehicleRepository vehicles, IUnitOfWork unitOfWork, TimeProvider clock)
+    {
+        _vehicles = vehicles;
+        _unitOfWork = unitOfWork;
+        _clock = clock;
+    }
+
+    public async Task<Unit> Handle(UpdateVehicleDetailsCommand request, CancellationToken cancellationToken)
+    {
+        var vehicle = await _vehicles.GetByIdAsync(request.VehicleId, cancellationToken)
+            ?? throw new NotFoundException($"Véhicule {request.VehicleId} introuvable.");
+
+        vehicle.Make = request.Make.Trim().ToUpperInvariant();
+        vehicle.Model = request.Model.Trim();
+        vehicle.Version = request.Version.Trim();
+        vehicle.FirstRegistration = request.FirstRegistration;
+        vehicle.Year = (short)request.FirstRegistration.Year;
+        vehicle.Fuel = request.Fuel;
+        vehicle.Gearbox = request.Gearbox;
+        vehicle.WeightKg = request.WeightKg;
+        vehicle.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
+        _vehicles.Update(vehicle);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
+    }
+}
+
 internal static class VehicleRules
 {
     /// <summary>Retrouve le véhicule du client par immatriculation, ou le crée.</summary>

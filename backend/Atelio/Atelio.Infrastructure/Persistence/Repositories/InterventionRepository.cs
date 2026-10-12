@@ -15,7 +15,7 @@ public class InterventionRepository : Repository<Intervention>, IInterventionRep
         Context.InterventionServices.FirstOrDefaultAsync(s => s.InterventionId == interventionId && s.ServiceId == serviceId, cancellationToken);
 
     public Task<Intervention?> GetWithLinesAsync(long interventionId, CancellationToken cancellationToken = default) =>
-        DbSet.Include(i => i.Services).Include(i => i.SpareParts).FirstOrDefaultAsync(i => i.Id == interventionId, cancellationToken);
+        DbSet.Include(i => i.Services).Include(i => i.SpareParts).Include(i => i.Articles).FirstOrDefaultAsync(i => i.Id == interventionId, cancellationToken);
 }
 
 public class SparePartRepository : Repository<SparePart>, ISparePartRepository
