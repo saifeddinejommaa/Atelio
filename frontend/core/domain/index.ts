@@ -1,6 +1,7 @@
 export type { Service } from "./entities/service";
 export { garageOffers, type DayAvailability, type CapacityPeriod, type Garage, type Mechanic, type Slot, type SlotCheck } from "./entities/garage";
-export type { Customer, NewCustomer } from "./entities/customer";
+export type { Customer, CustomerFilter, CustomerInvoice, CustomerSummary, NewCustomer } from "./entities/customer";
+export { GetCustomer, GetCustomerInvoices, GetCustomers } from "./usecases/GetCustomers";
 export {
   canMarkNoShow,
   canReschedule,
@@ -16,7 +17,14 @@ export {
   type StartCheck,
 } from "./entities/appointment";
 export type { Vehicle, VehicleCategory } from "./entities/vehicle";
-export type { CustomerVehicle, VehicleFuel } from "./entities/CustomerVehicle";
+export {
+  fuelLabels,
+  gearboxLabels,
+  type CustomerVehicle,
+  type VehicleDetails,
+  type VehicleFuel,
+  type VehicleGearbox,
+} from "./entities/CustomerVehicle";
 export type { Offer } from "./entities/offer";
 export {
   AppointmentStatus,
@@ -29,10 +37,12 @@ export {
 export type { IStatusRepository } from "./repositories/IStatusRepository";
 export { GetAppointmentStatuses, GetInterventionStatuses } from "./usecases/statuses";
 export {
+  articleTotal,
   interventionTotals,
   labourPrice,
   VAT_RATE,
   type Intervention,
+  type InterventionArticle,
   type InterventionFilter,
   type InterventionService,
   type InterventionSummary,
@@ -61,15 +71,20 @@ export { GetServices } from "./usecases/GetServices";
 export { GetServiceByCode } from "./usecases/GetServiceByCode";
 export { GetGarages } from "./usecases/GetGarages";
 export { GetGarageAvailability } from "./usecases/GetGarageAvailability";
-export { BookAppointment, MAX_NOTES_LENGTH } from "./usecases/BookAppointment";
+export { BookAppointment, BookMyAppointment, MAX_NOTES_LENGTH } from "./usecases/BookAppointment";
+export type { CustomerLogin, MyAppointmentRequest, NewAccount } from "./entities/CustomerLogin";
+export type { ICustomerAuthRepository } from "./repositories/ICustomerAuthRepository";
+export type { IMyAccountRepository } from "./repositories/IMyAccountRepository";
+export { RegisterAccount, RequestLoginCode, VerifyLoginCode } from "./usecases/CustomerLogin";
+export { CancelMyAppointment, GetMyAppointments, GetMyProfile, GetMyVehicles } from "./usecases/MyAccount";
 export { GetCustomerAppointments } from "./usecases/GetCustomerAppointments";
 export { CancelAppointment } from "./usecases/CancelAppointment";
 export { GetCustomerByEmail } from "./usecases/GetCustomerByEmail";
 export { GetActiveOffers } from "./usecases/GetActiveOffers";
-export { GetCustomerVehicles } from "./usecases/GetCustomerVehicles";
+export { GetCustomerVehicles, GetVehicle, UpdateVehicleDetails } from "./usecases/GetCustomerVehicles";
 export { GetGarageAppointments } from "./usecases/GetGarageAppointments";
 export { FindCustomersByPhone } from "./usecases/FindCustomersByPhone";
-export { CreateCustomer } from "./usecases/CreateCustomer";
+export { CreateCustomer, UpdateCustomer } from "./usecases/CreateCustomer";
 export {
   AbandonAppointment,
   CheckAppointmentStart,
@@ -77,10 +92,14 @@ export {
   StartAppointment,
 } from "./usecases/GarageAppointmentActions";
 export {
+  AddInterventionArticle,
   AddSparePart,
   AssignInterventionEmployee,
+  DeleteInterventionArticle,
   DeleteSparePart,
+  UpdateInterventionArticle,
   GetIntervention,
+  ImportQuote,
   GetInterventions,
   GetServiceCategories,
   UpdateServiceLabour,
@@ -103,7 +122,23 @@ export {
 export type { ITeamRepository } from "./repositories/ITeamRepository";
 export { DeclareAbsence, DeleteAbsence, GetTeam, SaveEmployeeSchedule } from "./usecases/team";
 
-export type { Invoice, InvoiceLine } from "./entities/invoice";
+export type { Article, ArticleFilter, ArticleInput } from "./entities/Article";
+export type { IArticleRepository } from "./repositories/IArticleRepository";
+export { CreateArticle, GetArticles, SetArticleActive, UpdateArticle } from "./usecases/Articles";
+
+export type { GarageQuote, GarageQuoteLine, GarageQuoteSummary, NewGarageQuote } from "./entities/GarageQuote";
+export type { IQuoteRepository } from "./repositories/IQuoteRepository";
+export { CreateQuote, GetCustomerQuotes, GetQuote, SendQuote } from "./usecases/Quotes";
+
+export type { Invoice, InvoiceDocument, InvoiceFilter, InvoiceLine, InvoicePage, InvoicePayment, InvoiceSummary } from "./entities/invoice";
 export { pageCount, type Page } from "./entities/page";
 export type { IInvoiceRepository } from "./repositories/IInvoiceRepository";
-export { FinishIntervention, GetInvoice, IssueInvoice, PayInvoice } from "./usecases/invoicing";
+export {
+  FinishIntervention,
+  GenerateInvoicePdf,
+  GetInvoice,
+  GetInvoicePdf,
+  GetInvoices,
+  IssueInvoice,
+  PayInvoice,
+} from "./usecases/invoicing";

@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.2" />
     <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
@@ -18,6 +19,11 @@
     <ProjectReference Include="..\Atelio.Application\Atelio.Application.csproj" />
     <ProjectReference Include="..\Atelio.Domain\Atelio.Domain.csproj" />
     <ProjectReference Include="..\Atelio.Infrastructure\Atelio.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Logos des marques, imprimés sur les factures PDF. -->
+    <None Update="Assets/**/*.svg" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

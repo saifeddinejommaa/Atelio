@@ -24,9 +24,11 @@ public enum EmployeeRole { Mechanic, Manager, Reception }
 
 public enum AbsenceReason { Leave, Sick, Training, Other }
 
-public enum VehicleFuel { Petrol, Diesel, Hybrid, Electric, Lpg, Other }
+public enum VehicleFuel { Petrol, Diesel, HybridPetrol, HybridDiesel, Electric, Lpg, Other }
 
 public enum VehicleCategory { City, Compact, Suv, Utility }
 
+public enum VehicleGearbox { Manual, Automatic }
+
 // Ligne de facture : main-d'œuvre ou pièce.
-public enum InvoiceLineKind { Labour, Part }
+public enum InvoiceLineKind { Labour, Part, Article }

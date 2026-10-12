@@ -1,18 +1,16 @@
 "use server";
 
-import { ApiError, AppointmentApiRepository } from "@atelio/core/data";
+import { ApiError, MyAccountApiRepository } from "@atelio/core/data";
 import {
-  BookAppointment,
-  CancelAppointment,
+  BookMyAppointment,
+  CancelMyAppointment,
   GetGarageAvailability,
   ValidationError,
   type DayAvailability,
 } from "@atelio/core/domain";
-import { apiClient } from "@/lib/api";
-import { getSessionCustomer } from "@/lib/customer/CustomerQueries";
 import { CachedGarageRepository } from "@/lib/garage/CachedGarageRepository";
 import { getServices } from "@/lib/garageService/ServiceQueries";
-import { getSessionUser } from "@/lib/session";
+import { sessionApiClient } from "@/lib/session";
 import { getTenant, type TenantConfig } from "@/tenants";
 
 // Actions appelées par le navigateur : on ne fait confiance ni à la forme ni au type des données reçues.
@@ -62,22 +60,19 @@ export async function confirmBooking(input: BookingRequest): Promise<BookingResu
   const req = normalize(input);
   const tenant = getTenant(req.tenant);
   if (!tenant) return { ok: false, error: "Site inconnu." };
-  if (!(await getSessionUser(tenant.slug))) return { ok: false, error: "Veuillez vous reconnecter." };
+  const account = await myAccount(tenant.slug);
+  if (!account) return { ok: false, error: "Veuillez vous reconnecter." };
 
   try {
-    const customer = await getSessionCustomer(tenant.slug);
-    if (!customer) return { ok: false, error: `Votre compte client ${tenant.name} est introuvable. Contactez le garage.` };
-
     const notes = [req.symptoms.length ? `Symptômes : ${req.symptoms.join(", ")}.` : "", req.notes.trim()]
       .filter(Boolean)
       .join("\n");
 
-    const booked = await new BookAppointment(appointments(tenant)).execute({
-      customerId: customer.id,
+    // Le client vient du jeton de session ; l'API vérifie aussi que le véhicule lui appartient.
+    const booked = await new BookMyAppointment(account).execute({
       garageId: toId(req.garageId),
       serviceIds: await toServiceIds(tenant, req.services),
       scheduledAt: `${req.date}T${req.time}`,
-      // L'API vérifie que le véhicule appartient bien au client.
       vehicleId: req.vehicleId ?? undefined,
       plate: req.vehicleId ? undefined : req.plate,
       mileage: req.mileage ? Number(req.mileage) : undefined,
@@ -94,19 +89,21 @@ export async function cancelAppointment(tenantSlug: string, reference: string): 
   const tenant = getTenant(String(tenantSlug));
   if (!tenant) return { ok: false, error: "Site inconnu." };
 
-  try {
-    const customer = await getSessionCustomer(tenant.slug);
-    if (!customer) return { ok: false, error: "Veuillez vous reconnecter." };
+  const account = await myAccount(tenant.slug);
+  if (!account) return { ok: false, error: "Veuillez vous reconnecter." };
 
-    await new CancelAppointment(appointments(tenant)).execute(String(reference), customer.id);
+  try {
+    await new CancelMyAppointment(account).execute(String(reference));
     return { ok: true };
   } catch (error) {
     return { ok: false, error: errorMessage(error, "annulation") };
   }
 }
 
-function appointments(tenant: TenantConfig) {
-  return new AppointmentApiRepository(apiClient(tenant.apiTenant));
+/** Compte du client connecté (routes /me de l'API), ou null s'il n'a pas de session. */
+async function myAccount(tenantSlug: string) {
+  const api = await sessionApiClient(tenantSlug);
+  return api && new MyAccountApiRepository(api);
 }
 
 /** Codes des prestations => identifiants de l'API. */

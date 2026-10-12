@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Atelio.Domain.Entities;
 
-// Ligne figée d'une facture, copiée de l'intervention à l'émission. Prix TTC.
+// Ligne figée d'une facture, copiée de l'intervention à l'émission.
+// Prix TTC pour la main-d'œuvre et les pièces (anciennes factures), HT pour les articles.
 [Table("invoice_line")]
 public class InvoiceLine
 {
@@ -21,6 +22,10 @@ public class InvoiceLine
 
     [Column("reference")]
     public string? Reference { get; set; }
+
+    // Opérations de l'article.
+    [Column("description")]
+    public string? Description { get; set; }
 
     [Column("quantity")]
     public decimal Quantity { get; set; }

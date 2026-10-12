@@ -1,9 +1,7 @@
-import { AppointmentApiRepository } from "@atelio/core/data";
-import { GetCustomerAppointments } from "@atelio/core/domain";
-import { apiClient } from "@/lib/api";
+import { MyAccountApiRepository } from "@atelio/core/data";
+import { GetMyAppointments } from "@atelio/core/domain";
 import { toAppointment, type Appointment } from "@/lib/appointment/appointments";
-import { getSessionCustomer } from "@/lib/customer/CustomerQueries";
-import { getTenant } from "@/tenants";
+import { sessionApiClient } from "@/lib/session";
 
 export type MyAppointments =
   | { status: "ok"; upcoming: Appointment[]; past: Appointment[] }
@@ -12,15 +10,11 @@ export type MyAppointments =
 
 /** Rendez-vous du compte connecté : à venir (le plus proche d'abord), puis passés ou annulés. */
 export async function getMyAppointments(tenantSlug: string): Promise<MyAppointments> {
-  const tenant = getTenant(tenantSlug);
-  if (!tenant) return { status: "unknown-customer" };
+  const api = await sessionApiClient(tenantSlug);
+  if (!api) return { status: "unknown-customer" };
 
   try {
-    const customer = await getSessionCustomer(tenant.slug);
-    if (!customer) return { status: "unknown-customer" };
-
-    const repository = new AppointmentApiRepository(apiClient(tenant.apiTenant));
-    const all = (await new GetCustomerAppointments(repository).execute(customer.id)).map((a) => toAppointment(a));
+    const all = (await new GetMyAppointments(new MyAccountApiRepository(api)).execute()).map((a) => toAppointment(a));
     return {
       status: "ok",
       upcoming: all.filter((a) => a.upcoming).reverse(),

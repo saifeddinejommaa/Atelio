@@ -1,4 +1,6 @@
 using Atelio.Application.Common;
+using Atelio.Infrastructure.Auth;
+using Atelio.Infrastructure.Documents;
 using Atelio.Infrastructure.Persistence;
 using Atelio.Infrastructure.Persistence.Repositories;
 using Atelio.Infrastructure.Tenancy;
@@ -17,6 +19,24 @@ public class InfrastructureModule : Module
             .Where(t => t.Name.EndsWith("Repository"))
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
+
+        // Connexion des clients b2c : jetons et envoi du code.
+        builder.RegisterType<CustomerTokenService>()
+            .As<ICustomerTokenService>()
+            .SingleInstance();
+
+        builder.RegisterType<ConsoleEmailSender>()
+            .As<IEmailSender>()
+            .SingleInstance();
+
+        // Factures PDF et leur stockage (Azure Blob Storage).
+        builder.RegisterType<QuestPdfInvoiceRenderer>()
+            .As<IInvoicePdfRenderer>()
+            .SingleInstance();
+
+        builder.RegisterType<BlobDocumentStorage>()
+            .As<IDocumentStorage>()
+            .SingleInstance();
 
         builder.RegisterType<UnitOfWork>()
             .As<IUnitOfWork>()

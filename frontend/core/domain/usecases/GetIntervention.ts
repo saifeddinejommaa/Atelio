@@ -53,6 +53,45 @@ export class DeleteSparePart {
   }
 }
 
+function checkQuantity(quantity: number): number {
+  if (!(quantity > 0)) throw new ValidationError("La quantité doit être supérieure à 0.");
+  return quantity;
+}
+
+/** Importe un article du catalogue (prix HT copié, non modifiable). */
+export class AddInterventionArticle {
+  constructor(private readonly repository: IInterventionRepository) {}
+
+  async execute(interventionId: number, articleId: number, quantity: number): Promise<number> {
+    return this.repository.addArticle(interventionId, articleId, checkQuantity(quantity));
+  }
+}
+
+export class UpdateInterventionArticle {
+  constructor(private readonly repository: IInterventionRepository) {}
+
+  async execute(interventionId: number, lineId: number, quantity: number): Promise<void> {
+    return this.repository.updateArticleQuantity(interventionId, lineId, checkQuantity(quantity));
+  }
+}
+
+export class DeleteInterventionArticle {
+  constructor(private readonly repository: IInterventionRepository) {}
+
+  execute(interventionId: number, lineId: number): Promise<void> {
+    return this.repository.deleteArticle(interventionId, lineId);
+  }
+}
+
+/** Importe un devis du client de l'intervention : ses lignes s'ajoutent aux articles. */
+export class ImportQuote {
+  constructor(private readonly repository: IInterventionRepository) {}
+
+  execute(interventionId: number, quoteId: number): Promise<void> {
+    return this.repository.importQuote(interventionId, quoteId);
+  }
+}
+
 /** Main-d'œuvre d'une prestation (ex. « Autre ») : temps passé et type indiqués par le mécanicien. */
 export class UpdateServiceLabour {
   constructor(private readonly repository: IInterventionRepository) {}

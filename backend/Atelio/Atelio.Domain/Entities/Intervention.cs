@@ -52,4 +52,6 @@ public class Intervention
     public List<InterventionService> Services { get; set; } = [];
 
     public List<SparePart> SpareParts { get; set; } = [];
+
+    public List<InterventionArticle> Articles { get; set; } = [];
 }

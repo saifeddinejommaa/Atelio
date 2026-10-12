@@ -13,6 +13,12 @@ export interface IInterventionRepository {
   addSparePart(interventionId: number, part: SparePartInput): Promise<number>;
   updateSparePart(interventionId: number, sparePartId: number, part: SparePartInput): Promise<void>;
   deleteSparePart(interventionId: number, sparePartId: number): Promise<void>;
+  /** Importe un article du catalogue et renvoie l'identifiant de la ligne. */
+  addArticle(interventionId: number, articleId: number, quantity: number): Promise<number>;
+  updateArticleQuantity(interventionId: number, lineId: number, quantity: number): Promise<void>;
+  deleteArticle(interventionId: number, lineId: number): Promise<void>;
+  /** Ajoute les lignes d'un devis du même client (une seule fois par devis). */
+  importQuote(interventionId: number, quoteId: number): Promise<void>;
   /** Catégories de prestations avec leur taux horaire. */
   getServiceCategories(): Promise<ServiceCategory[]>;
 }

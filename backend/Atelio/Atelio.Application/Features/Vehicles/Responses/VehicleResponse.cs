@@ -15,10 +15,24 @@ public class VehicleResponse
 
     public string? Model { get; set; }
 
+    public string? Version { get; set; }
+
     public short? Year { get; set; }
 
-    // petrol, diesel, hybrid, electric, lpg, other
+    // Date de 1re mise en circulation.
+    public DateOnly? FirstRegistration { get; set; }
+
+    // petrol, diesel, hybrid_petrol, hybrid_diesel, electric, lpg, other
     public VehicleFuel? Fuel { get; set; }
+
+    // manual, automatic
+    public VehicleGearbox? Gearbox { get; set; }
+
+    // Poids en kg.
+    public int? WeightKg { get; set; }
+
+    // Informations manquantes avant l'entrée en atelier (vide : complet).
+    public IReadOnlyList<string> MissingDetails { get; set; } = [];
 
     // city, compact, suv, utility
     public VehicleCategory? Category { get; set; }
@@ -32,8 +46,13 @@ public class VehicleResponse
         Plate = vehicle.Plate,
         Make = vehicle.Make,
         Model = vehicle.Model,
+        Version = vehicle.Version,
         Year = vehicle.Year,
+        FirstRegistration = vehicle.FirstRegistration,
         Fuel = vehicle.Fuel,
+        Gearbox = vehicle.Gearbox,
+        WeightKg = vehicle.WeightKg,
+        MissingDetails = vehicle.MissingDetails(),
         Category = vehicle.Category,
         Mileage = vehicle.Mileage,
     };

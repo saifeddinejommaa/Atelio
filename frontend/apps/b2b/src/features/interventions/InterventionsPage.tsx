@@ -2,7 +2,6 @@ import { InterventionApiRepository } from '@atelio/core/data'
 import {
   GetInterventions,
   InterventionStatus,
-  pageCount,
   type InterventionSummary,
   type Page,
   type StatusOption,
@@ -11,6 +10,8 @@ import { useEffect, useState } from 'react'
 import { Link, useLoaderData } from 'react-router'
 import { useBrand } from '../../brand/useBrand'
 import { useCurrentGarage } from '../../garage/useCurrentGarage'
+import Pagination from '../../components/Pagination'
+import { useDebounced } from '../../lib/useDebounced'
 import { interventionStatusClasses } from './InterventionStatus'
 
 const PAGE_SIZE = 20
@@ -18,16 +19,6 @@ const PAGE_SIZE = 20
 const dateTime = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 type ListState = { status: 'loading' } | { status: 'error' } | { status: 'ok'; page: Page<InterventionSummary> }
-
-/** Valeur saisie, prise en compte après une courte pause de frappe. */
-function useDebounced(value: string, delay = 300): string {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(timer)
-  }, [value, delay])
-  return debounced
-}
 
 /**
  * Interventions du garage, 20 par page : filtres client, immatriculation, jour de début
@@ -178,7 +169,7 @@ export default function InterventionsPage() {
                 ))}
               </tbody>
             </table>
-            <Pagination page={state.page} onChange={setPage} />
+            <Pagination page={state.page} onChange={setPage} noun={['intervention', 'interventions']} />
           </>
         )}
       </div>
@@ -194,66 +185,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</span>
       {children}
     </label>
-  )
-}
-
-/** Pages à afficher : la première, la dernière, la courante et ses voisines ; « … » entre les trous. */
-function pageNumbers(current: number, count: number): (number | '…')[] {
-  const pages = [...new Set([1, current - 1, current, current + 1, count])].filter((p) => p >= 1 && p <= count).sort((a, b) => a - b)
-  return pages.flatMap((p, i) => (i > 0 && p - pages[i - 1] > 1 ? (['…', p] as const) : [p]))
-}
-
-/** « 21–40 sur 134 interventions » et ‹ 1 2 3 … 7 ›. */
-function Pagination({ page, onChange }: { page: Page<InterventionSummary>; onChange: (page: number) => void }) {
-  const count = pageCount(page)
-  const first = (page.page - 1) * page.pageSize + 1
-  const last = Math.min(page.page * page.pageSize, page.total)
-  const button = 'flex h-8 min-w-8 items-center justify-center rounded-brand px-2 text-sm font-semibold'
-
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 px-4 py-3">
-      <p className="text-sm text-zinc-600">
-        {first}–{last} sur {page.total} intervention{page.total > 1 ? 's' : ''}
-      </p>
-      {count > 1 && (
-        <nav aria-label="Pages" className="flex items-center gap-1">
-          <button
-            type="button"
-            aria-label="Page précédente"
-            disabled={page.page === 1}
-            onClick={() => onChange(page.page - 1)}
-            className={`${button} text-zinc-600 hover:bg-muted disabled:opacity-30`}
-          >
-            ‹
-          </button>
-          {pageNumbers(page.page, count).map((p, i) =>
-            p === '…' ? (
-              <span key={`gap-${i}`} className="px-1 text-zinc-400">
-                …
-              </span>
-            ) : (
-              <button
-                key={p}
-                type="button"
-                aria-current={p === page.page ? 'page' : undefined}
-                onClick={() => onChange(p)}
-                className={`${button} ${p === page.page ? 'bg-primary text-on-primary' : 'text-zinc-700 hover:bg-muted'}`}
-              >
-                {p}
-              </button>
-            ),
-          )}
-          <button
-            type="button"
-            aria-label="Page suivante"
-            disabled={page.page === count}
-            onClick={() => onChange(page.page + 1)}
-            className={`${button} text-zinc-600 hover:bg-muted disabled:opacity-30`}
-          >
-            ›
-          </button>
-        </nav>
-      )}
-    </div>
   )
 }

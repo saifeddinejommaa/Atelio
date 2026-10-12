@@ -30,11 +30,6 @@ export default async function LoginPage({ params, searchParams }: PageProps<"/[t
         </p>
 
         <LoginForm tenant={tenant.slug} redirectTo={redirectTo} />
-
-        {/* Compte de démonstration, à retirer quand l'API .NET gérera l'authentification */}
-        <p className="mt-6 rounded-lg bg-muted p-3 text-sm text-zinc-600">
-          Compte de démo : <strong>test@test.com</strong> / <strong>0000</strong>
-        </p>
       </Card>
     </section>
   );
