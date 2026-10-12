@@ -1,0 +1,78 @@
+import type { ApiClient } from '@atelio/core/data'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { createBrowserRouter, Navigate } from 'react-router'
+import { RouterProvider } from 'react-router/dom'
+import { BrandContext } from './brand/BrandContext.tsx'
+import { currentBrand } from './brand/CurrentBrand'
+import ErrorPage from './components/ErrorPage.tsx'
+import Layout from './components/Layout.tsx'
+import UnknownSitePage from './components/UnknownSitePage.tsx'
+import AppointmentsPage from './features/appointments/AppointmentsPage.tsx'
+import { articlesLoader } from './features/articles/ArticlesLoader'
+import ArticlesPage from './features/articles/ArticlesPage.tsx'
+import { customerLoader } from './features/customers/CustomerLoader'
+import CustomerPage from './features/customers/CustomerPage.tsx'
+import CustomersPage from './features/customers/CustomersPage.tsx'
+import { quoteLoader } from './features/quotes/QuoteLoader'
+import QuotePage from './features/quotes/QuotePage.tsx'
+import TeamPage from './features/team/TeamPage.tsx'
+import { appointmentsLoader } from './features/appointments/AppointmentsLoader'
+import { interventionLoader } from './features/interventions/InterventionLoader'
+import { interventionStatusesLoader } from './features/interventions/InterventionStatusesLoader'
+import InterventionsPage from './features/interventions/InterventionsPage.tsx'
+import InterventionPage from './features/interventions/InterventionPage.tsx'
+import { invoiceLoader } from './features/invoices/InvoiceLoader'
+import InvoicePage from './features/invoices/InvoicePage.tsx'
+import InvoicesPage from './features/invoices/InvoicesPage.tsx'
+import { garagesLoader } from './garage/GaragesLoader'
+import { apiClientFor } from './lib/api.ts'
+import './index.css'
+
+function createRouter(api: ApiClient) {
+  return createBrowserRouter([
+    {
+      path: '/',
+      element: <Layout />,
+      loader: garagesLoader(api),
+      errorElement: <ErrorPage />,
+      children: [
+        {
+          errorElement: <ErrorPage />,
+          children: [
+            { index: true, element: <Navigate to="/rendez-vous" replace /> },
+            { path: 'rendez-vous', element: <AppointmentsPage />, loader: appointmentsLoader(api) },
+            { path: 'interventions', element: <InterventionsPage />, loader: interventionStatusesLoader(api) },
+            { path: 'interventions/:id', element: <InterventionPage />, loader: interventionLoader(api) },
+            { path: 'factures', element: <InvoicesPage /> },
+            { path: 'factures/:id', element: <InvoicePage />, loader: invoiceLoader(api) },
+            { path: 'clients', element: <CustomersPage /> },
+            { path: 'clients/:id', element: <CustomerPage />, loader: customerLoader(api) },
+            { path: 'devis/:id', element: <QuotePage />, loader: quoteLoader(api) },
+            { path: 'articles', element: <ArticlesPage />, loader: articlesLoader(api) },
+            { path: 'equipes', element: <TeamPage /> },
+            { path: '*', element: <ErrorPage /> },
+          ],
+        },
+      ],
+    },
+  ])
+}
+
+const root = createRoot(document.getElementById('root')!)
+
+if (!currentBrand) {
+  root.render(<UnknownSitePage />)
+} else {
+  // La marque est fixée par le domaine : le router et le client API sont créés une seule fois.
+  const brand = { brand: currentBrand, api: apiClientFor(currentBrand) }
+  const router = createRouter(brand.api)
+
+  root.render(
+    <StrictMode>
+      <BrandContext value={brand}>
+        <RouterProvider router={router} />
+      </BrandContext>
+    </StrictMode>,
+  )
+}
