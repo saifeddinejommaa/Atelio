@@ -38,10 +38,12 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
         <div className="pointer-events-none absolute -right-32 -top-32 h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--tenant-secondary)_22%,transparent),transparent)]" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 lg:grid-cols-2 lg:py-24">
           <div>
-            <p className="inline-block rounded-full bg-on-primary/10 px-3 py-1 text-sm font-medium">
-              {tenant.content.heroBadge}
-            </p>
-            <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+            {tenant.content.heroBadge && (
+              <p className="mb-5 inline-block rounded-full bg-on-primary/10 px-3 py-1 text-sm font-medium">
+                {tenant.content.heroBadge}
+              </p>
+            )}
+            <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
               L&apos;entretien de votre voiture, <span className="text-secondary">au juste prix.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg text-on-primary/80">
@@ -200,7 +202,7 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
         <div className="mx-auto max-w-7xl px-4 py-20">
           <div className="text-center">
             <h2 className="text-3xl font-extrabold tracking-tight">Ils nous font confiance</h2>
-            <p className="mt-2 text-zinc-600">{tenant.content.rating}</p>
+            {tenant.content.rating && <p className="mt-2 text-zinc-600">{tenant.content.rating}</p>}
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {reviews.map((r) => (

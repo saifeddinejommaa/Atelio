@@ -12,8 +12,12 @@ public static class CustomerAuthPolicy
 {
     public const string Name = "Customer";
 
+    /// <summary>Schéma d'authentification : jeton émis par /api/auth/customer.</summary>
+    public const string Scheme = "Customer";
+
     public static void Configure(AuthorizationPolicyBuilder policy) =>
         policy
+            .AddAuthenticationSchemes(Scheme)
             .RequireAuthenticatedUser()
             .RequireClaim(CustomerClaims.CustomerId)
             .RequireAssertion(context =>

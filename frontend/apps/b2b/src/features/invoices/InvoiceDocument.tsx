@@ -78,7 +78,7 @@ export default function InvoiceDocument({
 
       {articles.length > 0 ? (
         // Facture d'articles : prix HT, la TVA s'ajoute au total.
-        <table className="mt-8 w-full">
+        <table data-plain className="mt-8 w-full">
           <thead className="border-b-2 border-zinc-800 text-left text-xs uppercase tracking-wider">
             <tr>
               <th className="py-2">Désignation</th>
@@ -93,6 +93,11 @@ export default function InvoiceDocument({
                 <td className="py-1.5">
                   <span className="font-semibold">{l.label}</span>
                   {l.description && <p className="whitespace-pre-line text-xs text-zinc-600">{l.description}</p>}
+                  {l.discountPercent !== null && (
+                    <p className="mt-0.5 text-xs font-semibold">
+                      {l.discountLabel} : remise -{qty.format(l.discountPercent)} %
+                    </p>
+                  )}
                 </td>
                 <td className="py-1.5 text-right">{qty.format(l.quantity)}</td>
                 <td className="py-1.5 text-right">{euro.format(l.unitPrice)}</td>
@@ -103,7 +108,7 @@ export default function InvoiceDocument({
         </table>
       ) : (
         // Anciennes factures : main-d'œuvre et pièces en TTC.
-        <table className="mt-8 w-full">
+        <table data-plain className="mt-8 w-full">
           <thead className="border-b-2 border-zinc-800 text-left text-xs uppercase tracking-wider">
             <tr>
               <th className="py-2">Désignation</th>

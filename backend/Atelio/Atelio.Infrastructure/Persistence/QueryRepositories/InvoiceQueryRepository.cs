@@ -67,6 +67,8 @@ public class InvoiceQueryRepository : IInvoiceQueryRepository
             l.description AS {nameof(InvoiceLineResponse.Description)},
             l.quantity AS {nameof(InvoiceLineResponse.Quantity)},
             l.unit_price AS {nameof(InvoiceLineResponse.UnitPrice)},
+            l.discount_percent AS {nameof(InvoiceLineResponse.DiscountPercent)},
+            l.discount_label AS {nameof(InvoiceLineResponse.DiscountLabel)},
             l.total AS {nameof(InvoiceLineResponse.Total)}
 
         FROM invoice_line l

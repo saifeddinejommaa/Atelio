@@ -112,10 +112,14 @@ public class InterventionQueryRepository : IInterventionQueryRepository
             a.name AS {nameof(InterventionArticleResponse.Name)},
             a.description AS {nameof(InterventionArticleResponse.Description)},
             a.quantity AS {nameof(InterventionArticleResponse.Quantity)},
-            a.unit_price_ht AS {nameof(InterventionArticleResponse.UnitPriceHt)}
+            a.unit_price_ht AS {nameof(InterventionArticleResponse.UnitPriceHt)},
+            a.promotion_id AS {nameof(InterventionArticleResponse.PromotionId)},
+            pr.title AS {nameof(InterventionArticleResponse.PromotionTitle)},
+            a.discount_percent AS {nameof(InterventionArticleResponse.DiscountPercent)}
 
         FROM intervention_article a
         LEFT JOIN quote q ON q.id = a.quote_id
+        LEFT JOIN promotion pr ON pr.id = a.promotion_id
 
         WHERE a.intervention_id = @Id
 

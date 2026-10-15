@@ -108,3 +108,14 @@ body {
 .brand-calendar .calendar-day-view {
   --fc-classic-today: transparent;
 }
+
+/*
+ * Tableaux : une ligne sur deux légèrement grisée, pour suivre une ligne d'un bout à l'autre.
+ * :where() n'a aucune priorité : une ligne sélectionnée ou survolée (classes Tailwind) garde sa couleur.
+ * data-plain : documents imprimés (facture, devis), sans alternance. data-striped : listes en forme de tableau.
+ */
+@layer base {
+  :where(table:not([data-plain]) > tbody > tr:nth-child(even), ul[data-striped] > li:nth-child(even)) {
+    background-color: rgb(244 244 245 / 0.7);
+  }
+}

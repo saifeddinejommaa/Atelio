@@ -200,7 +200,7 @@ export default function NewAppointmentPanel({
                 type="tel"
                 value={phone}
                 onChange={(e) => changePhone(e.target.value)}
-                placeholder="Téléphone, ex. 06 12 34 56 78"
+                placeholder="Indiquez le téléphone du client"
                 aria-label="Téléphone du client"
                 autoFocus
                 className="min-w-0 flex-1 rounded-brand border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-primary"
@@ -271,7 +271,7 @@ export default function NewAppointmentPanel({
                   </Choice>
                 )}
                 {vehicleChoice === NEW_VEHICLE && (
-                  <Field label="Immatriculation" value={plate} onChange={(v) => setPlate(v.toUpperCase())} placeholder="AB-123-CD" />
+                  <Field label="Immatriculation" value={plate} onChange={(v) => setPlate(v.toUpperCase())} placeholder="Indiquez l'immatriculation" />
                 )}
               </div>
             </section>

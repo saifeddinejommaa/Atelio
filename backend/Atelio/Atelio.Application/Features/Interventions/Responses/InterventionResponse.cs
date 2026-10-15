@@ -1,3 +1,5 @@
+using Atelio.Domain;
+
 namespace Atelio.Application.Features.Interventions.Responses;
 
 public class InterventionResponse
@@ -144,6 +146,17 @@ public class InterventionArticleResponse
 
     // Prix unitaire HT.
     public decimal UnitPriceHt { get; set; }
+
+    // Promotion appliquée à la ligne, sinon null.
+    public long? PromotionId { get; set; }
+
+    public string? PromotionTitle { get; set; }
+
+    // Remise figée (ex. 20 pour -20 %).
+    public decimal? DiscountPercent { get; set; }
+
+    // Total HT de la ligne, remise déduite.
+    public decimal TotalHt => Pricing.LineTotal(Quantity, UnitPriceHt, DiscountPercent);
 }
 
 /// <summary>Pièce à prévoir pour une prestation de l'intervention (kit, aide-mémoire).</summary>

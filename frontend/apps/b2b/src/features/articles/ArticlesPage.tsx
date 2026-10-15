@@ -1,9 +1,11 @@
 import { ApiError, ArticleApiRepository } from '@atelio/core/data'
 import { SetArticleActive, type Article } from '@atelio/core/domain'
 import { useState } from 'react'
-import { useLoaderData, useRevalidator } from 'react-router'
+import { useRevalidator } from 'react-router'
 import { useBrand } from '../../brand/useBrand'
+import IconButton from '../../components/IconButton'
 import ArticlePanel from './ArticlePanel'
+import { useDeferredData } from '../../components/DeferredRoute'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 
@@ -22,7 +24,7 @@ function normalize(text: string): string {
 
 /** Catalogue d'articles de la marque (prix HT), importés ensuite sur les interventions. */
 export default function ArticlesPage() {
-  const articles = useLoaderData<Article[]>()
+  const articles = useDeferredData<Article[]>()
   const { api } = useBrand()
   const revalidator = useRevalidator()
   const [search, setSearch] = useState('')
@@ -102,7 +104,7 @@ export default function ArticlesPage() {
               <th className="px-4 py-3">Article</th>
               <th className="w-32 px-4 py-3 text-right">Prix HT</th>
               <th className="w-28 px-4 py-3">État</th>
-              <th className="w-48 px-4 py-3" />
+              <th className="w-28 px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -120,18 +122,16 @@ export default function ArticlesPage() {
                     {a.isActive ? 'Actif' : 'Désactivé'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <button type="button" onClick={() => setEditing(a)} className="text-zinc-600 hover:underline">
-                    Modifier
-                  </button>{' '}
-                  <button
-                    type="button"
-                    disabled={busy === a.id}
-                    onClick={() => toggle(a)}
-                    className={`hover:underline disabled:opacity-40 ${a.isActive ? 'text-red-700' : 'text-emerald-700'}`}
-                  >
-                    {a.isActive ? 'Désactiver' : 'Réactiver'}
-                  </button>
+                <td className="px-4 py-3">
+                  <div className="flex justify-end gap-1">
+                    <IconButton icon="edit" label="Modifier" onClick={() => setEditing(a)} />
+                    <IconButton
+                      icon={a.isActive ? 'disable' : 'enable'}
+                      label={a.isActive ? 'Désactiver' : 'Réactiver'}
+                      disabled={busy === a.id}
+                      onClick={() => toggle(a)}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

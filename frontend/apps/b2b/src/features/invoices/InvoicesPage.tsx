@@ -7,6 +7,7 @@ import Pagination from '../../components/Pagination'
 import { useCurrentGarage } from '../../garage/useCurrentGarage'
 import { useDebounced } from '../../lib/useDebounced'
 import InvoicePdfViewer from './InvoicePdfViewer'
+import LoadingState from '../../components/LoadingState'
 
 const PAGE_SIZE = 20
 
@@ -95,8 +96,9 @@ export default function InvoicesPage() {
     setPage(1)
   }
 
+  // Grand écran : page à la hauteur de l'écran, titre et recherche fixes ; la liste et l'aperçu défilent chacun de leur côté.
   return (
-    <>
+    <div className="flex flex-col lg:h-[calc(100vh-4rem)]">
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight">Factures</h1>
         <p className="mt-1 text-sm text-zinc-500">Factures émises par {garage.name}.</p>
@@ -113,11 +115,11 @@ export default function InvoicesPage() {
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-zinc-500">Client</span>
-          <input value={customer} onChange={(e) => filter(() => setCustomer(e.target.value))} placeholder="Nom ou prénom" className={`${input} w-48`} />
+          <input value={customer} onChange={(e) => filter(() => setCustomer(e.target.value))} placeholder="Indiquez le nom ou le prénom" className={`${input} w-56`} />
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-zinc-500">Véhicule</span>
-          <input value={plate} onChange={(e) => filter(() => setPlate(e.target.value))} placeholder="Immatriculation" className={`${input} w-40`} />
+          <input value={plate} onChange={(e) => filter(() => setPlate(e.target.value))} placeholder="Indiquez l'immatriculation" className={`${input} w-48`} />
         </label>
         {filtered && (
           <button
@@ -137,16 +139,16 @@ export default function InvoicesPage() {
         )}
       </section>
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
-        <section aria-label="Liste des factures" className="overflow-hidden rounded-brand bg-white shadow-sm">
-          {state.status === 'loading' && <p className="px-4 py-6 text-sm text-zinc-500">Chargement…</p>}
+      <div className="mt-4 grid items-start gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
+        <section aria-label="Liste des factures" className="flex min-h-0 flex-col overflow-hidden rounded-brand bg-white shadow-sm">
+          {state.status === 'loading' && <LoadingState message="Chargement des factures…" />}
           {state.status === 'error' && <p className="px-4 py-6 text-sm text-red-700">{state.message}</p>}
           {state.status === 'ok' && items.length === 0 && (
             <p className="px-4 py-6 text-sm text-zinc-500">{filtered ? 'Aucune facture ne correspond.' : 'Aucune facture.'}</p>
           )}
           {state.status === 'ok' && items.length > 0 && (
             <>
-              <ul className="divide-y divide-zinc-100">
+              <ul data-striped className="min-h-0 flex-1 divide-y divide-zinc-100 overflow-y-auto">
                 {items.map((i) => {
                   const active = i.id === shownId
                   return (
@@ -180,9 +182,11 @@ export default function InvoicesPage() {
           )}
         </section>
 
-        <section aria-label="Aperçu de la facture" className="lg:sticky lg:top-4">
+        <section aria-label="Aperçu de la facture" className="min-h-0 lg:overflow-y-auto">
           {shownId !== null && previewState.status === 'loading' && (
-            <p className="rounded-brand bg-white px-4 py-6 text-sm text-zinc-500 shadow-sm">Chargement de la facture…</p>
+            <div className="rounded-brand bg-white shadow-sm">
+              <LoadingState message="Chargement de la facture…" />
+            </div>
           )}
           {shownId !== null && previewState.status === 'error' && (
             <p className="rounded-brand bg-white px-4 py-6 text-sm text-red-700 shadow-sm">La facture n'a pas pu être chargée.</p>
@@ -206,13 +210,13 @@ export default function InvoicesPage() {
               <InvoicePdfViewer
                 key={previewState.invoice.id}
                 invoice={previewState.invoice}
-                height="calc(100vh - 12rem)"
+                height="calc(100vh - 19rem)"
                 onChanged={() => setReload((n) => n + 1)}
               />
             </>
           )}
         </section>
       </div>
-    </>
+    </div>
   )
 }

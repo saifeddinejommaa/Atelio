@@ -6,7 +6,7 @@ using Atelio.Infrastructure.Auth;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using MediatR;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi;
 using System.Text.Json.Serialization;
 
@@ -72,22 +72,42 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Appli
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPipelineBehavior<,>));
 
 // ============================================================
-// Authentification des clients b2c (jeton émis par /api/auth/customer)
+// Authentification
+// - clients b2c : jeton émis par /api/auth/customer (code par e-mail), routes /me ;
+// - personnel des garages (back-office) : jeton Microsoft Entra du tenant Gustaya, toutes les autres routes
+//   (sauf celles marquées [AllowAnonymous], utilisées par le site b2c sans connexion).
 // ============================================================
 
 var customerAuth = builder.Configuration.GetSection(CustomerAuthOptions.SectionName).Get<CustomerAuthOptions>()
     ?? throw new InvalidOperationException("Section CustomerAuth manquante dans la configuration.");
+var entraId = builder.Configuration.GetSection(EntraIdOptions.SectionName).Get<EntraIdOptions>()
+    ?? throw new InvalidOperationException("Section EntraId manquante dans la configuration.");
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddAuthentication()
+    .AddJwtBearer(CustomerAuthPolicy.Scheme, options =>
     {
         // Claims gardés tels quels (cid, tenant).
         options.MapInboundClaims = false;
         options.TokenValidationParameters = CustomerTokenService.ValidationParameters(customerAuth.SigningKey, CustomerClaims.SessionAudience);
+    })
+    .AddJwtBearer(StaffAuth.Scheme, options =>
+    {
+        // Jetons v2 du tenant Gustaya, destinés à l'API (client id ou URI api://).
+        options.Authority = $"{entraId.Instance.TrimEnd('/')}/{entraId.TenantId}/v2.0";
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters.ValidAudiences = [entraId.ApiClientId, $"api://{entraId.ApiClientId}"];
+        options.TokenValidationParameters.NameClaimType = "name";
+        // Rôles d'application (Admin, Staff) dans le claim « roles ».
+        options.TokenValidationParameters.RoleClaimType = "roles";
     });
 
-builder.Services.AddAuthorization(options => options.AddPolicy(CustomerAuthPolicy.Name, CustomerAuthPolicy.Configure));
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(CustomerAuthPolicy.Name, CustomerAuthPolicy.Configure);
+    StaffAuth.AddPolicies(options);
+});
+builder.Services.AddScoped<IAuthorizationHandler, BrandEmployeeAuthorizationHandler>();
 
 // ============================================================
 // CORS

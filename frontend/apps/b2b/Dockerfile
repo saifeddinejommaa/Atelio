@@ -15,6 +15,14 @@ COPY apps/b2b apps/b2b
 # Vide en production : les marques sont reconnues par leur domaine (current-brand.ts).
 ARG VITE_BRAND_BASE_DOMAIN=
 ENV VITE_BRAND_BASE_DOMAIN=$VITE_BRAND_BASE_DOMAIN
+
+# Connexion Microsoft du personnel (tenant Gustaya), intégrée au build par Vite.
+ARG VITE_ENTRA_TENANT_ID=
+ARG VITE_ENTRA_CLIENT_ID=
+ARG VITE_ENTRA_API_SCOPE=
+ENV VITE_ENTRA_TENANT_ID=$VITE_ENTRA_TENANT_ID
+ENV VITE_ENTRA_CLIENT_ID=$VITE_ENTRA_CLIENT_ID
+ENV VITE_ENTRA_API_SCOPE=$VITE_ENTRA_API_SCOPE
 RUN npm run build --workspace=b2b
 
 # ---------- Runtime ----------

@@ -79,7 +79,14 @@ export default function InterventionActions({ intervention }: { intervention: In
             </button>
           </>
         ) : (
-          <button type="button" onClick={() => setConfirming(true)} className={primary}>
+          // Grisé tant qu'aucun article n'est ajouté : il n'y aurait rien à facturer.
+          <button
+            type="button"
+            disabled={intervention.articles.length === 0}
+            title={intervention.articles.length === 0 ? 'Ajoutez au moins un article avant de terminer les travaux.' : undefined}
+            onClick={() => setConfirming(true)}
+            className={primary}
+          >
             Terminer les travaux
           </button>
         ))}

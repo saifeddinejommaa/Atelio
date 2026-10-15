@@ -72,7 +72,7 @@ export default function ArticlePanel({
       <form id="article-form" onSubmit={submit} className="space-y-5 text-sm">
         <label className="block">
           <span className="mb-1 block font-semibold">Nom</span>
-          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Huile moteur" maxLength={200} className={input} />
+          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Indiquez le nom de l'article" maxLength={200} className={input} />
         </label>
         <label className="block">
           <span className="mb-1 block font-semibold">Description</span>
@@ -81,14 +81,14 @@ export default function ArticlePanel({
             onChange={(e) => setDescription(e.target.value)}
             rows={6}
             maxLength={2000}
-            placeholder={'- Changement de l\'huile moteur 5W30\n- Changement du filtre à huile\n- Nettoyage des durites'}
+            placeholder="Indiquez les opérations réalisées, une par ligne"
             className={input}
           />
           <span className="mt-1 block text-xs text-zinc-500">Une opération par ligne. Affichée sur l'intervention et sur la facture.</span>
         </label>
-        <label className="block w-40">
+        <label className="block w-56">
           <span className="mb-1 block font-semibold">Prix unitaire HT (€)</span>
-          <input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0,00" className={`${input} text-right`} />
+          <input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Indiquez le prix HT" className={`${input} text-right`} />
         </label>
         {error && <p className="rounded-brand bg-red-50 px-3 py-2 text-red-700">{error}</p>}
       </form>

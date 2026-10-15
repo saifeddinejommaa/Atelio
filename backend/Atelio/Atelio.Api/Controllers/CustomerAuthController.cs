@@ -1,11 +1,13 @@
 using Atelio.Application.Features.CustomerAuth.Commands;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Atelio.Api.Controllers;
 
 /// <summary>Connexion des clients du site b2c : code à 6 chiffres envoyé par e-mail.</summary>
 [ApiController]
+[AllowAnonymous]
 [Route("api/auth/customer")]
 public class CustomerAuthController : ControllerBase
 {

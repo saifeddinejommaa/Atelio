@@ -13,6 +13,15 @@ public class PromotionResponse
     // Ex. 20 pour -20 %.
     public decimal DiscountPercent { get; set; }
 
+    // Période d'affichage (jours locaux, bornes incluses) ; pas de fin : sans limite.
+    public DateOnly StartsOn { get; set; }
+
+    public DateOnly? EndsOn { get; set; }
+
+    public string? Conditions { get; set; }
+
+    public bool IsActive { get; set; }
+
     public long ServiceId { get; set; }
 
     public string ServiceCode { get; set; } = null!;

@@ -5,6 +5,7 @@ using Atelio.Application.Features.Garages.Responses;
 using Atelio.Application.Features.Team.Queries;
 using Atelio.Domain.Repositories;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Atelio.Api.Controllers;
@@ -26,12 +27,14 @@ public class GaragesController : ControllerBase
 
     /// <summary>Garages actifs (page « Trouver un garage »).</summary>
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll([FromQuery] GaragesRequestFilter filter, CancellationToken cancellationToken)
     {
         return Ok(await _queryRepository.GetGaragesAsync(filter, cancellationToken));
     }
 
     [HttpGet("{id:long}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(long id, CancellationToken cancellationToken)
     {
         var result = await _queryRepository.GetByIdAsync(id, cancellationToken);
@@ -44,6 +47,7 @@ public class GaragesController : ControllerBase
     /// Ex. : GET /api/garages/1/availability?serviceIds=1&amp;serviceIds=2&amp;from=2026-10-05&amp;days=14
     /// </summary>
     [HttpGet("{id:long}/availability")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAvailability(
         long id,
         [FromQuery] List<long> serviceIds,

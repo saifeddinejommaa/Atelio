@@ -1,5 +1,5 @@
 import { InterventionStatus } from '@atelio/core/domain'
-import { Link, useLoaderData } from 'react-router'
+import { Link } from 'react-router'
 import ArticlesCard from './ArticlesCard'
 import type { InterventionData } from './InterventionLoader'
 import InterventionActions from './InterventionActions'
@@ -7,13 +7,14 @@ import { interventionStatusClasses } from './InterventionStatus'
 import MechanicPicker from './MechanicPicker'
 import TotalsCard from './TotalsCard'
 import VehicleCard from './VehicleCard'
+import { useDeferredData } from '../../components/DeferredRoute'
 
 const day = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
 /** Détail d'une intervention : client, véhicule, mécanicien chargé, prestations demandées, articles, récapitulatif. */
 export default function InterventionPage() {
-  const { intervention, vehicle, mechanics, catalog, quotes } = useLoaderData<InterventionData>()
+  const { intervention, vehicle, mechanics, catalog, quotes, promotions } = useDeferredData<InterventionData>()
   // Facturée : les articles ne se modifient plus.
   const locked = intervention.status.id === InterventionStatus.Invoiced || intervention.status.id === InterventionStatus.Closed
 
@@ -98,7 +99,7 @@ export default function InterventionPage() {
       </div>
 
       <div className="mt-4 grid items-start gap-4 xl:grid-cols-[3fr_1fr]">
-        <ArticlesCard intervention={intervention} catalog={catalog} quotes={quotes} readOnly={locked} />
+        <ArticlesCard intervention={intervention} catalog={catalog} quotes={quotes} promotions={promotions} readOnly={locked} />
         <TotalsCard intervention={intervention} />
       </div>
     </>

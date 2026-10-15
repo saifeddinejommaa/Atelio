@@ -3,6 +3,7 @@ import { GenerateInvoicePdf, GetInvoicePdf, type Invoice } from '@atelio/core/do
 import { useEffect, useState } from 'react'
 import { useBrand } from '../../brand/useBrand'
 import InvoiceDocument from './InvoiceDocument'
+import LoadingState from '../../components/LoadingState'
 
 const dateTime = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
@@ -117,7 +118,9 @@ export default function InvoicePdfViewer({
         )}
       </div>
 
-      {state.status === 'loading' && <p className="rounded-brand bg-white px-4 py-6 text-sm text-zinc-500 shadow-sm">Chargement du PDF…</p>}
+      {state.status === 'loading' && <div className="rounded-brand bg-white shadow-sm">
+          <LoadingState message="Chargement du PDF…" />
+        </div>}
       {state.status === 'error' && <p className="rounded-brand bg-white px-4 py-6 text-sm text-red-700 shadow-sm">{state.message}</p>}
       {state.status === 'ok' && (
         <iframe title={`Facture ${invoice.number}`} src={state.url} style={{ height }} className="w-full rounded-brand border border-zinc-200 bg-white" />

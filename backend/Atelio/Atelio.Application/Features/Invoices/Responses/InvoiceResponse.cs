@@ -103,5 +103,11 @@ public class InvoiceLineResponse
     // HT pour un article, TTC pour la main-d'œuvre et les pièces.
     public decimal UnitPrice { get; set; }
 
+    // Remise de la promotion appliquée à la ligne (ex. 20 pour -20 %), sinon null.
+    public decimal? DiscountPercent { get; set; }
+
+    public string? DiscountLabel { get; set; }
+
+    // Remise déduite.
     public decimal Total { get; set; }
 }

@@ -1,4 +1,4 @@
-import type { Absence, DaySchedule, NewAbsence, TeamMember } from "../entities/team";
+import type { Absence, DaySchedule, NewAbsence, NewTeamMember, TeamMember } from "../entities/team";
 import { ValidationError } from "../errors";
 import type { ITeamRepository } from "../repositories/ITeamRepository";
 
@@ -45,6 +45,30 @@ export class DeclareAbsence {
     if (!absence.startDate || !absence.endDate) throw new ValidationError("Indiquez le premier et le dernier jour.");
     if (absence.endDate < absence.startDate) throw new ValidationError("Le dernier jour doit être après le premier.");
     return this.repository.declareAbsence(employeeId, { ...absence, comment: absence.comment?.trim() || null });
+  }
+}
+
+/** Ajoute un employé au garage (prénom, nom, rôle ; téléphone et e-mail facultatifs). */
+export class AddTeamMember {
+  constructor(private readonly repository: ITeamRepository) {}
+
+  async execute(garageId: number, member: NewTeamMember): Promise<number> {
+    const firstName = member.firstName.trim();
+    const lastName = member.lastName.trim();
+    if (!firstName) throw new ValidationError("Indiquez le prénom.");
+    if (!lastName) throw new ValidationError("Indiquez le nom.");
+    const email = member.email?.trim() || null;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ValidationError("L'e-mail n'est pas valide.");
+    return this.repository.addMember(garageId, { firstName, lastName, role: member.role, phone: member.phone?.trim() || null, email });
+  }
+}
+
+/** L'employé quitte l'équipe et le planning (son historique reste). */
+export class DeactivateTeamMember {
+  constructor(private readonly repository: ITeamRepository) {}
+
+  execute(employeeId: number): Promise<void> {
+    return this.repository.deactivateMember(employeeId);
   }
 }
 

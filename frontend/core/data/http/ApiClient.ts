@@ -8,6 +8,8 @@ export type ApiConfig = {
   tenant: string;
   /** Jeton de session du client connecté (en-tête Authorization), pour les routes /me. */
   token?: string;
+  /** Back-office : jeton Microsoft du personnel, demandé avant chaque appel (renouvelé au besoin). */
+  getToken?: () => Promise<string>;
 };
 
 /** Paramètres de query string. Un tableau donne un paramètre répété (?id=1&id=2). */
@@ -58,10 +60,11 @@ export class ApiClient {
     await this.read(await this.send("DELETE", path), path);
   }
 
-  private send(method: string, path: string, query?: QueryParams, body?: unknown): Promise<Response> {
+  private async send(method: string, path: string, query?: QueryParams, body?: unknown): Promise<Response> {
     const headers: Record<string, string> = { "X-Tenant": this.config.tenant, Accept: "application/json" };
     if (body !== undefined) headers["Content-Type"] = "application/json";
-    if (this.config.token) headers.Authorization = `Bearer ${this.config.token}`;
+    const token = this.config.token ?? (await this.config.getToken?.());
+    if (token) headers.Authorization = `Bearer ${token}`;
 
     return fetch(this.url(path, query), {
       method,

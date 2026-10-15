@@ -10,6 +10,9 @@ public interface IServiceQueryRepository
         ServicesRequestFilter filter,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Toutes les prestations, actives ou non (back-office).</summary>
+    Task<IReadOnlyList<ServiceAdminResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+
     Task<ServiceResponse?> GetByCodeAsync(
         string code,
         CancellationToken cancellationToken = default);

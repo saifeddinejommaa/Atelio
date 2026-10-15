@@ -247,7 +247,7 @@ internal static class SparePartRules
 }
 
 // ============================================================
-// ARTICLES (importés du catalogue : nom, description et prix HT copiés, seule la quantité se saisit)
+// ARTICLES (importés du catalogue : nom, description et prix HT copiés ; quantité et promotion se saisissent)
 // ============================================================
 
 public class AddInterventionArticleCommand : IRequest<long>
@@ -258,6 +258,9 @@ public class AddInterventionArticleCommand : IRequest<long>
 
     // Décimale possible (ex. 4,5 L).
     public decimal Quantity { get; set; }
+
+    // Promotion en cours appliquée à la ligne, sinon null.
+    public long? PromotionId { get; set; }
 }
 
 public class AddInterventionArticleCommandValidator : AbstractValidator<AddInterventionArticleCommand>
@@ -275,7 +278,9 @@ public class AddInterventionArticleCommandHandler : IRequestHandler<AddIntervent
     private readonly IInvoiceRepository _invoices;
     private readonly IArticleRepository _articles;
     private readonly IInterventionArticleRepository _lines;
+    private readonly IPromotionRepository _promotions;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenant;
     private readonly TimeProvider _clock;
 
     public AddInterventionArticleCommandHandler(
@@ -283,14 +288,18 @@ public class AddInterventionArticleCommandHandler : IRequestHandler<AddIntervent
         IInvoiceRepository invoices,
         IArticleRepository articles,
         IInterventionArticleRepository lines,
+        IPromotionRepository promotions,
         IUnitOfWork unitOfWork,
+        ITenantContext tenant,
         TimeProvider clock)
     {
         _interventions = interventions;
         _invoices = invoices;
         _articles = articles;
         _lines = lines;
+        _promotions = promotions;
         _unitOfWork = unitOfWork;
+        _tenant = tenant;
         _clock = clock;
     }
 
@@ -314,6 +323,7 @@ public class AddInterventionArticleCommandHandler : IRequestHandler<AddIntervent
             Quantity = request.Quantity,
             CreatedAt = _clock.GetUtcNow().UtcDateTime,
         };
+        await InterventionArticleRules.SetPromotionAsync(line, request.PromotionId, _promotions, _tenant, _clock, cancellationToken);
 
         await _lines.AddAsync(line, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -329,6 +339,9 @@ public class UpdateInterventionArticleCommand : IRequest<Unit>
     public long LineId { get; set; }
 
     public decimal Quantity { get; set; }
+
+    // Promotion de la ligne (null : aucune). Inchangée, elle garde sa remise d'origine même si elle est terminée.
+    public long? PromotionId { get; set; }
 }
 
 public class UpdateInterventionArticleCommandValidator : AbstractValidator<UpdateInterventionArticleCommand>
@@ -344,15 +357,27 @@ public class UpdateInterventionArticleCommandHandler : IRequestHandler<UpdateInt
     private readonly IInterventionRepository _interventions;
     private readonly IInvoiceRepository _invoices;
     private readonly IInterventionArticleRepository _lines;
+    private readonly IPromotionRepository _promotions;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenant;
+    private readonly TimeProvider _clock;
 
     public UpdateInterventionArticleCommandHandler(
-        IInterventionRepository interventions, IInvoiceRepository invoices, IInterventionArticleRepository lines, IUnitOfWork unitOfWork)
+        IInterventionRepository interventions,
+        IInvoiceRepository invoices,
+        IInterventionArticleRepository lines,
+        IPromotionRepository promotions,
+        IUnitOfWork unitOfWork,
+        ITenantContext tenant,
+        TimeProvider clock)
     {
         _interventions = interventions;
         _invoices = invoices;
         _lines = lines;
+        _promotions = promotions;
         _unitOfWork = unitOfWork;
+        _tenant = tenant;
+        _clock = clock;
     }
 
     public async Task<Unit> Handle(UpdateInterventionArticleCommand request, CancellationToken cancellationToken)
@@ -361,6 +386,11 @@ public class UpdateInterventionArticleCommandHandler : IRequestHandler<UpdateInt
         var line = await InterventionArticleRules.GetAsync(_lines, request.InterventionId, request.LineId, cancellationToken);
 
         line.Quantity = request.Quantity;
+        if (request.PromotionId != line.PromotionId)
+        {
+            await InterventionArticleRules.SetPromotionAsync(line, request.PromotionId, _promotions, _tenant, _clock, cancellationToken);
+        }
+
         _lines.Update(line);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -488,6 +518,36 @@ internal static class InterventionArticleRules
         return line is not null && line.InterventionId == interventionId
             ? line
             : throw new NotFoundException($"Article {lineId} introuvable sur l'intervention {interventionId}.");
+    }
+
+    /// <summary>
+    /// Applique la promotion choisie à la ligne (sa remise est figée) ; elle doit être active et en cours aujourd'hui.
+    /// Null retire la promotion.
+    /// </summary>
+    public static async Task SetPromotionAsync(
+        InterventionArticle line,
+        long? promotionId,
+        IPromotionRepository promotions,
+        ITenantContext tenant,
+        TimeProvider clock,
+        CancellationToken cancellationToken)
+    {
+        if (promotionId is not long id)
+        {
+            line.PromotionId = null;
+            line.DiscountPercent = null;
+            return;
+        }
+
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(clock.GetUtcNow().UtcDateTime, tenant.TimeZone));
+        var promotion = await promotions.GetByIdAsync(id, cancellationToken);
+        if (promotion is null || !promotion.IsActive || promotion.StartsOn > today || promotion.EndsOn < today)
+        {
+            throw new BusinessException("Cette promotion n'est pas en cours.");
+        }
+
+        line.PromotionId = promotion.Id;
+        line.DiscountPercent = promotion.DiscountPercent;
     }
 }
 

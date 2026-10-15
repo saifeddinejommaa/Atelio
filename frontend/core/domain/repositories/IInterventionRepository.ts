@@ -1,4 +1,10 @@
-import type { Intervention, InterventionFilter, InterventionSummary, ServiceCategory, SparePartInput } from "../entities/intervention";
+import type {
+  Intervention,
+  InterventionFilter,
+  InterventionSummary,
+  ServiceCategory,
+  SparePartInput,
+} from "../entities/intervention";
 import type { Page } from "../entities/page";
 
 export interface IInterventionRepository {
@@ -14,8 +20,9 @@ export interface IInterventionRepository {
   updateSparePart(interventionId: number, sparePartId: number, part: SparePartInput): Promise<void>;
   deleteSparePart(interventionId: number, sparePartId: number): Promise<void>;
   /** Importe un article du catalogue et renvoie l'identifiant de la ligne. */
-  addArticle(interventionId: number, articleId: number, quantity: number): Promise<number>;
-  updateArticleQuantity(interventionId: number, lineId: number, quantity: number): Promise<void>;
+  /** promotionId : promotion en cours appliquée à la ligne, sinon null. */
+  addArticle(interventionId: number, articleId: number, quantity: number, promotionId: number | null): Promise<number>;
+  updateArticle(interventionId: number, lineId: number, quantity: number, promotionId: number | null): Promise<void>;
   deleteArticle(interventionId: number, lineId: number): Promise<void>;
   /** Ajoute les lignes d'un devis du même client (une seule fois par devis). */
   importQuote(interventionId: number, quoteId: number): Promise<void>;

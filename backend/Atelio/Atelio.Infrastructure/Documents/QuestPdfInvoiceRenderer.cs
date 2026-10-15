@@ -214,6 +214,11 @@ public class QuestPdfInvoiceRenderer : IInvoicePdfRenderer
                     {
                         c.Item().Text(line.Description).FontSize(8).FontColor(Muted);
                     }
+
+                    if (line.DiscountPercent is decimal discount)
+                    {
+                        c.Item().PaddingTop(2).Text($"{line.DiscountLabel} : remise -{discount.ToString("0.##", French)} %").FontSize(8).SemiBold();
+                    }
                 });
                 table.Cell().Element(Cell).AlignRight().Text(Number(line.Quantity));
                 table.Cell().Element(Cell).AlignRight().Text(Number(line.UnitPrice));

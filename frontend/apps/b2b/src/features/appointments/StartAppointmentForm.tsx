@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useBrand } from '../../brand/useBrand'
 import VehicleDetailsForm from '../vehicles/VehicleDetailsForm'
+import LoadingState from '../../components/LoadingState'
 
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
@@ -128,7 +129,7 @@ export default function StartAppointmentForm({ appointment, onCancel }: { appoin
         </p>
       )}
 
-      {vehicleState.status === 'loading' && <p className="text-sm text-zinc-500">Vérification du véhicule…</p>}
+      {vehicleState.status === 'loading' && <LoadingState message="Vérification du véhicule…" className="py-6" />}
       {vehicleState.status === 'error' && <p className="rounded-brand bg-red-50 px-3 py-2 text-sm text-red-700">{vehicleState.message}</p>}
       {vehicleState.status === 'ok' && !vehicleComplete && (
         <div className="space-y-3 rounded-brand border border-amber-300 bg-amber-50 p-4">

@@ -9,6 +9,12 @@ public interface IEmployeeRepository : IRepository<Employee>
 
     /// <summary>Employés actifs du garage (tous rôles), par nom.</summary>
     Task<IReadOnlyList<Employee>> GetActiveByGarageAsync(long garageId, CancellationToken cancellationToken = default);
+
+    /// <summary>Employé relié à ce compte Microsoft (suivi pour modification), ou null.</summary>
+    Task<Employee?> GetByEntraObjectIdAsync(string objectId, CancellationToken cancellationToken = default);
+
+    /// <summary>Employé actif avec cet e-mail, pas encore relié à un compte Microsoft (suivi), ou null.</summary>
+    Task<Employee?> GetUnlinkedByEmailAsync(string email, CancellationToken cancellationToken = default);
 }
 
 public interface IEmployeeScheduleRepository : IRepository<EmployeeSchedule>

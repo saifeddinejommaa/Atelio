@@ -1,9 +1,15 @@
-import { memberDay, weeklyHours, type TeamMember } from '@atelio/core/domain'
+import { ApiError, TeamApiRepository } from '@atelio/core/data'
+import { DeactivateTeamMember, memberDay, weeklyHours, type TeamMember } from '@atelio/core/domain'
 import { useState } from 'react'
+import { useBrand } from '../../brand/useBrand'
+import ConfirmDialog from '../../components/ConfirmDialog'
+import IconButton from '../../components/IconButton'
 import { useCurrentGarage } from '../../garage/useCurrentGarage'
 import EditEmployeePanel from './EditEmployeePanel'
+import NewEmployeePanel from './NewEmployeePanel'
 import { addDays, dayLabels, formatDay, isoDate, mondayOf, reasonLabels, roleLabels } from './TeamLabels'
 import { useTeam } from './useTeam'
+import LoadingState from '../../components/LoadingState'
 
 /** Équipes : une carte dépliable par employé, avec sa semaine jour par jour. */
 export default function TeamPage() {
@@ -14,6 +20,27 @@ export default function TeamPage() {
   const { state, reload } = useTeam(garage.id, days[0], days[6])
   const [open, setOpen] = useState<number[]>([])
   const [editing, setEditing] = useState<number | null>(null)
+  const [adding, setAdding] = useState(false)
+  // Employé dont le retrait de l'équipe attend confirmation.
+  const [removing, setRemoving] = useState<TeamMember | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const { api } = useBrand()
+
+  async function deactivate(member: TeamMember) {
+    setBusy(true)
+    setError('')
+    try {
+      await new DeactivateTeamMember(new TeamApiRepository(api)).execute(member.id)
+      setOpen((cur) => cur.filter((id) => id !== member.id))
+      reload()
+    } catch (err) {
+      setError(err instanceof ApiError && err.status < 500 ? err.message : 'La modification a échoué, réessayez.')
+    } finally {
+      setRemoving(null)
+      setBusy(false)
+    }
+  }
 
   function toggle(id: number) {
     setOpen((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
@@ -45,10 +72,15 @@ export default function TeamPage() {
           <span className="ml-2 font-bold">
             {formatDay(days[0])} – {formatDay(days[6])}
           </span>
+          <button type="button" onClick={() => setAdding(true)} className="ml-4 rounded-brand bg-secondary px-4 py-2 text-sm font-semibold text-on-secondary">
+            + Nouvel employé
+          </button>
         </div>
       </div>
 
-      {state.status === 'loading' && <p className="mt-6 text-sm text-zinc-500">Chargement…</p>}
+      {error && <p className="mt-4 rounded-brand bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+
+      {state.status === 'loading' && <LoadingState message="Chargement de l'équipe…" />}
       {state.status === 'error' && <p className="mt-6 text-sm text-red-700">L'équipe n'a pas pu être chargée.</p>}
       {state.status === 'ok' && state.members.length === 0 && (
         <p className="mt-6 rounded-brand bg-white p-6 text-sm text-zinc-600 shadow-sm">Aucun employé actif dans ce garage.</p>
@@ -65,9 +97,38 @@ export default function TeamPage() {
               expanded={open.includes(m.id)}
               onToggle={() => toggle(m.id)}
               onEdit={() => setEditing(m.id)}
+              onRemove={() => {
+                setError('')
+                setRemoving(m)
+              }}
             />
           ))}
         </div>
+      )}
+
+      {adding && (
+        <NewEmployeePanel
+          garageId={garage.id}
+          garageName={garage.name}
+          onClose={() => setAdding(false)}
+          onAdded={(id) => {
+            setAdding(false)
+            reload()
+            // Planning type à saisir tout de suite.
+            setEditing(id)
+          }}
+        />
+      )}
+
+      {removing && (
+        <ConfirmDialog
+          title={`Voulez-vous retirer ${removing.firstName} ${removing.lastName} de l'équipe ?`}
+          message="L'employé n'apparaîtra plus dans le planning et ne comptera plus dans la capacité du garage. Ses interventions passées restent inchangées."
+          confirmLabel="Retirer"
+          busy={busy}
+          onConfirm={() => deactivate(removing)}
+          onCancel={() => setRemoving(null)}
+        />
       )}
 
       {editing !== null && (
@@ -89,6 +150,7 @@ function MemberCard({
   expanded,
   onToggle,
   onEdit,
+  onRemove,
 }: {
   member: TeamMember
   days: string[]
@@ -96,6 +158,8 @@ function MemberCard({
   expanded: boolean
   onToggle: () => void
   onEdit: () => void
+  /** Retire l'employé de l'équipe (désactivation). */
+  onRemove: () => void
 }) {
   const absentDays = days.filter((d) => memberDay(member, d).kind === 'absent').length
 
@@ -122,13 +186,8 @@ function MemberCard({
             </span>
           </span>
         </button>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="rounded-brand border border-zinc-300 px-3 py-1.5 text-sm font-semibold hover:border-primary"
-        >
-          Modifier
-        </button>
+        <IconButton icon="edit" label="Modifier le planning" onClick={onEdit} />
+        <IconButton icon="disable" label="Retirer de l'équipe" onClick={onRemove} />
       </div>
 
       {expanded && (

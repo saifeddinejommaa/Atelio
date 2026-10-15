@@ -6,4 +6,7 @@ public class InterventionArticleRequest
     public long ArticleId { get; set; }
 
     public decimal Quantity { get; set; }
+
+    // Promotion en cours appliquée à la ligne, sinon null.
+    public long? PromotionId { get; set; }
 }

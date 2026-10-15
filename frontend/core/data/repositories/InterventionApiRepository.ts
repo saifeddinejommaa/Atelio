@@ -65,14 +65,14 @@ export class InterventionApiRepository implements IInterventionRepository {
     await this.api.delete(`/interventions/${interventionId}/spare-parts/${sparePartId}`);
   }
 
-  async addArticle(interventionId: number, articleId: number, quantity: number): Promise<number> {
-    const created = await this.api.post<{ id: number }>(`/interventions/${interventionId}/articles`, { articleId, quantity });
+  async addArticle(interventionId: number, articleId: number, quantity: number, promotionId: number | null): Promise<number> {
+    const created = await this.api.post<{ id: number }>(`/interventions/${interventionId}/articles`, { articleId, quantity, promotionId });
     if (!created) throw new ApiError(500, "L'API n'a pas renvoyé l'article ajouté.");
     return created.id;
   }
 
-  async updateArticleQuantity(interventionId: number, lineId: number, quantity: number): Promise<void> {
-    await this.api.put(`/interventions/${interventionId}/articles/${lineId}`, { quantity });
+  async updateArticle(interventionId: number, lineId: number, quantity: number, promotionId: number | null): Promise<void> {
+    await this.api.put(`/interventions/${interventionId}/articles/${lineId}`, { quantity, promotionId });
   }
 
   async importQuote(interventionId: number, quoteId: number): Promise<void> {

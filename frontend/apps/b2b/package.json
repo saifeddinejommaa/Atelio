@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@atelio/core": "*",
+    "@azure/msal-browser": "^5.25.0",
     "@fullcalendar/react": "^7.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

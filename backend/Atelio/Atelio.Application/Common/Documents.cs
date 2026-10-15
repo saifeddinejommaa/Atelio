@@ -52,7 +52,9 @@ public record InvoicePdfModel(
     decimal AmountPaid,
     decimal Remaining);
 
-public record InvoicePdfLine(string Label, string? Description, decimal Quantity, decimal UnitPrice, decimal Total);
+// Total : remise de la promotion déduite (DiscountLabel / DiscountPercent, sinon null).
+public record InvoicePdfLine(
+    string Label, string? Description, decimal Quantity, decimal UnitPrice, string? DiscountLabel, decimal? DiscountPercent, decimal Total);
 
 public record InvoicePdfPayment(DateTime PaidAtLocal, string Method, decimal Amount);
 

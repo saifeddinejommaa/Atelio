@@ -26,3 +26,13 @@ public class ServiceResponse
     // Prix TTC après promotion (égal au prix s'il n'y a pas de promotion).
     public decimal FinalPrice => Pricing.ApplyDiscount(Price, DiscountPercent);
 }
+
+/// <summary>Prestation dans le back-office : active ou non, avec son type d'intervention.</summary>
+public class ServiceAdminResponse : ServiceResponse
+{
+    public bool IsActive { get; set; }
+
+    public long? CategoryId { get; set; }
+
+    public string? CategoryName { get; set; }
+}

@@ -1,10 +1,12 @@
 using Atelio.Application.Features.Services.Responses;
 using Atelio.Domain.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Atelio.Api.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/service-categories")]
 public class ServiceCategoriesController : ControllerBase
 {

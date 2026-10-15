@@ -15,3 +15,17 @@ export type Service = {
   /** Prix TTC après promotion. */
   finalPrice: number;
 };
+
+/** Prestation dans le back-office : active ou non, avec son type d'intervention. */
+export type ManagedService = Service & {
+  /** Désactivée : plus proposée sur le site ni à la prise de rendez-vous. */
+  isActive: boolean;
+  /** Type d'intervention : donne le taux horaire de main-d'œuvre. */
+  categoryId: number | null;
+  categoryName: string | null;
+};
+
+/** Prestation à enregistrer. */
+export type ServiceInput = Pick<Service, "name" | "description" | "price" | "durationMinutes" | "uncertainDuration"> & {
+  categoryId: number | null;
+};

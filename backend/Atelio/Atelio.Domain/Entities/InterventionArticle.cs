@@ -33,6 +33,14 @@ public class InterventionArticle
     [Column("quantity")]
     public decimal Quantity { get; set; } = 1;
 
+    // Promotion choisie par le garagiste sur la ligne (en cours le jour du choix), sinon null.
+    [Column("promotion_id")]
+    public long? PromotionId { get; set; }
+
+    // Remise figée au choix de la promotion (ex. 20 pour -20 %).
+    [Column("discount_percent")]
+    public decimal? DiscountPercent { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 }
