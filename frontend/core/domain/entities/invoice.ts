@@ -12,6 +12,10 @@ export type InvoiceLine = {
   description: string | null;
   quantity: number;
   unitPrice: number;
+  /** Remise de la promotion appliquée à la ligne (ex. 20 pour -20 %), sinon null. */
+  discountPercent: number | null;
+  discountLabel: string | null;
+  /** Remise déduite. */
   total: number;
 };
 

@@ -1,10 +1,11 @@
 import type { Invoice } from '@atelio/core/domain'
-import { Link, useLoaderData, useRevalidator } from 'react-router'
+import { Link, useRevalidator } from 'react-router'
 import InvoicePdfViewer from './InvoicePdfViewer'
+import { useDeferredData } from '../../components/DeferredRoute'
 
 /** Facture : PDF stocké (téléchargeable, imprimable depuis le lecteur PDF du navigateur). */
 export default function InvoicePage() {
-  const invoice = useLoaderData<Invoice>()
+  const invoice = useDeferredData<Invoice>()
   const revalidator = useRevalidator()
 
   return (

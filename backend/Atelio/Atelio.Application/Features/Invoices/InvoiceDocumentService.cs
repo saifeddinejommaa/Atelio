@@ -95,7 +95,7 @@ public class InvoiceDocumentService : IInvoiceDocumentService
             Lines: invoice.Lines
                 .OrderBy(l => l.SortOrder)
                 .ThenBy(l => l.Id)
-                .Select(l => new InvoicePdfLine(l.Label, l.Description, l.Quantity, l.UnitPrice, l.Total))
+                .Select(l => new InvoicePdfLine(l.Label, l.Description, l.Quantity, l.UnitPrice, l.DiscountLabel, l.DiscountPercent, l.Total))
                 .ToList(),
             TotalHt: invoice.TotalHt,
             TotalVat: invoice.TotalVat,

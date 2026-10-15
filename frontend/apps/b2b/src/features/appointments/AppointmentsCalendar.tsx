@@ -27,6 +27,7 @@ import '@fullcalendar/react/themes/classic/palette.css'
 import { useCallback, useMemo, useRef, useState, type RefObject } from 'react'
 import { useBrand } from '../../brand/useBrand'
 import { displayColors, MIN_LEAD_HOURS } from './AppointmentStatus'
+import LoadingState from '../../components/LoadingState'
 
 type ViewType = 'timeGridDay' | 'timeGridWeek'
 
@@ -152,6 +153,7 @@ export default function AppointmentsCalendar({
     [api, garage.id],
   )
 
+  const [loadingEvents, setLoadingEvents] = useState(false)
   const capacity = useRef<CapacityPeriod[]>([])
   const loadCapacity = useCallback(
     async (info: EventSourceFuncInfo): Promise<EventInput[]> => {
@@ -289,8 +291,17 @@ export default function AppointmentsCalendar({
       )}
 
       {/* En vue jour, la colonne du jour courant n'est pas teintée : la journée reste blanche. */}
-      <div className={view.type === 'timeGridDay' ? 'calendar-day-view' : undefined}>
+      <div className={`relative ${view.type === 'timeGridDay' ? 'calendar-day-view' : ''}`}>
+        {/* Rendez-vous et capacité en cours de chargement : le calendrier reste affiché dessous. */}
+        {loadingEvents && (
+          <div className="absolute inset-0 z-20 flex items-start justify-center bg-white/60 pt-24">
+            <div className="rounded-brand bg-white px-6 shadow-sm">
+              <LoadingState message="Chargement des rendez-vous…" className="py-6" />
+            </div>
+          </div>
+        )}
         <FullCalendar
+          loading={setLoadingEvents}
           ref={calendarRef}
           plugins={plugins}
           locale={frLocale}

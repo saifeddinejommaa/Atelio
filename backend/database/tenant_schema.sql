@@ -157,6 +157,7 @@ CREATE TABLE public.employee (
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    entra_object_id character varying(64) UNIQUE,
     CONSTRAINT employee_role_check CHECK (((role)::text = ANY ((ARRAY['mechanic'::character varying, 'manager'::character varying, 'reception'::character varying])::text[])))
 );
 
@@ -438,6 +439,8 @@ CREATE TABLE public.invoice_line (
     total numeric(10,2) NOT NULL,
     sort_order smallint DEFAULT 0 NOT NULL,
     description text,
+    discount_percent numeric(5,2),
+    discount_label character varying(150),
     CONSTRAINT invoice_line_kind_check CHECK (((kind)::text = ANY ((ARRAY['labour'::character varying, 'part'::character varying, 'article'::character varying])::text[]))),
     CONSTRAINT invoice_line_quantity_check CHECK ((quantity > (0)::numeric)),
     CONSTRAINT invoice_line_total_check CHECK ((total >= (0)::numeric)),
@@ -540,7 +543,11 @@ CREATE TABLE public.promotion (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     discount_percent numeric(5,2) NOT NULL,
-    CONSTRAINT promotion_discount_percent_check CHECK (((discount_percent > (0)::numeric) AND (discount_percent <= (100)::numeric)))
+    starts_on date DEFAULT CURRENT_DATE NOT NULL,
+    ends_on date,
+    conditions text,
+    CONSTRAINT promotion_discount_percent_check CHECK (((discount_percent > (0)::numeric) AND (discount_percent <= (100)::numeric))),
+    CONSTRAINT promotion_period_check CHECK (((ends_on IS NULL) OR (ends_on >= starts_on)))
 );
 
 
@@ -1554,7 +1561,9 @@ CREATE TABLE public.intervention_article (
     description text,
     unit_price_ht numeric(10,2) NOT NULL CHECK (unit_price_ht >= (0)::numeric),
     quantity numeric(10,2) DEFAULT 1 NOT NULL CHECK (quantity > (0)::numeric),
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    promotion_id bigint REFERENCES public.promotion(id),
+    discount_percent numeric(5,2) CHECK (discount_percent > (0)::numeric AND discount_percent <= (100)::numeric)
 );
 
 ALTER TABLE public.intervention_article OWNER TO postgres;

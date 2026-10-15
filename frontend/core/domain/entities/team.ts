@@ -36,6 +36,9 @@ export type TeamMember = {
   absences: Absence[];
 };
 
+/** Nouvel employé du garage (pour le planning) : son planning type se saisit ensuite. */
+export type NewTeamMember = Pick<TeamMember, "firstName" | "lastName" | "role" | "phone" | "email">;
+
 /** "08:30" => 510 minutes. */
 function minutes(time: string): number {
   const [h, m] = time.split(":").map(Number);

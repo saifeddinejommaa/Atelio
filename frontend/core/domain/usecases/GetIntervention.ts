@@ -1,4 +1,10 @@
-import type { Intervention, InterventionFilter, InterventionSummary, ServiceCategory, SparePartInput } from "../entities/intervention";
+import type {
+  Intervention,
+  InterventionFilter,
+  InterventionSummary,
+  ServiceCategory,
+  SparePartInput,
+} from "../entities/intervention";
 import type { Page } from "../entities/page";
 import { ValidationError } from "../errors";
 import type { IInterventionRepository } from "../repositories/IInterventionRepository";
@@ -58,20 +64,21 @@ function checkQuantity(quantity: number): number {
   return quantity;
 }
 
-/** Importe un article du catalogue (prix HT copié, non modifiable). */
+/** Importe un article du catalogue (prix HT copié, non modifiable), avec une promotion en cours facultative. */
 export class AddInterventionArticle {
   constructor(private readonly repository: IInterventionRepository) {}
 
-  async execute(interventionId: number, articleId: number, quantity: number): Promise<number> {
-    return this.repository.addArticle(interventionId, articleId, checkQuantity(quantity));
+  async execute(interventionId: number, articleId: number, quantity: number, promotionId: number | null = null): Promise<number> {
+    return this.repository.addArticle(interventionId, articleId, checkQuantity(quantity), promotionId);
   }
 }
 
 export class UpdateInterventionArticle {
   constructor(private readonly repository: IInterventionRepository) {}
 
-  async execute(interventionId: number, lineId: number, quantity: number): Promise<void> {
-    return this.repository.updateArticleQuantity(interventionId, lineId, checkQuantity(quantity));
+  /** promotionId inchangé : la ligne garde sa remise d'origine, même si la promotion est terminée. */
+  async execute(interventionId: number, lineId: number, quantity: number, promotionId: number | null): Promise<void> {
+    return this.repository.updateArticle(interventionId, lineId, checkQuantity(quantity), promotionId);
   }
 }
 

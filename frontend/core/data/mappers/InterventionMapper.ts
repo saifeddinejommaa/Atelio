@@ -72,6 +72,9 @@ export function toInterventionEntity(dto: InterventionDto): Intervention {
       description: a.description,
       quantity: a.quantity,
       unitPriceHt: a.unitPriceHt,
+      promotionId: a.promotionId ?? null,
+      promotionTitle: a.promotionTitle ?? null,
+      discountPercent: a.discountPercent ?? null,
     })),
     kit: (dto.kit ?? []).map((k) => ({ serviceName: k.serviceName, name: k.name })),
   };

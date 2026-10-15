@@ -91,6 +91,7 @@ public class IssueInvoiceCommandHandler : IRequestHandler<IssueInvoiceCommand, l
     private readonly IInterventionRepository _interventions;
     private readonly IInvoiceRepository _invoices;
     private readonly IPaymentRepository _payments;
+    private readonly IPromotionRepository _promotions;
     private readonly IInvoiceDocumentService _documents;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenant;
@@ -100,6 +101,7 @@ public class IssueInvoiceCommandHandler : IRequestHandler<IssueInvoiceCommand, l
         IInterventionRepository interventions,
         IInvoiceRepository invoices,
         IPaymentRepository payments,
+        IPromotionRepository promotions,
         IInvoiceDocumentService documents,
         IUnitOfWork unitOfWork,
         ITenantContext tenant,
@@ -108,6 +110,7 @@ public class IssueInvoiceCommandHandler : IRequestHandler<IssueInvoiceCommand, l
         _interventions = interventions;
         _invoices = invoices;
         _payments = payments;
+        _promotions = promotions;
         _documents = documents;
         _unitOfWork = unitOfWork;
         _tenant = tenant;
@@ -130,7 +133,15 @@ public class IssueInvoiceCommandHandler : IRequestHandler<IssueInvoiceCommand, l
             throw new BusinessException("Cette intervention est déjà facturée.");
         }
 
-        // Seuls les articles se facturent, en HT ; la TVA s'ajoute au total.
+        // Titres des promotions appliquées aux lignes, figés sur la facture.
+        var promotionTitles = new Dictionary<long, string>();
+        foreach (var promotionId in intervention.Articles.Where(a => a.PromotionId.HasValue).Select(a => a.PromotionId!.Value).Distinct())
+        {
+            var promotion = await _promotions.GetByIdAsync(promotionId, cancellationToken);
+            promotionTitles[promotionId] = promotion?.Title ?? "Promotion";
+        }
+
+        // Seuls les articles se facturent, en HT (remise de la promotion déduite) ; la TVA s'ajoute au total.
         var lines = intervention.Articles
             .OrderBy(a => a.CreatedAt)
             .ThenBy(a => a.Id)
@@ -141,7 +152,9 @@ public class IssueInvoiceCommandHandler : IRequestHandler<IssueInvoiceCommand, l
                 Description = a.Description,
                 Quantity = a.Quantity,
                 UnitPrice = a.UnitPriceHt,
-                Total = Math.Round(a.Quantity * a.UnitPriceHt, 2, MidpointRounding.AwayFromZero),
+                DiscountPercent = a.DiscountPercent,
+                DiscountLabel = a.PromotionId is long id ? promotionTitles[id] : null,
+                Total = Pricing.LineTotal(a.Quantity, a.UnitPriceHt, a.DiscountPercent),
                 SortOrder = (short)i,
             })
             .ToList();

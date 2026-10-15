@@ -47,7 +47,7 @@ export type InterventionDto = {
     unitPrice: number;
   }[];
   spareParts: { id: number; reference: string | null; name: string; quantity: number; unitPrice: number }[];
-  articles: { id: number; articleId: number; quoteId: number | null; quoteNumber: string | null; name: string; description: string | null; quantity: number; unitPriceHt: number }[];
+  articles: { id: number; articleId: number; quoteId: number | null; quoteNumber: string | null; name: string; description: string | null; quantity: number; unitPriceHt: number; promotionId: number | null; promotionTitle: string | null; discountPercent: number | null }[];
   kit: { serviceName: string; name: string }[];
 };
 

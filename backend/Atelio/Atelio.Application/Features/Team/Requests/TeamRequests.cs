@@ -1,6 +1,24 @@
 using Atelio.Application.Features.Team.Commands;
+using Atelio.Domain.Enums;
 
 namespace Atelio.Application.Features.Team.Requests;
+
+/// <summary>Nouvel employé : { garageId, firstName, lastName, role, phone?, email? }.</summary>
+public class AddEmployeeRequest
+{
+    public long GarageId { get; set; }
+
+    public string FirstName { get; set; } = null!;
+
+    public string LastName { get; set; } = null!;
+
+    // mechanic, manager, reception
+    public EmployeeRole Role { get; set; }
+
+    public string? Phone { get; set; }
+
+    public string? Email { get; set; }
+}
 
 public class SaveScheduleRequest
 {

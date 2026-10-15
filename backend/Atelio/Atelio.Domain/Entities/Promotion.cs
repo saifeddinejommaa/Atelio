@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Atelio.Domain.Entities;
 
-// Remise en % sur le prix d'un service, activable / désactivable.
-// Appliquée au prix du service lors du devis et de la facturation.
+// Remise en % sur une prestation, affichée sur le site (page « Offres du moment ») pendant sa période,
+// activable / désactivable depuis le back-office.
 [Table("promotion")]
 public class Promotion
 {
@@ -25,6 +25,17 @@ public class Promotion
 
     /// <summary>Prix remisé, arrondi au centime.</summary>
     public decimal ApplyTo(decimal price) => Pricing.ApplyDiscount(price, DiscountPercent);
+
+    // Période d'affichage sur le site (jours locaux, bornes incluses) ; pas de fin : sans limite.
+    [Column("starts_on")]
+    public DateOnly StartsOn { get; set; }
+
+    [Column("ends_on")]
+    public DateOnly? EndsOn { get; set; }
+
+    // Petit texte affiché sous l'offre (ex. « Non cumulable avec d'autres offres. »).
+    [Column("conditions")]
+    public string? Conditions { get; set; }
 
     [Column("is_active")]
     public bool IsActive { get; set; } = true;

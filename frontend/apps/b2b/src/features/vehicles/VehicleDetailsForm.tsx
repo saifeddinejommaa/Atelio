@@ -72,15 +72,15 @@ export default function VehicleDetailsForm({
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1 block font-semibold">Marque</span>
-          <input value={make} onChange={(e) => setMake(e.target.value)} placeholder="PEUGEOT" maxLength={50} className={input} />
+          <input value={make} onChange={(e) => setMake(e.target.value)} placeholder="Indiquez la marque" maxLength={50} className={input} />
         </label>
         <label className="block">
           <span className="mb-1 block font-semibold">Modèle</span>
-          <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="207" maxLength={80} className={input} />
+          <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="Indiquez le modèle" maxLength={80} className={input} />
         </label>
         <label className="block">
           <span className="mb-1 block font-semibold">Version</span>
-          <input value={version} onChange={(e) => setVersion(e.target.value)} placeholder="SW 1.6" maxLength={80} className={input} />
+          <input value={version} onChange={(e) => setVersion(e.target.value)} placeholder="Indiquez la version" maxLength={80} className={input} />
         </label>
         <label className="block">
           <span className="mb-1 block font-semibold">1re mise en circulation</span>
@@ -124,7 +124,7 @@ export default function VehicleDetailsForm({
           <span className="mb-1 block font-semibold">
             Poids (kg) <span className="font-normal text-zinc-500">· facultatif</span>
           </span>
-          <input inputMode="numeric" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="1 741" className={input} />
+          <input inputMode="numeric" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="Indiquez le poids en kg" className={input} />
         </label>
       </div>
 

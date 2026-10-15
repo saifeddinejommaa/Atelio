@@ -4,6 +4,7 @@ import AbsencesCard from './AbsencesCard'
 import ScheduleCard from './ScheduleCard'
 import { addDays, isoDate, roleLabels } from './TeamLabels'
 import { useTeam } from './useTeam'
+import LoadingState from '../../components/LoadingState'
 
 type Tab = 'schedule' | 'absences'
 
@@ -39,7 +40,7 @@ export default function EditEmployeePanel({
       subtitle={member && roleLabels[member.role]}
       onClose={onClose}
     >
-      {state.status === 'loading' && <p className="text-sm text-zinc-500">Chargement…</p>}
+      {state.status === 'loading' && <LoadingState message="Chargement des horaires…" className="py-10" />}
       {state.status === 'error' && <p className="text-sm text-red-700">L'employé n'a pas pu être chargé.</p>}
       {state.status === 'ok' && !member && <p className="text-sm text-zinc-600">Cet employé n'est plus dans l'équipe.</p>}
 

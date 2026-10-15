@@ -7,6 +7,7 @@ import { computeQuote, garageOffers, isValidPlate, MAX_NOTES_LENGTH, type DayAva
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import LoadingState from "@/components/ui/LoadingState";
 import { confirmBooking, loadAvailability } from "@/lib/appointment/AppointmentActions";
 import type { Garage } from "@/lib/garage/garages";
 import type { Service } from "@/lib/garageService/services";
@@ -102,12 +103,14 @@ export default function BookingFlow({
     setSelected((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
   }
 
-  /** Charge les créneaux du garage pour les prestations choisies, puis passe à l'étape « Créneau ». */
+  /** Passe à l'étape « Créneau » et y charge les créneaux du garage pour les prestations choisies. */
   function showSlots() {
     if (!garage) return;
     setSlotsError("");
     setDate("");
     setTime("");
+    setDays([]);
+    setStep(3);
     startLoadingSlots(async () => {
       const result = await loadAvailability(tenant.slug, garage.id, selected);
       if (result.ok) setDays(result.days);
@@ -115,7 +118,6 @@ export default function BookingFlow({
         setDays([]);
         setSlotsError(result.error);
       }
-      setStep(3);
     });
   }
 
@@ -316,53 +318,59 @@ export default function BookingFlow({
         {step === 3 && (
           <>
             <h2 className="text-xl font-bold">Choisissez votre créneau</h2>
-            {slotsError && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{slotsError}</p>}
-            {!slotsError && days.every((d) => d.slots.every((s) => !s.available)) && (
-              <p className="mt-4 rounded-lg bg-muted p-4 text-sm text-zinc-600">
-                Aucun créneau disponible dans ce garage sur les prochains jours. Essayez un autre garage.
-              </p>
-            )}
-            <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
-              {days.map((d) => {
-                const dt = parseDay(d.date);
-                const free = d.slots.some((s) => s.available);
-                return (
-                  <button
-                    key={d.date}
-                    type="button"
-                    disabled={!free}
-                    onClick={() => {
-                      setDate(d.date);
-                      setTime("");
-                    }}
-                    className={`w-16 shrink-0 rounded-lg border-2 py-2 text-center text-sm capitalize transition-colors disabled:opacity-40 ${
-                      date === d.date ? "border-secondary bg-muted font-semibold" : "border-zinc-200 hover:border-zinc-300"
-                    }`}
-                  >
-                    {weekday.format(dt)}
-                    <span className="block font-bold">{dayMonth.format(dt)}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {day ? (
-              <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                {day.slots.map((s) => (
-                  <button
-                    key={s.time}
-                    type="button"
-                    disabled={!s.available}
-                    onClick={() => setTime(s.time)}
-                    className={`rounded-lg border-2 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:border-zinc-100 disabled:text-zinc-300 disabled:line-through ${
-                      time === s.time ? "border-secondary bg-secondary text-on-secondary" : "border-zinc-200 hover:border-zinc-300"
-                    }`}
-                  >
-                    {s.time.replace(":", "h")}
-                  </button>
-                ))}
-              </div>
+            {loadingSlots ? (
+              <LoadingState message="Chargement des créneaux disponibles…" className="py-16" />
             ) : (
-              <p className="mt-5 text-sm text-zinc-500">Sélectionnez un jour pour voir les horaires disponibles.</p>
+              <>
+                {slotsError && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{slotsError}</p>}
+                {!slotsError && days.every((d) => d.slots.every((s) => !s.available)) && (
+                  <p className="mt-4 rounded-lg bg-muted p-4 text-sm text-zinc-600">
+                    Aucun créneau disponible dans ce garage sur les prochains jours. Essayez un autre garage.
+                  </p>
+                )}
+                <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
+                  {days.map((d) => {
+                    const dt = parseDay(d.date);
+                    const free = d.slots.some((s) => s.available);
+                    return (
+                      <button
+                        key={d.date}
+                        type="button"
+                        disabled={!free}
+                        onClick={() => {
+                          setDate(d.date);
+                          setTime("");
+                        }}
+                        className={`w-16 shrink-0 rounded-lg border-2 py-2 text-center text-sm capitalize transition-colors disabled:opacity-40 ${
+                          date === d.date ? "border-secondary bg-muted font-semibold" : "border-zinc-200 hover:border-zinc-300"
+                        }`}
+                      >
+                        {weekday.format(dt)}
+                        <span className="block font-bold">{dayMonth.format(dt)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {day ? (
+                  <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {day.slots.map((s) => (
+                      <button
+                        key={s.time}
+                        type="button"
+                        disabled={!s.available}
+                        onClick={() => setTime(s.time)}
+                        className={`rounded-lg border-2 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:border-zinc-100 disabled:text-zinc-300 disabled:line-through ${
+                          time === s.time ? "border-secondary bg-secondary text-on-secondary" : "border-zinc-200 hover:border-zinc-300"
+                        }`}
+                      >
+                        {s.time.replace(":", "h")}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-5 text-sm text-zinc-500">Sélectionnez un jour pour voir les horaires disponibles.</p>
+                )}
+              </>
             )}
           </>
         )}
@@ -419,8 +427,6 @@ export default function BookingFlow({
           {step < steps.length - 1 ? (
             <Button
               disabled={!canContinue}
-              loading={loadingSlots}
-              loadingText="Chargement…"
               onClick={() => {
                 if (step === 2) showSlots();
                 else setStep(step + 1);

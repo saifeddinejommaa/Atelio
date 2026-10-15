@@ -9,17 +9,18 @@ export type TenantConfig = Brand & {
    * Le site reste aussi accessible via <slug>.<TENANT_BASE_DOMAIN> et <domaine commun>/<slug>.
    */
   domains: string[];
-  /** Phrase d'accroche affichée dans le pied de page et les métadonnées. */
-  tagline: string;
+  /** Phrase d'accroche affichée dans le pied de page et les métadonnées ; rien n'est affiché si absente. */
+  tagline?: string;
   contact: {
     phone: string;
     phoneLabel: string;
     email: string;
   };
-  /** Textes propres au client. */
+  /** Textes propres au client ; chacun est masqué s'il est absent. */
   content: {
-    topBanner: string;
-    heroBadge: string;
-    rating: string;
+    /** Badge au-dessus du titre de l'accueil. */
+    heroBadge?: string;
+    /** Note des avis clients, sous « Ils nous font confiance ». */
+    rating?: string;
   };
 };

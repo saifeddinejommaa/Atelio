@@ -271,6 +271,115 @@ public class DeleteAbsenceCommandHandler : IRequestHandler<DeleteAbsenceCommand,
     }
 }
 
+// ============================================================
+// EMPLOYÉS (pour le planning : identité et rôle ; l'accès au back-office se gère à part)
+// ============================================================
+
+/// <summary>Nouvel employé du garage, actif, sans planning type (à saisir ensuite).</summary>
+public class AddEmployeeCommand : IRequest<long>
+{
+    public long GarageId { get; set; }
+
+    public string FirstName { get; set; } = null!;
+
+    public string LastName { get; set; } = null!;
+
+    public EmployeeRole Role { get; set; }
+
+    public string? Phone { get; set; }
+
+    public string? Email { get; set; }
+}
+
+public class AddEmployeeCommandValidator : AbstractValidator<AddEmployeeCommand>
+{
+    public AddEmployeeCommandValidator()
+    {
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage("Indiquez le prénom.").MaximumLength(100);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage("Indiquez le nom.").MaximumLength(100);
+        RuleFor(x => x.Role).IsInEnum().WithMessage("Choisissez le rôle.");
+        RuleFor(x => x.Phone).MaximumLength(30);
+        RuleFor(x => x.Email).MaximumLength(255).EmailAddress().WithMessage("L'e-mail n'est pas valide.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Email));
+    }
+}
+
+public class AddEmployeeCommandHandler : IRequestHandler<AddEmployeeCommand, long>
+{
+    private readonly IGarageRepository _garages;
+    private readonly IEmployeeRepository _employees;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _clock;
+
+    public AddEmployeeCommandHandler(IGarageRepository garages, IEmployeeRepository employees, IUnitOfWork unitOfWork, TimeProvider clock)
+    {
+        _garages = garages;
+        _employees = employees;
+        _unitOfWork = unitOfWork;
+        _clock = clock;
+    }
+
+    public async Task<long> Handle(AddEmployeeCommand request, CancellationToken cancellationToken)
+    {
+        _ = await _garages.GetByIdAsync(request.GarageId, cancellationToken)
+            ?? throw new NotFoundException($"Garage {request.GarageId} introuvable.");
+
+        var now = _clock.GetUtcNow().UtcDateTime;
+        var employee = new Employee
+        {
+            GarageId = request.GarageId,
+            FirstName = request.FirstName.Trim(),
+            LastName = request.LastName.Trim(),
+            Role = request.Role,
+            Phone = TextRules.Clean(request.Phone),
+            Email = TextRules.Clean(request.Email)?.ToLowerInvariant(),
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        await _employees.AddAsync(employee, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return employee.Id;
+    }
+}
+
+/// <summary>
+/// Désactive un employé : il quitte l'équipe et ne compte plus dans la capacité du garage.
+/// Ses interventions et rendez-vous passés restent inchangés.
+/// </summary>
+public class DeactivateEmployeeCommand : IRequest<Unit>
+{
+    public long EmployeeId { get; set; }
+}
+
+public class DeactivateEmployeeCommandHandler : IRequestHandler<DeactivateEmployeeCommand, Unit>
+{
+    private readonly IEmployeeRepository _employees;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _clock;
+
+    public DeactivateEmployeeCommandHandler(IEmployeeRepository employees, IUnitOfWork unitOfWork, TimeProvider clock)
+    {
+        _employees = employees;
+        _unitOfWork = unitOfWork;
+        _clock = clock;
+    }
+
+    public async Task<Unit> Handle(DeactivateEmployeeCommand request, CancellationToken cancellationToken)
+    {
+        var employee = await TeamTime.GetActiveEmployeeAsync(_employees, request.EmployeeId, cancellationToken);
+
+        employee.IsActive = false;
+        employee.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
+        _employees.Update(employee);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
+    }
+}
+
 internal static class TeamTime
 {
     /// <summary>"08:30" => 08:30, sinon null.</summary>

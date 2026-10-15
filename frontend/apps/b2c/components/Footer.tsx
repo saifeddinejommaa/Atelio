@@ -18,23 +18,14 @@ export default function Footer({ tenant, services }: { tenant: SiteTenant; servi
         { path: "/offres", label: "Offres du moment" },
       ],
     },
-    {
-      title: tenant.name,
-      links: [
-        { path: "/a-propos", label: "Qui sommes-nous ?" },
-        { path: "/contact", label: "Nous contacter" },
-        { path: "/mentions-legales", label: "Mentions légales" },
-        { path: "/confidentialite", label: "Confidentialité" },
-      ],
-    },
   ];
 
   return (
     <footer className="bg-primary print:hidden text-on-primary/80">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-3">
         <div className="text-on-primary">
           <Logo tenant={tenant} />
-          <p className="mt-4 text-sm leading-6 text-on-primary/80">{tenant.tagline}</p>
+          {tenant.tagline && <p className="mt-4 text-sm leading-6 text-on-primary/80">{tenant.tagline}</p>}
           <p className="mt-3 text-sm text-on-primary/80">
             <a href={`tel:${tenant.contact.phone}`} className="hover:text-secondary">
               {tenant.contact.phoneLabel}

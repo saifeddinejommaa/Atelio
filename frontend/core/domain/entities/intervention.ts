@@ -67,7 +67,7 @@ export type Intervention = {
   kit: KitItem[];
 };
 
-/** Article importé sur l'intervention : copie du catalogue (nom, description, prix HT), seule la quantité change. */
+/** Article importé sur l'intervention : copie du catalogue (nom, description, prix HT) ; quantité et promotion se choisissent. */
 export type InterventionArticle = {
   id: number;
   articleId: number;
@@ -79,6 +79,11 @@ export type InterventionArticle = {
   /** Décimale possible (ex. 4,5 L). */
   quantity: number;
   unitPriceHt: number;
+  /** Promotion appliquée à la ligne, sinon null. */
+  promotionId: number | null;
+  promotionTitle: string | null;
+  /** Remise figée au choix de la promotion (ex. 20 pour -20 %). */
+  discountPercent: number | null;
 };
 
 
@@ -106,9 +111,12 @@ export const VAT_RATE = 0.2;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Total d'une ligne d'article (HT), arrondi au centime comme sur la facture. */
-export function articleTotal(article: Pick<InterventionArticle, "quantity" | "unitPriceHt">): number {
-  return round2(article.quantity * article.unitPriceHt);
+/** Total d'une ligne d'article (HT), arrondi au centime, remise déduite : même calcul que la facture. */
+export function articleTotal(
+  article: Pick<InterventionArticle, "quantity" | "unitPriceHt"> & { discountPercent?: number | null },
+): number {
+  const total = round2(article.quantity * article.unitPriceHt);
+  return article.discountPercent ? round2(total * (1 - article.discountPercent / 100)) : total;
 }
 
 /** Totaux des articles : HT (somme des lignes), TVA, TTC — même calcul que la facture. */

@@ -6,17 +6,14 @@ const config: TenantConfig = {
   ...sej,
   // Domaine propre (ex. "mon-garage.fr"). En attendant : sej.<TENANT_BASE_DOMAIN> ou /sej.
   domains: [],
-  tagline: "À compléter",
+  // tagline : indiquez la phrase d'accroche de la marque.
   contact: {
     phone: "0000000000",
     phoneLabel: "00 00 00 00 00",
     email: "contact@exemple.fr",
   },
-  content: {
-    topBanner: "À compléter",
-    heroBadge: "À compléter",
-    rating: "À compléter",
-  },
+  // Indiquez les textes de la marque : heroBadge (badge de l'accueil), rating (note des avis clients).
+  content: {},
 };
 
 export default config;

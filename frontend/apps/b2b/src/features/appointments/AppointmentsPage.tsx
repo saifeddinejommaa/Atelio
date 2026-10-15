@@ -1,17 +1,17 @@
 import type { Appointment } from '@atelio/core/domain'
 import type { CalendarRef } from '@fullcalendar/react'
 import { useEffect, useRef, useState } from 'react'
-import { useLoaderData } from 'react-router'
 import { useCurrentGarage } from '../../garage/useCurrentGarage'
 import AppointmentDetailPanel from './AppointmentDetailPanel'
 import { calendarLegend, LOCKED_BACKGROUND, MIN_LEAD_HOURS } from './AppointmentStatus'
 import type { AppointmentsData } from './AppointmentsLoader'
 import AppointmentsCalendar from './AppointmentsCalendar'
 import NewAppointmentPanel from './NewAppointmentPanel'
+import { useDeferredData } from '../../components/DeferredRoute'
 
 export default function AppointmentsPage() {
   const garage = useCurrentGarage()
-  const { services: allServices, appointmentStatuses, interventionStatuses } = useLoaderData<AppointmentsData>()
+  const { services: allServices, appointmentStatuses, interventionStatuses } = useDeferredData<AppointmentsData>()
   const services = allServices.filter((s) => garage.serviceCodes.includes(s.code))
   const legend = [
     ...calendarLegend(appointmentStatuses, interventionStatuses),

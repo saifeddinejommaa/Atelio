@@ -1,4 +1,4 @@
-import type { Absence, DaySchedule, NewAbsence, TeamMember, ITeamRepository } from "../../domain";
+import type { Absence, DaySchedule, NewAbsence, NewTeamMember, TeamMember, ITeamRepository } from "../../domain";
 import { ApiError, type ApiClient } from "../http/ApiClient";
 import type { AbsenceDto, DayScheduleDto, TeamMemberDto } from "../dto/TeamDto";
 import { toAbsence, toDaySchedule, toTeamMember } from "../mappers/TeamMapper";
@@ -24,5 +24,15 @@ export class TeamApiRepository implements ITeamRepository {
 
   async deleteAbsence(employeeId: number, absenceId: number): Promise<void> {
     await this.api.delete(`/employees/${employeeId}/absences/${absenceId}`);
+  }
+
+  async addMember(garageId: number, member: NewTeamMember): Promise<number> {
+    const created = await this.api.post<{ id: number }>("/employees", { garageId, ...member });
+    if (!created) throw new ApiError(500, "L'API n'a pas renvoyé l'employé ajouté.");
+    return created.id;
+  }
+
+  async deactivateMember(employeeId: number): Promise<void> {
+    await this.api.put(`/employees/${employeeId}/deactivate`, {});
   }
 }

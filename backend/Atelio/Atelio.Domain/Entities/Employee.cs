@@ -25,6 +25,10 @@ public class Employee
     [Column("email")]
     public string? Email { get; set; }
 
+    // Compte Microsoft Entra (identifiant « oid » du tenant Gustaya), relié à la 1re connexion par l'e-mail.
+    [Column("entra_object_id")]
+    public string? EntraObjectId { get; set; }
+
     [Column("phone")]
     public string? Phone { get; set; }
 

@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLoaderData } from 'react-router'
-import { applyBrandToDocument, themeStyle } from '../brand/BrandTheme'
+import { themeStyle } from '../brand/BrandTheme'
+import { markAppReady, type Deferred } from '../lib/deferred'
+import type { StaffMember } from '@atelio/core/domain'
 import { useBrand } from '../brand/useBrand'
 import GarageSwitcher from '../garage/GarageSwitcher'
 import type { GaragesData } from '../garage/GaragesLoader'
 import type { CurrentGarageContext } from '../garage/useCurrentGarage'
+import { useDeferredResult } from './DeferredRoute'
+import LoadingState from './LoadingState'
+import TechnicalError from './TechnicalError'
 
 const links = [
   { to: '/rendez-vous', label: 'Rendez-vous' },
@@ -12,18 +17,30 @@ const links = [
   { to: '/factures', label: 'Factures' },
   { to: '/clients', label: 'Clients' },
   { to: '/articles', label: 'Articles' },
+  { to: '/prestations', label: 'Prestations' },
+  { to: '/promotions', label: 'Promotions' },
   { to: '/equipes', label: 'Équipes' },
 ]
 
+const roleLabels: Record<StaffMember['role'], string> = { admin: 'Admin', staff: 'Staff' }
+
 const LAST_GARAGE_KEY = 'last-garage'
 
+/**
+ * Cadre de l'espace pro. Tout ce que le front connaît déjà (marque, menu, compte Microsoft, déconnexion)
+ * s'affiche tout de suite ; seul le contenu attend la personne connectée et ses garages (API),
+ * et affiche l'erreur technique à sa place en cas de souci.
+ */
 export default function Layout() {
-  const { brand } = useBrand()
-  const { garages, companyGarageCount } = useLoaderData<GaragesData>()
+  const { brand, accountName, signOut } = useBrand()
+  const result = useDeferredResult(useLoaderData<Deferred<GaragesData>>())
   const [garageId, setGarageId] = useState(() => readLastGarage())
-  const garage = garages.find((g) => g.id === garageId) ?? garages[0]
+  const data = result.status === 'ok' ? result.value : null
+  const staff = data?.staff ?? null
+  const garage = data?.garages.find((g) => g.id === garageId) ?? data?.garages[0]
 
-  useEffect(() => applyBrandToDocument(brand), [brand])
+  // Démarrage terminé : les rechargements de page gardent désormais leurs données affichées (voir deferred).
+  useEffect(() => markAppReady(), [])
 
   function changeGarage(id: number) {
     setGarageId(id)
@@ -41,8 +58,8 @@ export default function Layout() {
             <p className="text-xs text-on-primary/70">Espace pro</p>
           </div>
         </div>
-        {garage && (
-          <GarageSwitcher garages={garages} companyGarageCount={companyGarageCount} value={garage} onChange={changeGarage} />
+        {data && garage && (
+          <GarageSwitcher garages={data.garages} companyGarageCount={data.companyGarageCount} value={garage} onChange={changeGarage} />
         )}
         <nav className="mt-8 space-y-1">
           {links.map((link) => (
@@ -59,10 +76,33 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+        <div className="mt-auto border-t border-white/15 px-3 pt-4 text-sm">
+          <p className="font-semibold">{staff ? `${staff.firstName} ${staff.lastName}` : accountName}</p>
+          {staff && <p className="text-xs text-on-primary/70">{roleLabels[staff.role]}</p>}
+          <button type="button" onClick={() => void signOut()} className="mt-2 text-xs text-on-primary/80 underline hover:text-on-primary">
+            Se déconnecter
+          </button>
+        </div>
       </aside>
       <main className="min-w-0 flex-1 px-8 py-8">
-        {garage ? (
-          <Outlet context={{ garage } satisfies CurrentGarageContext} />
+        {result.status === 'loading' ? (
+          <LoadingState message="Chargement de l'espace pro…" />
+        ) : result.status === 'error' ? (
+          <TechnicalError error={result.error} />
+        ) : !staff ? (
+          // Compte Microsoft valide mais pas employé de cette marque.
+          <div className="mx-auto mt-16 max-w-md rounded-brand bg-white p-8 text-center shadow-sm">
+            <h1 className="text-xl font-extrabold tracking-tight">Accès refusé</h1>
+            <p className="mt-2 text-sm text-zinc-600">
+              Le compte <strong>{accountName}</strong> n&apos;est relié à aucun employé actif de {brand.name}. Demandez au responsable de
+              la marque de vous attribuer un rôle Atelio et d&apos;ajouter votre e-mail à votre fiche employé.
+            </p>
+            <button type="button" onClick={() => void signOut()} className="mt-6 rounded-brand bg-primary px-4 py-2 text-sm font-semibold text-on-primary">
+              Changer de compte
+            </button>
+          </div>
+        ) : garage ? (
+          <Outlet context={{ garage, staff } satisfies CurrentGarageContext} />
         ) : (
           <p className="rounded-brand bg-white p-6 text-sm text-zinc-600 shadow-sm">
             Votre compte n&apos;a accès à aucun garage. Contactez votre responsable.

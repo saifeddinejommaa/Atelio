@@ -130,23 +130,23 @@ public class InterventionsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Importe un article du catalogue : { articleId, quantity }. Renvoie { id } de la ligne.</summary>
+    /// <summary>Importe un article du catalogue : { articleId, quantity, promotionId? }. Renvoie { id } de la ligne.</summary>
     [HttpPost("{id:long}/articles")]
     public async Task<IActionResult> AddArticle(long id, [FromBody] InterventionArticleRequest request, CancellationToken cancellationToken)
     {
         var lineId = await _mediator.Send(
-            new AddInterventionArticleCommand { InterventionId = id, ArticleId = request.ArticleId, Quantity = request.Quantity },
+            new AddInterventionArticleCommand { InterventionId = id, ArticleId = request.ArticleId, Quantity = request.Quantity, PromotionId = request.PromotionId },
             cancellationToken);
 
         return Ok(new { id = lineId });
     }
 
-    /// <summary>Change la quantité d'un article : { quantity }.</summary>
+    /// <summary>Change la quantité et la promotion d'un article : { quantity, promotionId? }.</summary>
     [HttpPut("{id:long}/articles/{lineId:long}")]
     public async Task<IActionResult> UpdateArticle(long id, long lineId, [FromBody] InterventionArticleRequest request, CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new UpdateInterventionArticleCommand { InterventionId = id, LineId = lineId, Quantity = request.Quantity },
+            new UpdateInterventionArticleCommand { InterventionId = id, LineId = lineId, Quantity = request.Quantity, PromotionId = request.PromotionId },
             cancellationToken);
 
         return NoContent();

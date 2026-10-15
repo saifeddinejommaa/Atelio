@@ -33,6 +33,15 @@ public class InvoiceLine
     [Column("unit_price")]
     public decimal UnitPrice { get; set; }
 
+    // Remise de la promotion appliquée à la ligne (ex. 20 pour -20 %), sinon null.
+    [Column("discount_percent")]
+    public decimal? DiscountPercent { get; set; }
+
+    // Titre de la promotion, figé à l'émission.
+    [Column("discount_label")]
+    public string? DiscountLabel { get; set; }
+
+    // Quantité × prix unitaire, remise déduite.
     [Column("total")]
     public decimal Total { get; set; }
 

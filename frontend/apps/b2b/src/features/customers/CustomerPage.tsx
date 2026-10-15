@@ -1,11 +1,12 @@
 import { fuelLabels, gearboxLabels, InvoiceStatus, type CustomerVehicle } from '@atelio/core/domain'
 import { useState } from 'react'
-import { Link, useLoaderData, useRevalidator } from 'react-router'
+import { Link, useRevalidator } from 'react-router'
 import SidePanel from '../../components/SidePanel'
 import NewQuotePanel from '../quotes/NewQuotePanel'
 import VehicleDetailsForm from '../vehicles/VehicleDetailsForm'
 import type { CustomerData } from './CustomerLoader'
 import EditCustomerPanel from './EditCustomerPanel'
+import { useDeferredData } from '../../components/DeferredRoute'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 const date = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -26,7 +27,7 @@ function formatDay(value: string): string {
 
 /** Fiche client : coordonnées et véhicules (modifiables), devis (création, impression, e-mail) et factures. */
 export default function CustomerPage() {
-  const { customer, vehicles, invoices, quotes, catalog } = useLoaderData<CustomerData>()
+  const { customer, vehicles, invoices, quotes, catalog } = useDeferredData<CustomerData>()
   const revalidator = useRevalidator()
   const [panel, setPanel] = useState<{ kind: 'customer' } | { kind: 'vehicle'; vehicle: CustomerVehicle } | { kind: 'quote' } | null>(null)
 

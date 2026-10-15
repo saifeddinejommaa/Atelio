@@ -8,6 +8,7 @@ export type { VehicleDto } from "./dto/VehicleDto";
 export type { InterventionDto, InterventionSummaryDto } from "./dto/InterventionDto";
 
 export { ServiceApiRepository } from "./repositories/ServiceApiRepository";
+export { ManagedServiceApiRepository, type ManagedServiceDto } from "./repositories/ManagedServiceApiRepository";
 export { GarageApiRepository } from "./repositories/GarageApiRepository";
 export { AppointmentApiRepository } from "./repositories/AppointmentApiRepository";
 export { CustomerApiRepository } from "./repositories/CustomerApiRepository";
@@ -17,8 +18,9 @@ export { ArticleApiRepository, type ArticleDto } from "./repositories/ArticleApi
 export { CustomerAuthApiRepository } from "./repositories/CustomerAuthApiRepository";
 export { MyAccountApiRepository } from "./repositories/MyAccountApiRepository";
 export { QuoteApiRepository } from "./repositories/QuoteApiRepository";
+export { StaffApiRepository } from "./repositories/StaffApiRepository";
 
-export { OfferMockRepository } from "./mocks/OfferMockRepository";
+export { PromotionApiRepository, type PromotionDto } from "./repositories/PromotionApiRepository";
 export { lookupVehicle } from "./mocks/VehicleLookup";
 
 export { brands, getBrand, gmg78, sej } from "./brands";

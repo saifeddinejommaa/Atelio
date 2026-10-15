@@ -1,8 +1,9 @@
 import { ApiError, QuoteApiRepository } from '@atelio/core/data'
 import { SendQuote, VAT_RATE, type GarageQuote } from '@atelio/core/domain'
 import { useState } from 'react'
-import { Link, useLoaderData } from 'react-router'
+import { Link } from 'react-router'
 import { useBrand } from '../../brand/useBrand'
+import { useDeferredData } from '../../components/DeferredRoute'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 const qty = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
@@ -13,7 +14,7 @@ const date = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit'
  * Il s'imprime (ou s'enregistre en PDF) depuis le navigateur, ou s'envoie par e-mail au client.
  */
 export default function QuotePage() {
-  const quote = useLoaderData<GarageQuote>()
+  const quote = useDeferredData<GarageQuote>()
   const { brand, api } = useBrand()
   const [sending, setSending] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
@@ -106,7 +107,7 @@ export default function QuotePage() {
           </div>
         </section>
 
-        <table className="mt-8 w-full">
+        <table data-plain className="mt-8 w-full">
           <thead className="border-b-2 border-zinc-800 text-left text-xs uppercase tracking-wider">
             <tr>
               <th className="py-2">Désignation</th>

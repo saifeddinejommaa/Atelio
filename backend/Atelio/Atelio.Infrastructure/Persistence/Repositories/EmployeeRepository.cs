@@ -19,6 +19,17 @@ public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
             .ThenBy(e => e.FirstName)
             .ToListAsync(cancellationToken);
 
+    public Task<Employee?> GetByEntraObjectIdAsync(string objectId, CancellationToken cancellationToken = default) =>
+        DbSet.FirstOrDefaultAsync(e => e.EntraObjectId == objectId, cancellationToken);
+
+    public Task<Employee?> GetUnlinkedByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.Trim().ToLower();
+        return DbSet.FirstOrDefaultAsync(
+            e => e.IsActive && e.EntraObjectId == null && e.Email != null && e.Email.ToLower() == normalized,
+            cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Employee>> GetActiveByGarageAsync(long garageId, CancellationToken cancellationToken = default) =>
         await DbSet.AsNoTracking()
             .Where(e => e.GarageId == garageId && e.IsActive)

@@ -17,6 +17,8 @@ export type InvoiceDto = Omit<Invoice, "status" | "paymentMethod" | "lines" | "p
     description: string | null;
     quantity: number;
     unitPrice: number;
+    discountPercent: number | null;
+    discountLabel: string | null;
     total: number;
   }[];
 };
@@ -51,6 +53,8 @@ function toInvoice(dto: InvoiceDto): Invoice {
     lines: (dto.lines ?? []).map((l) => ({
       ...l,
       description: l.description ?? null,
+      discountPercent: l.discountPercent ?? null,
+      discountLabel: l.discountLabel ?? null,
       kind: l.kind === "article" || l.kind === "part" ? l.kind : "labour",
     })),
   };

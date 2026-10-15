@@ -1,5 +1,6 @@
 using Atelio.Application.Common;
 using Atelio.Infrastructure.Documents;
+using Atelio.Infrastructure.Persistence;
 using Atelio.Infrastructure.Tenancy;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,7 @@ public static class InfrastructureServicesConfiguration
 
         // Colonnes snake_case => propriétés PascalCase quand un alias manque.
         DefaultTypeMap.MatchNamesWithUnderscores = true;
+        SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
 
         services.AddSingleton(TimeProvider.System);
 
