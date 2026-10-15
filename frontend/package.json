@@ -1,0 +1,8 @@
+{
+  "name": "atelio-frontend",
+  "private": true,
+  "workspaces": [
+    "core",
+    "apps/*"
+  ]
+}

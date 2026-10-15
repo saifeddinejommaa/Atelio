@@ -1,0 +1,39 @@
+using Atelio.Application.Common;
+using Atelio.Infrastructure.Documents;
+using Atelio.Infrastructure.Persistence;
+using Atelio.Infrastructure.Tenancy;
+using Dapper;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+using System.Data;
+
+namespace Atelio.Infrastructure;
+
+public static class InfrastructureServicesConfiguration
+{
+    public static IServiceCollection ConfigureInfrastructureServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<TenancyOptions>(configuration.GetSection(TenancyOptions.SectionName));
+        services.Configure<CustomerAuthOptions>(configuration.GetSection(CustomerAuthOptions.SectionName));
+        services.Configure<DocumentStorageOptions>(configuration.GetSection(DocumentStorageOptions.SectionName));
+
+        // EF Core et Dapper se connectent à la base de la marque blanche de la requête.
+        services.AddDbContext<AtelioDbContext>((provider, options) =>
+            options.UseNpgsql(provider.GetRequiredService<TenantContext>().ConnectionString));
+
+        services.AddScoped<IDbConnection>(provider =>
+            new NpgsqlConnection(provider.GetRequiredService<TenantContext>().ConnectionString));
+
+        // Colonnes snake_case => propriétés PascalCase quand un alias manque.
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
+        SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+
+        services.AddSingleton(TimeProvider.System);
+
+        return services;
+    }
+}

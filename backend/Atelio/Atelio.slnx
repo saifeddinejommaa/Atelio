@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="Atelio.csproj" />
+  <Project Path="Atelio.Api/Atelio.Api.csproj" />
+  <Project Path="Atelio.Application/Atelio.Application.csproj" />
+  <Project Path="Atelio.Domain/Atelio.Domain.csproj" />
+  <Project Path="Atelio.Infrastructure/Atelio.Infrastructure.csproj" />
 </Solution>
