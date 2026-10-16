@@ -1,10 +1,14 @@
 using Atelio.Application.Common;
 using Atelio.Infrastructure.Auth;
 using Atelio.Infrastructure.Documents;
+using Atelio.Infrastructure.Email;
 using Atelio.Infrastructure.Persistence;
 using Atelio.Infrastructure.Persistence.Repositories;
 using Atelio.Infrastructure.Tenancy;
 using Autofac;
+using Azure.Communication.Email;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Atelio.Infrastructure;
 
@@ -25,9 +29,15 @@ public class InfrastructureModule : Module
             .As<ICustomerTokenService>()
             .SingleInstance();
 
-        builder.RegisterType<ConsoleEmailSender>()
-            .As<IEmailSender>()
+        // E-mails : Azure Communication Services si configuré (section « Email »), sinon affichés dans les logs.
+        builder.Register(c => c.Resolve<IOptions<EmailOptions>>().Value.CreateClient())
+            .As<EmailClient>()
             .SingleInstance();
+
+        builder.Register<IEmailSender>(c => c.Resolve<IOptions<EmailOptions>>().Value.IsConfigured
+                ? new AzureEmailSender(c.Resolve<EmailClient>(), c.Resolve<ITenantContext>())
+                : new ConsoleEmailSender(c.Resolve<ILogger<ConsoleEmailSender>>()))
+            .InstancePerLifetimeScope();
 
         // Factures PDF et leur stockage (Azure Blob Storage).
         builder.RegisterType<QuestPdfInvoiceRenderer>()

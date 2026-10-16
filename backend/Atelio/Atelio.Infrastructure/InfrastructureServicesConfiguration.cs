@@ -1,5 +1,6 @@
 using Atelio.Application.Common;
 using Atelio.Infrastructure.Documents;
+using Atelio.Infrastructure.Email;
 using Atelio.Infrastructure.Persistence;
 using Atelio.Infrastructure.Tenancy;
 using Dapper;
@@ -20,6 +21,7 @@ public static class InfrastructureServicesConfiguration
         services.Configure<TenancyOptions>(configuration.GetSection(TenancyOptions.SectionName));
         services.Configure<CustomerAuthOptions>(configuration.GetSection(CustomerAuthOptions.SectionName));
         services.Configure<DocumentStorageOptions>(configuration.GetSection(DocumentStorageOptions.SectionName));
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
 
         // EF Core et Dapper se connectent à la base de la marque blanche de la requête.
         services.AddDbContext<AtelioDbContext>((provider, options) =>

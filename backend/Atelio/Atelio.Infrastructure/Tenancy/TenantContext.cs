@@ -27,6 +27,12 @@ public class TenantSettings
 
     /// <summary>Identité légale imprimée sur les factures (raison sociale, SIRET, TVA...).</summary>
     public TenantLegal? Legal { get; set; }
+
+    /// <summary>
+    /// Adresse d'envoi des e-mails (ex. DoNotReply@gmg-78.com), sur un domaine vérifié dans Azure Communication Services.
+    /// Inutile tant que la section « Email » est vide (e-mails affichés dans les logs).
+    /// </summary>
+    public string? EmailSender { get; set; }
 }
 
 /// <summary>
@@ -51,6 +57,9 @@ public class TenantContext : ITenantContext
 
     public TenantLegal Legal =>
         Current.Legal ?? throw new InvalidOperationException($"Tenancy : mentions légales (Legal) manquantes pour la marque « {Current.Slug} ».");
+
+    public string EmailSenderAddress =>
+        Current.EmailSender ?? throw new InvalidOperationException($"Tenancy : adresse d'envoi des e-mails (EmailSender) manquante pour la marque « {Current.Slug} ».");
 
     /// <summary>Chaîne de connexion vers la base de la marque blanche.</summary>
     public string ConnectionString =>
