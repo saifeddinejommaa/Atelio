@@ -245,6 +245,8 @@ public class StartAppointmentCommandHandler : IRequestHandler<StartAppointmentCo
             GarageId = appointment.GarageId,
             // Premier mécanicien libre ; modifiable dans l'intervention.
             EmployeeId = start.Placement.EmployeeId,
+            // Kilométrage figé à l'entrée en atelier (imprimé sur la facture).
+            Mileage = vehicle.Mileage,
             Status = InterventionStatus.InProgress,
             StartedAt = start.StartUtc,
             CreatedAt = nowUtc,

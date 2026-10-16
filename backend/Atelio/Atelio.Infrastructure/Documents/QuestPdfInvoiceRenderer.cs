@@ -139,13 +139,16 @@ public class QuestPdfInvoiceRenderer : IInvoicePdfRenderer
                 });
             });
 
-            // Objet : le véhicule.
+            // Objet : le véhicule (marque, modèle et version), puis son immatriculation.
             col.Item().Column(subject =>
             {
                 subject.Item().Text("Objet :").FontColor(Muted);
-                subject.Item().Text(string.IsNullOrWhiteSpace(invoice.VehicleDescription)
-                    ? invoice.VehiclePlate
-                    : $"{invoice.VehiclePlate} - {invoice.VehicleDescription}");
+                if (!string.IsNullOrWhiteSpace(invoice.VehicleDescription))
+                {
+                    subject.Item().Text(invoice.VehicleDescription);
+                }
+
+                subject.Item().Text(invoice.VehiclePlate);
             });
 
             col.Item().Element(c => LinesTable(c, invoice));
@@ -331,7 +334,7 @@ public class QuestPdfInvoiceRenderer : IInvoicePdfRenderer
         {
             col.Item().AlignCenter().Text(legal.CompanyName).Bold().FontSize(10);
             col.Item().AlignCenter().Text(legal.Address).FontColor(Muted);
-            col.Item().AlignCenter().Text($"Siret {legal.Siret} · TVA {legal.VatNumber}").FontColor(Muted);
+            col.Item().AlignCenter().Text($"Siret {legal.Siret}").FontColor(Muted);
             col.Item().AlignRight().Text(text =>
             {
                 text.DefaultTextStyle(x => x.FontSize(7.5f).FontColor(Muted));
