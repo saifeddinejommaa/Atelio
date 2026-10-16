@@ -6,8 +6,8 @@ import type { Brand } from '@atelio/core/domain'
 // Pour une nouvelle société : ajouter son domaine ici (la marque elle-même est dans core, brands/).
 // À compléter avec le domaine de chaque société, ex. { slug: 'gmg78', domain: 'pro.mon-garage.fr' }.
 const domains: { slug: string; domain: string }[] = [
-  { slug: 'gmg78', domain: 'app.gmg-78.com' },
-  // TEMPORAIRE : test sur l'adresse technique Azure, à retirer une fois app.gmg-78.com branché.
+  { slug: 'gmg78', domain: 'app.gmg78.com' },
+  // TEMPORAIRE : test sur l'adresse technique Azure, à retirer une fois app.gmg78.com branché.
   { slug: 'gmg78', domain: 'ca-atelio-b2b.thankfulcoast-11fdaee5.francecentral.azurecontainerapps.io' },
 ]/** Marque correspondant au nom d'hôte, ou null si le domaine n'est pas reconnu. */
 export function resolveBrandByHost(hostname: string, baseDomain = import.meta.env.VITE_BRAND_BASE_DOMAIN): Brand | null {

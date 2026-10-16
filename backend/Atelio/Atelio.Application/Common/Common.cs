@@ -23,7 +23,7 @@ public interface ITenantContext
     /// <summary>Identité légale de la marque, imprimée sur les factures.</summary>
     TenantLegal Legal { get; }
 
-    /// <summary>Adresse d'envoi des e-mails de la marque (ex. DoNotReply@gmg-78.com).</summary>
+    /// <summary>Adresse d'envoi des e-mails de la marque (ex. DoNotReply@gmg78.com).</summary>
     string EmailSenderAddress { get; }
 }
 

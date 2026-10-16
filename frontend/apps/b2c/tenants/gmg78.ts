@@ -5,7 +5,7 @@ import type { TenantConfig } from "./types";
 const config: TenantConfig = {
   ...gmg78,
   // Domaine propre (ex. "mon-garage.fr"). En attendant : gmg78.<TENANT_BASE_DOMAIN> ou /gmg78.
-  domains: ["gmg-78.com"],
+  domains: ["gmg78.com"],
   // tagline : indiquez la phrase d'accroche de la marque.
   contact: {
     phone: "0171483183",

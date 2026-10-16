@@ -30,7 +30,7 @@ public class EmailOptions
 
 /// <summary>
 /// Envoi réel des e-mails par Azure Communication Services, depuis l'adresse de la marque blanche
-/// de la requête (ex. DoNotReply@gmg-78.com, domaine vérifié dans Azure).
+/// de la requête (ex. DoNotReply@gmg78.com, domaine vérifié dans Azure).
 /// </summary>
 public class AzureEmailSender : IEmailSender
 {

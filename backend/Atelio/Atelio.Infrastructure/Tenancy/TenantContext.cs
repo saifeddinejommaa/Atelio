@@ -29,7 +29,7 @@ public class TenantSettings
     public TenantLegal? Legal { get; set; }
 
     /// <summary>
-    /// Adresse d'envoi des e-mails (ex. DoNotReply@gmg-78.com), sur un domaine vérifié dans Azure Communication Services.
+    /// Adresse d'envoi des e-mails (ex. DoNotReply@gmg78.com), sur un domaine vérifié dans Azure Communication Services.
     /// Inutile tant que la section « Email » est vide (e-mails affichés dans les logs).
     /// </summary>
     public string? EmailSender { get; set; }
