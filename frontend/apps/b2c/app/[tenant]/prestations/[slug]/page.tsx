@@ -100,7 +100,7 @@ export default async function ServicePage({ params }: PageProps<"/[tenant]/prest
             Prendre rendez-vous
           </Button>
           <Button as={Link} href={href(`/devis?prestation=${service.slug}`)} variant="outline" size="lg" fullWidth className="mt-3">
-            Obtenir un devis précis
+            Demander un devis
           </Button>
           <p className="mt-4 text-center text-sm text-zinc-500">
             Une question ?{" "}

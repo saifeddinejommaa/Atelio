@@ -1,6 +1,7 @@
 import type { CustomerVehicle, VehicleDetails } from "../entities/CustomerVehicle";
 import { ValidationError } from "../errors";
 import type { IVehicleRepository } from "../repositories/IVehicleRepository";
+import { formatPlate, isValidPlate } from "../rules/plate";
 
 /** Véhicules actifs d'un client. */
 export class GetCustomerVehicles {
@@ -16,6 +17,16 @@ export class GetVehicle {
 
   execute(vehicleId: number): Promise<CustomerVehicle | null> {
     return this.repository.getById(vehicleId);
+  }
+}
+
+/** Ajoute un véhicule à un client par son immatriculation. */
+export class AddCustomerVehicle {
+  constructor(private readonly repository: IVehicleRepository) {}
+
+  async execute(customerId: number, plate: string): Promise<void> {
+    if (!isValidPlate(plate)) throw new ValidationError("Immatriculation invalide (format AB-123-CD).");
+    return this.repository.save(customerId, formatPlate(plate.trim()));
   }
 }
 

@@ -4,6 +4,7 @@ using Atelio.Application.Features.Appointments.Commands;
 using Atelio.Application.Features.Appointments.Repositories;
 using Atelio.Application.Features.Appointments.Requests;
 using Atelio.Application.Features.Customers.Responses;
+using Atelio.Application.Features.QuoteRequests.Commands;
 using Atelio.Application.Features.Vehicles.Responses;
 using Atelio.Domain.Repositories;
 using MediatR;
@@ -71,6 +72,15 @@ public class MeController : ControllerBase
         command.CustomerId = CustomerId;
 
         return Ok(await _mediator.Send(command, cancellationToken));
+    }
+
+    /// <summary>Demande un devis pour le client connecté : { plate, serviceIds, message }. Renvoie { id }.</summary>
+    [HttpPost("quote-requests")]
+    public async Task<IActionResult> RequestQuote([FromBody] CreateQuoteRequestCommand command, CancellationToken cancellationToken)
+    {
+        command.CustomerId = CustomerId;
+
+        return Ok(new { id = await _mediator.Send(command, cancellationToken) });
     }
 
     [HttpPost("appointments/{reference}/cancel")]

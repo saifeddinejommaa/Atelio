@@ -1,5 +1,5 @@
 import { ApiError, QuoteApiRepository } from '@atelio/core/data'
-import { articleTotal, CreateQuote, ValidationError, VAT_RATE, type Article, type CustomerVehicle } from '@atelio/core/domain'
+import { articleTotal, CreateQuote, UpdateQuote, ValidationError, VAT_RATE, type Article, type CustomerVehicle, type GarageQuote } from '@atelio/core/domain'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { useBrand } from '../../brand/useBrand'
@@ -10,7 +10,7 @@ import ArticleSearch from '../articles/ArticleSearch'
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 const input = 'w-full rounded-brand border border-zinc-300 px-2 py-1.5 outline-none focus:border-primary'
 
-type Line = { article: Article; quantity: string }
+type Line = { articleId: number; name: string; description: string | null; unitPriceHt: string; quantity: string }
 
 /** "4,5" ou "4.5" => 4.5 ; vide ou invalide => NaN. */
 function toNumber(value: string): number {
@@ -19,52 +19,81 @@ function toNumber(value: string): number {
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
+/** Total HT de la ligne ; 0 tant que la quantité ou le prix est invalide. */
+function lineTotal(line: Line): number {
+  const quantity = toNumber(line.quantity)
+  const unitPriceHt = toNumber(line.unitPriceHt)
+  return Number.isFinite(quantity) && Number.isFinite(unitPriceHt) ? articleTotal({ quantity, unitPriceHt }) : 0
+}
+
 /**
  * Nouveau devis pour un véhicule du client : articles du catalogue (prix HT non modifiables) et quantités.
  * Le garage courant établit le devis. Une fois créé, il s'ouvre pour être imprimé ou envoyé par e-mail.
+ * Le prix HT se modifie pour ce devis seulement : le prix du catalogue ne change pas.
+ * Avec quote : modifie ce devis (ses lignes gardent leur prix, les articles ajoutés prennent celui du catalogue).
  */
 export default function NewQuotePanel({
   customerId,
   vehicles,
   catalog,
+  quoteRequestId,
+  initialVehicleId,
+  quote,
+  onSaved,
   onClose,
 }: {
   customerId: number
   vehicles: CustomerVehicle[]
   /** Articles actifs du catalogue. */
   catalog: Article[]
+  /** Demande du client traitée par ce devis, s'il y en a une. */
+  quoteRequestId?: number
+  /** Véhicule présélectionné. */
+  initialVehicleId?: number
+  /** Devis à modifier. */
+  quote?: GarageQuote
+  /** Appelé après l'enregistrement d'une modification. */
+  onSaved?: () => void
   onClose: () => void
 }) {
   const { api } = useBrand()
   const garage = useCurrentGarage()
   const navigate = useNavigate()
-  const [vehicleId, setVehicleId] = useState(vehicles.length === 1 ? vehicles[0].id : 0)
-  const [lines, setLines] = useState<Line[]>([])
+  const [vehicleId, setVehicleId] = useState(quote?.vehicleId ?? initialVehicleId ?? (vehicles.length === 1 ? vehicles[0].id : 0))
+  const [lines, setLines] = useState<Line[]>(() => (quote?.lines ?? []).map((l) => ({ ...l, unitPriceHt: String(l.unitPriceHt).replace('.', ','), quantity: String(l.quantity) })))
   const [selected, setSelected] = useState<Article | null>(null)
   const [quantity, setQuantity] = useState('1')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  const totalHt = round2(lines.reduce((sum, l) => sum + (Number.isFinite(toNumber(l.quantity)) ? articleTotal({ quantity: toNumber(l.quantity), unitPriceHt: l.article.unitPriceHt }) : 0), 0))
+  const totalHt = round2(lines.reduce((sum, l) => sum + lineTotal(l), 0))
   const vat = round2(totalHt * VAT_RATE)
 
   function add(e: FormEvent) {
     e.preventDefault()
     if (!selected) return
-    setLines([...lines, { article: selected, quantity }])
+    setLines([...lines, { articleId: selected.id, name: selected.name, description: selected.description, unitPriceHt: String(selected.unitPriceHt).replace('.', ','), quantity }])
     setSelected(null)
     setQuantity('1')
   }
 
-  async function create() {
+  async function save() {
     setBusy(true)
     setError('')
+    const quoteLines = lines.map((l) => ({ articleId: l.articleId, quantity: toNumber(l.quantity), unitPriceHt: toNumber(l.unitPriceHt) }))
     try {
+      if (quote) {
+        await new UpdateQuote(new QuoteApiRepository(api)).execute(quote.id, { vehicleId, lines: quoteLines })
+        onSaved?.()
+        return
+      }
+
       const id = await new CreateQuote(new QuoteApiRepository(api)).execute({
         customerId,
         vehicleId,
         garageId: garage.id,
-        lines: lines.map((l) => ({ articleId: l.article.id, quantity: toNumber(l.quantity) })),
+        quoteRequestId,
+        lines: quoteLines,
       })
       navigate(`/devis/${id}`)
     } catch (err) {
@@ -75,8 +104,8 @@ export default function NewQuotePanel({
 
   return (
     <SidePanel
-      title="Nouveau devis"
-      subtitle={`Établi par ${garage.name}`}
+      title={quote ? `Modifier le devis ${quote.number}` : 'Nouveau devis'}
+      subtitle={`Établi par ${quote?.garageName ?? garage.name}`}
       wide
       onClose={onClose}
       footer={
@@ -92,10 +121,10 @@ export default function NewQuotePanel({
             <button
               type="button"
               disabled={busy || lines.length === 0 || !vehicleId}
-              onClick={create}
+              onClick={save}
               className="rounded-brand bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-40"
             >
-              {busy ? 'Création…' : 'Créer le devis'}
+              {quote ? (busy ? 'Enregistrement…' : 'Enregistrer') : busy ? 'Création…' : 'Créer le devis'}
             </button>
           </div>
         </div>
@@ -148,12 +177,13 @@ export default function NewQuotePanel({
           </thead>
           <tbody className="divide-y divide-zinc-100">
             {lines.map((l, i) => {
-              const q = toNumber(l.quantity)
+              const total = lineTotal(l)
+              const valid = Number.isFinite(toNumber(l.quantity)) && Number.isFinite(toNumber(l.unitPriceHt))
               return (
                 <tr key={i} className="align-top">
                   <td className="py-2 pr-2">
-                    <span className="font-semibold">{l.article.name}</span>
-                    {l.article.description && <p className="whitespace-pre-line text-xs text-zinc-500">{l.article.description}</p>}
+                    <span className="font-semibold">{l.name}</span>
+                    {l.description && <p className="whitespace-pre-line text-xs text-zinc-500">{l.description}</p>}
                   </td>
                   <td className="py-2 pr-2">
                     <input
@@ -164,9 +194,17 @@ export default function NewQuotePanel({
                       className={`${input} text-right`}
                     />
                   </td>
-                  <td className="py-2 pr-2 text-right">{euro.format(l.article.unitPriceHt)}</td>
+                  <td className="py-2 pr-2">
+                    <input
+                      inputMode="decimal"
+                      value={l.unitPriceHt}
+                      onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitPriceHt: e.target.value } : x)))}
+                      aria-label="Prix unitaire HT"
+                      className={`${input} text-right`}
+                    />
+                  </td>
                   <td className="py-2 pr-2 text-right font-medium">
-                    {Number.isFinite(q) ? euro.format(articleTotal({ quantity: q, unitPriceHt: l.article.unitPriceHt })) : '—'}
+                    {valid ? euro.format(total) : '—'}
                   </td>
                   <td className="py-2 text-right">
                     <button type="button" onClick={() => setLines(lines.filter((_, j) => j !== i))} className="text-red-700 hover:underline">

@@ -2,6 +2,7 @@ import type { Appointment, BookedAppointment } from "../entities/appointment";
 import type { Customer } from "../entities/customer";
 import type { CustomerVehicle } from "../entities/CustomerVehicle";
 import type { MyAppointmentRequest } from "../entities/CustomerLogin";
+import type { NewQuoteRequest } from "../entities/QuoteRequest";
 
 /** Compte du client connecté (routes /me de l'API, avec son jeton de session). */
 export interface IMyAccountRepository {
@@ -11,4 +12,5 @@ export interface IMyAccountRepository {
   getVehicles(): Promise<CustomerVehicle[]>;
   book(request: MyAppointmentRequest): Promise<BookedAppointment>;
   cancel(reference: string): Promise<void>;
+  requestQuote(request: NewQuoteRequest): Promise<void>;
 }

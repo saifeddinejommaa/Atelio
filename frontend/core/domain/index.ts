@@ -89,7 +89,7 @@ export { GetCustomerAppointments } from "./usecases/GetCustomerAppointments";
 export { CancelAppointment } from "./usecases/CancelAppointment";
 export { GetCustomerByEmail } from "./usecases/GetCustomerByEmail";
 export { CreatePromotion, GetActivePromotions, GetPromotions, SetPromotionActive, UpdatePromotion } from "./usecases/Promotions";
-export { GetCustomerVehicles, GetVehicle, UpdateVehicleDetails } from "./usecases/GetCustomerVehicles";
+export { AddCustomerVehicle, GetCustomerVehicles, GetVehicle, UpdateVehicleDetails } from "./usecases/GetCustomerVehicles";
 export { GetGarageAppointments } from "./usecases/GetGarageAppointments";
 export { FindCustomersByPhone } from "./usecases/FindCustomersByPhone";
 export { CreateCustomer, UpdateCustomer } from "./usecases/CreateCustomer";
@@ -145,9 +145,13 @@ export type { Article, ArticleFilter, ArticleInput } from "./entities/Article";
 export type { IArticleRepository } from "./repositories/IArticleRepository";
 export { CreateArticle, GetArticles, SetArticleActive, UpdateArticle } from "./usecases/Articles";
 
-export type { GarageQuote, GarageQuoteLine, GarageQuoteSummary, NewGarageQuote } from "./entities/GarageQuote";
+export type { GarageQuote, GarageQuoteChanges, GarageQuoteLine, GarageQuoteSummary, NewGarageQuote } from "./entities/GarageQuote";
 export type { IQuoteRepository } from "./repositories/IQuoteRepository";
-export { CreateQuote, GetCustomerQuotes, GetQuote, SendQuote } from "./usecases/Quotes";
+export { CreateQuote, GetCustomerQuotes, GetQuote, SendQuote, UpdateQuote } from "./usecases/Quotes";
+
+export type { NewQuoteRequest, QuoteRequest } from "./entities/QuoteRequest";
+export type { IQuoteRequestRepository } from "./repositories/IQuoteRequestRepository";
+export { GetPendingQuoteRequestCount, GetQuoteRequest, GetQuoteRequests, RequestMyQuote } from "./usecases/QuoteRequests";
 
 export type { Invoice, InvoiceDocument, InvoiceFilter, InvoiceLine, InvoicePage, InvoicePayment, InvoiceSummary } from "./entities/invoice";
 export { pageCount, type Page } from "./entities/page";

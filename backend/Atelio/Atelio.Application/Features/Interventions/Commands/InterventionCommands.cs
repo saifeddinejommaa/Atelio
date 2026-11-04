@@ -342,6 +342,9 @@ public class UpdateInterventionArticleCommand : IRequest<Unit>
 
     // Promotion de la ligne (null : aucune). Inchangée, elle garde sa remise d'origine même si elle est terminée.
     public long? PromotionId { get; set; }
+
+    // Prix HT propre à cette intervention (le catalogue ne change pas). Absent : la ligne garde le sien.
+    public decimal? UnitPriceHt { get; set; }
 }
 
 public class UpdateInterventionArticleCommandValidator : AbstractValidator<UpdateInterventionArticleCommand>
@@ -349,6 +352,7 @@ public class UpdateInterventionArticleCommandValidator : AbstractValidator<Updat
     public UpdateInterventionArticleCommandValidator()
     {
         RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("La quantité doit être supérieure à 0.");
+        RuleFor(x => x.UnitPriceHt).GreaterThanOrEqualTo(0).WithMessage("Le prix ne peut pas être négatif.");
     }
 }
 
@@ -386,6 +390,7 @@ public class UpdateInterventionArticleCommandHandler : IRequestHandler<UpdateInt
         var line = await InterventionArticleRules.GetAsync(_lines, request.InterventionId, request.LineId, cancellationToken);
 
         line.Quantity = request.Quantity;
+        line.UnitPriceHt = Math.Round(request.UnitPriceHt ?? line.UnitPriceHt, 2, MidpointRounding.AwayFromZero);
         if (request.PromotionId != line.PromotionId)
         {
             await InterventionArticleRules.SetPromotionAsync(line, request.PromotionId, _promotions, _tenant, _clock, cancellationToken);

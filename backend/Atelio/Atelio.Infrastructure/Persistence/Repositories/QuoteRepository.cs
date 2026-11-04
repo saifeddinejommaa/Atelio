@@ -17,6 +17,12 @@ public class QuoteRepository : Repository<Quote>, IQuoteRepository
     public Task<Quote?> GetWithLinesAsync(long id, CancellationToken cancellationToken = default) =>
         DbSet.AsNoTracking().Include(q => q.Lines).FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
 
+    public Task<Quote?> GetForUpdateAsync(long id, CancellationToken cancellationToken = default) =>
+        DbSet.Include(q => q.Lines).FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
+
+    public Task<bool> IsImportedAsync(long id, CancellationToken cancellationToken = default) =>
+        Context.Set<InterventionArticle>().AnyAsync(a => a.QuoteId == id, cancellationToken);
+
     public async Task<string> NextNumberAsync(int year, CancellationToken cancellationToken = default)
     {
         // Un seul devis numéroté à la fois : deux devis ne peuvent pas prendre le même numéro.

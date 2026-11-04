@@ -2,12 +2,11 @@ import { ApiError, AppointmentApiRepository, CustomerApiRepository, VehicleApiRe
 import {
   BookAppointment,
   CreateCustomer,
-  FindCustomersByPhone,
   GetCustomerVehicles,
   isValidPlate,
   MAX_NOTES_LENGTH,
   ValidationError,
-  type Customer,
+  type CustomerSummary,
   type CustomerVehicle,
   type Garage,
   type Service,
@@ -15,6 +14,7 @@ import {
 import { useState, type FormEvent } from 'react'
 import { useBrand } from '../../brand/useBrand'
 import SidePanel from '../../components/SidePanel'
+import CustomerSearch from '../customers/CustomerSearch'
 import SlotCheckMessage from './SlotCheckMessage'
 import { useSlotCheck } from './useSlotCheck'
 
@@ -57,11 +57,10 @@ export default function NewAppointmentPanel({
 }) {
   const { api } = useBrand()
 
-  // Client : recherche par téléphone. null = pas encore cherché, [] = nouveau client.
-  const [phone, setPhone] = useState('')
-  const [customers, setCustomers] = useState<Customer[] | null>(null)
-  const [customerId, setCustomerId] = useState<number | null>(null)
-  const [newCustomer, setNewCustomer] = useState({ firstName: '', lastName: '', email: '' })
+  // Client : trouvé par la recherche, ou nouvelle fiche à saisir.
+  const [customer, setCustomer] = useState<CustomerSummary | null>(null)
+  const [creatingCustomer, setCreatingCustomer] = useState(false)
+  const [newCustomer, setNewCustomer] = useState({ firstName: '', lastName: '', phone: '', email: '' })
   // Fiche créée lors d'un premier essai (ex. créneau refusé) : on ne la recrée pas.
   const [createdCustomerId, setCreatedCustomerId] = useState<number | null>(null)
 
@@ -74,51 +73,33 @@ export default function NewAppointmentPanel({
   const [serviceIds, setServiceIds] = useState<number[]>([])
   const [notes, setNotes] = useState('')
 
-  const [searching, setSearching] = useState(false)
+  const [loadingCustomer, setLoadingCustomer] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const isNewCustomer = customers !== null && customers.length === 0
   const duration = services.filter((s) => serviceIds.includes(s.id)).reduce((sum, s) => sum + s.durationMinutes, 0)
 
-  async function search(e?: FormEvent) {
-    e?.preventDefault()
+  async function selectCustomer(found: CustomerSummary) {
     setError('')
-    setSearching(true)
+    setLoadingCustomer(true)
     try {
-      const found = await new FindCustomersByPhone(new CustomerApiRepository(api)).execute(phone)
-      setCustomers(found)
-      setCreatedCustomerId(null)
-      if (found.length === 1) await selectCustomer(found[0].id)
-      else {
-        setCustomerId(null)
-        setVehicles([])
-        setVehicleChoice(NEW_VEHICLE)
-      }
+      const list = await new GetCustomerVehicles(new VehicleApiRepository(api)).execute(found.id)
+      setCustomer(found)
+      setVehicles(list)
+      // Une seule voiture : présélectionnée. Plusieurs : le garagiste choisit.
+      setVehicleChoice(list.length === 1 ? list[0].id : list.length === 0 ? NEW_VEHICLE : null)
     } catch (err) {
       setError(errorMessage(err))
     } finally {
-      setSearching(false)
+      setLoadingCustomer(false)
     }
   }
 
-  async function selectCustomer(id: number) {
-    setCustomerId(id)
-    const list = await new GetCustomerVehicles(new VehicleApiRepository(api)).execute(id)
-    setVehicles(list)
-    // Une seule voiture : présélectionnée. Plusieurs : le garagiste choisit.
-    setVehicleChoice(list.length === 1 ? list[0].id : list.length === 0 ? NEW_VEHICLE : null)
-  }
-
-  function changePhone(value: string) {
-    setPhone(value)
-    // Nouveau numéro : il faut relancer la recherche.
-    if (customers !== null) {
-      setCustomers(null)
-      setCustomerId(null)
-      setVehicles([])
-      setVehicleChoice(NEW_VEHICLE)
-    }
+  function backToSearch() {
+    setCustomer(null)
+    setCreatingCustomer(false)
+    setVehicles([])
+    setVehicleChoice(NEW_VEHICLE)
   }
 
   function toggleService(id: number) {
@@ -126,7 +107,7 @@ export default function NewAppointmentPanel({
   }
 
   const hasVehicle = typeof vehicleChoice === 'number' || (vehicleChoice === NEW_VEHICLE && isValidPlate(plate))
-  const hasCustomer = customerId !== null || (isNewCustomer && !!newCustomer.firstName.trim() && !!newCustomer.lastName.trim())
+  const hasCustomer = customer !== null || (creatingCustomer && !!newCustomer.firstName.trim() && !!newCustomer.lastName.trim() && !!newCustomer.phone.trim())
   // Disponibilité vérifiée dès que les prestations (donc la durée) sont connues.
   const slotCheck = useSlotCheck(
     serviceIds.length > 0 ? { garageId: garage.id, scheduledAt: localDateTime(start), serviceIds: [...serviceIds].sort() } : null,
@@ -138,9 +119,9 @@ export default function NewAppointmentPanel({
     setError('')
     setSubmitting(true)
     try {
-      let id = customerId ?? createdCustomerId
+      let id = customer?.id ?? createdCustomerId
       if (id === null) {
-        id = await new CreateCustomer(new CustomerApiRepository(api)).execute({ ...newCustomer, phone })
+        id = await new CreateCustomer(new CustomerApiRepository(api)).execute(newCustomer)
         setCreatedCustomerId(id)
       }
       const booked = await new BookAppointment(new AppointmentApiRepository(api)).execute({
@@ -195,67 +176,48 @@ export default function NewAppointmentPanel({
           {/* Client */}
           <section>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Client</h3>
-            <form onSubmit={search} className="mt-3 flex gap-2">
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => changePhone(e.target.value)}
-                placeholder="Indiquez le téléphone du client"
-                aria-label="Téléphone du client"
-                autoFocus
-                className="min-w-0 flex-1 rounded-brand border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-              <button
-                type="submit"
-                disabled={searching || phone.replace(/\D/g, '').length < 9}
-                className="rounded-brand bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-40"
-              >
-                {searching ? '…' : 'Rechercher'}
-              </button>
-            </form>
-
-            {customers !== null && customers.length > 1 && (
-              <div className="mt-3 space-y-2">
-                <p className="text-sm text-zinc-600">{customers.length} clients ont ce numéro :</p>
-                {customers.map((c) => (
-                  <Choice key={c.id} checked={customerId === c.id} onSelect={() => selectCustomer(c.id)}>
-                    {c.firstName} {c.lastName}
-                    {c.email && <span className="block text-xs text-zinc-500">{c.email}</span>}
-                  </Choice>
-                ))}
-              </div>
-            )}
-
-            {customers !== null && customers.length === 1 && (
-              <p className="mt-3 rounded-brand bg-muted px-3 py-2 text-sm">
-                <span className="font-semibold">
-                  {customers[0].firstName} {customers[0].lastName}
-                </span>
-                {customers[0].email && <span className="text-zinc-500"> · {customers[0].email}</span>}
-              </p>
-            )}
-
-            {isNewCustomer && (
-              <div className="mt-3 space-y-3">
-                <p className="text-sm text-zinc-600">Aucun client avec ce numéro : nouvelle fiche client.</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Prénom" value={newCustomer.firstName} onChange={(v) => setNewCustomer({ ...newCustomer, firstName: v })} />
-                  <Field label="Nom" value={newCustomer.lastName} onChange={(v) => setNewCustomer({ ...newCustomer, lastName: v })} />
+            <div className="mt-3">
+              {customer ? (
+                <div className="flex items-start justify-between gap-3 rounded-brand bg-muted px-3 py-2 text-sm">
+                  <p>
+                    <span className="block font-semibold">
+                      {customer.firstName} {customer.lastName}
+                    </span>
+                    <span className="block text-zinc-500">{[customer.phone, customer.email].filter(Boolean).join(' · ')}</span>
+                  </p>
+                  <button type="button" onClick={backToSearch} className="shrink-0 font-semibold text-primary hover:underline">
+                    Changer
+                  </button>
                 </div>
-                {/* Correction du numéro sans relancer la recherche. */}
-                <Field label="Téléphone" type="tel" value={phone} onChange={setPhone} />
-                <Field
-                  label="E-mail (facultatif)"
-                  type="email"
-                  value={newCustomer.email}
-                  onChange={(v) => setNewCustomer({ ...newCustomer, email: v })}
+              ) : creatingCustomer ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Prénom" value={newCustomer.firstName} disabled={createdCustomerId !== null} placeholder="Indiquez le prénom" onChange={(v) => setNewCustomer({ ...newCustomer, firstName: v })} />
+                    <Field label="Nom" value={newCustomer.lastName} disabled={createdCustomerId !== null} placeholder="Indiquez le nom" onChange={(v) => setNewCustomer({ ...newCustomer, lastName: v })} />
+                  </div>
+                  <Field label="Téléphone" type="tel" value={newCustomer.phone} disabled={createdCustomerId !== null} placeholder="Indiquez le téléphone" onChange={(v) => setNewCustomer({ ...newCustomer, phone: v })} />
+                  <Field label="E-mail (facultatif)" type="email" value={newCustomer.email} disabled={createdCustomerId !== null} placeholder="Indiquez l'e-mail" onChange={(v) => setNewCustomer({ ...newCustomer, email: v })} />
+                  {createdCustomerId === null && (
+                    <button type="button" onClick={backToSearch} className="text-sm font-semibold text-primary hover:underline">
+                      ← Rechercher un client
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <CustomerSearch
+                  disabled={loadingCustomer}
+                  onSelect={(c) => void selectCustomer(c)}
+                  onNewCustomer={() => {
+                    setCreatingCustomer(true)
+                    setError('')
+                  }}
                 />
-              </div>
-            )}
+              )}
+            </div>
           </section>
 
           {/* Véhicule */}
-          {(customerId !== null || isNewCustomer) && (
+          {(customer !== null || creatingCustomer) && (
             <section>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Véhicule</h3>
               <div className="mt-3 space-y-2">
@@ -334,12 +296,14 @@ function Field({
   onChange,
   type = 'text',
   placeholder,
+  disabled = false,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   type?: string
   placeholder?: string
+  disabled?: boolean
 }) {
   return (
     <label className="block text-sm">
@@ -348,8 +312,9 @@ function Field({
         type={type}
         value={value}
         placeholder={placeholder}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-brand border border-zinc-300 px-3 py-2 outline-none focus:border-primary"
+        className="mt-1 w-full rounded-brand border border-zinc-300 px-3 py-2 outline-none focus:border-primary disabled:bg-muted"
       />
     </label>
   )

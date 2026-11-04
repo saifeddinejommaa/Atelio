@@ -1,5 +1,7 @@
+import { QuoteRequestApiRepository } from '@atelio/core/data'
+import { GetPendingQuoteRequestCount } from '@atelio/core/domain'
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLoaderData } from 'react-router'
+import { NavLink, Outlet, useLoaderData, useLocation } from 'react-router'
 import { themeStyle } from '../brand/BrandTheme'
 import { markAppReady, type Deferred } from '../lib/deferred'
 import type { StaffMember } from '@atelio/core/domain'
@@ -14,6 +16,7 @@ import TechnicalError from './TechnicalError'
 const links = [
   { to: '/rendez-vous', label: 'Rendez-vous' },
   { to: '/interventions', label: 'Interventions' },
+  { to: '/devis', label: 'Devis' },
   { to: '/factures', label: 'Factures' },
   { to: '/clients', label: 'Clients' },
   { to: '/articles', label: 'Articles' },
@@ -26,21 +29,37 @@ const roleLabels: Record<StaffMember['role'], string> = { admin: 'Admin', staff:
 
 const LAST_GARAGE_KEY = 'last-garage'
 
+// Rafraîchissement de la pastille des demandes de devis, en plus de chaque changement de page.
+const PENDING_QUOTES_REFRESH_MS = 60_000
+
 /**
  * Cadre de l'espace pro. Tout ce que le front connaît déjà (marque, menu, compte Microsoft, déconnexion)
  * s'affiche tout de suite ; seul le contenu attend la personne connectée et ses garages (API),
  * et affiche l'erreur technique à sa place en cas de souci.
  */
 export default function Layout() {
-  const { brand, accountName, signOut } = useBrand()
+  const { brand, accountName, signOut, api } = useBrand()
+  const { pathname } = useLocation()
   const result = useDeferredResult(useLoaderData<Deferred<GaragesData>>())
   const [garageId, setGarageId] = useState(() => readLastGarage())
   const data = result.status === 'ok' ? result.value : null
   const staff = data?.staff ?? null
   const garage = data?.garages.find((g) => g.id === garageId) ?? data?.garages[0]
+  const [pendingQuotes, setPendingQuotes] = useState(0)
 
   // Démarrage terminé : les rechargements de page gardent désormais leurs données affichées (voir deferred).
   useEffect(() => markAppReady(), [])
+
+  // Demandes de devis à traiter. Une panne laisse simplement la dernière valeur affichée.
+  useEffect(() => {
+    if (!staff) return
+    const refresh = () => {
+      new GetPendingQuoteRequestCount(new QuoteRequestApiRepository(api)).execute().then(setPendingQuotes).catch(() => {})
+    }
+    refresh()
+    const timer = setInterval(refresh, PENDING_QUOTES_REFRESH_MS)
+    return () => clearInterval(timer)
+  }, [api, staff, pathname])
 
   function changeGarage(id: number) {
     setGarageId(id)
@@ -67,12 +86,17 @@ export default function Layout() {
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `block rounded-brand px-3 py-2 text-sm font-medium transition-colors ${
+                `flex items-center justify-between rounded-brand px-3 py-2 text-sm font-medium transition-colors ${
                   isActive ? 'bg-secondary text-on-secondary' : 'text-on-primary/75 hover:bg-white/10 hover:text-on-primary'
                 }`
               }
             >
               {link.label}
+              {link.to === '/devis' && pendingQuotes > 0 && (
+                <span aria-label={`${pendingQuotes} demande(s) à traiter`} className="ml-2 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-center text-xs font-bold leading-none text-white">
+                  {pendingQuotes}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

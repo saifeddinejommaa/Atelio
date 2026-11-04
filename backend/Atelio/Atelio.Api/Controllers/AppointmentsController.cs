@@ -3,7 +3,6 @@ using Atelio.Application.Features.Appointments.Queries;
 using Atelio.Application.Features.Appointments.Repositories;
 using Atelio.Application.Features.Appointments.Requests;
 using Atelio.Domain.Enums;
-using Atelio.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

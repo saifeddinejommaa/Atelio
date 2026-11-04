@@ -18,6 +18,7 @@ export { ArticleApiRepository, type ArticleDto } from "./repositories/ArticleApi
 export { CustomerAuthApiRepository } from "./repositories/CustomerAuthApiRepository";
 export { MyAccountApiRepository } from "./repositories/MyAccountApiRepository";
 export { QuoteApiRepository } from "./repositories/QuoteApiRepository";
+export { QuoteRequestApiRepository } from "./repositories/QuoteRequestApiRepository";
 export { StaffApiRepository } from "./repositories/StaffApiRepository";
 
 export { PromotionApiRepository, type PromotionDto } from "./repositories/PromotionApiRepository";

@@ -14,6 +14,8 @@ public class QuoteQueryRepository : IQuoteQueryRepository
             q.id AS {nameof(QuoteResponse.Id)},
             q.number AS {nameof(QuoteResponse.Number)},
             q.created_at AS {nameof(QuoteResponse.CreatedAt)},
+            q.sent_at AS {nameof(QuoteResponse.SentAt)},
+            EXISTS (SELECT 1 FROM intervention_article a WHERE a.quote_id = q.id) AS {nameof(QuoteResponse.IsImported)},
             q.total_ht AS {nameof(QuoteResponse.TotalHt)},
             q.total_vat AS {nameof(QuoteResponse.TotalVat)},
             q.total_ttc AS {nameof(QuoteResponse.TotalTtc)},
@@ -22,6 +24,7 @@ public class QuoteQueryRepository : IQuoteQueryRepository
             c.last_name AS {nameof(QuoteResponse.CustomerLastName)},
             c.email AS {nameof(QuoteResponse.CustomerEmail)},
             c.phone AS {nameof(QuoteResponse.CustomerPhone)},
+            v.id AS {nameof(QuoteResponse.VehicleId)},
             v.plate AS {nameof(QuoteResponse.VehiclePlate)},
             v.make AS {nameof(QuoteResponse.VehicleMake)},
             v.model AS {nameof(QuoteResponse.VehicleModel)},
@@ -40,6 +43,7 @@ public class QuoteQueryRepository : IQuoteQueryRepository
 
     private const string LinesSelect = $"""
         SELECT
+            l.article_id AS {nameof(QuoteLineResponse.ArticleId)},
             l.name AS {nameof(QuoteLineResponse.Name)},
             l.description AS {nameof(QuoteLineResponse.Description)},
             l.quantity AS {nameof(QuoteLineResponse.Quantity)},

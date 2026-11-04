@@ -1,4 +1,4 @@
-import type { Appointment, BookedAppointment, Customer, CustomerVehicle, IMyAccountRepository, MyAppointmentRequest } from "../../domain";
+import type { Appointment, BookedAppointment, Customer, CustomerVehicle, IMyAccountRepository, MyAppointmentRequest, NewQuoteRequest } from "../../domain";
 import { ApiError, type ApiClient } from "../http/ApiClient";
 import type { AppointmentCreatedDto, AppointmentDto } from "../dto/AppointmentDto";
 import type { CustomerDto } from "../dto/CustomerDto";
@@ -46,5 +46,9 @@ export class MyAccountApiRepository implements IMyAccountRepository {
 
   async cancel(reference: string): Promise<void> {
     await this.api.post(`/me/appointments/${encodeURIComponent(reference)}/cancel`, {});
+  }
+
+  async requestQuote(request: NewQuoteRequest): Promise<void> {
+    await this.api.post("/me/quote-requests", request);
   }
 }

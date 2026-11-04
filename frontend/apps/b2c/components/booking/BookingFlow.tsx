@@ -84,7 +84,7 @@ export default function BookingFlow({
   const category = savedVehicle ? savedVehicle.category : newVehicle?.category;
   const priceOf = (s: Service) =>
     category ? computeQuote([s], category, (x) => x.priceFrom ?? 0).totalTTC : (s.priceFrom ?? 0);
-  const pricePrefix = category ? "" : "dès ";
+  const pricePrefix = category ? "" : "à partir de ";
   const total = chosen.reduce((sum, s) => sum + priceOf(s), 0);
   // Seuls les garages qui réalisent toutes les prestations choisies sont proposés.
   const eligible = garages.filter((g) => garageOffers(g, selected));

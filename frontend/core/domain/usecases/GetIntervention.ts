@@ -64,7 +64,12 @@ function checkQuantity(quantity: number): number {
   return quantity;
 }
 
-/** Importe un article du catalogue (prix HT copié, non modifiable), avec une promotion en cours facultative. */
+function checkPrice(unitPriceHt: number): number {
+  if (!(unitPriceHt >= 0)) throw new ValidationError("Le prix doit être un montant positif.");
+  return unitPriceHt;
+}
+
+/** Importe un article du catalogue (prix HT copié), avec une promotion en cours facultative. */
 export class AddInterventionArticle {
   constructor(private readonly repository: IInterventionRepository) {}
 
@@ -76,9 +81,12 @@ export class AddInterventionArticle {
 export class UpdateInterventionArticle {
   constructor(private readonly repository: IInterventionRepository) {}
 
-  /** promotionId inchangé : la ligne garde sa remise d'origine, même si la promotion est terminée. */
-  async execute(interventionId: number, lineId: number, quantity: number, promotionId: number | null): Promise<void> {
-    return this.repository.updateArticle(interventionId, lineId, checkQuantity(quantity), promotionId);
+  /**
+   * promotionId inchangé : la ligne garde sa remise d'origine, même si la promotion est terminée.
+   * unitPriceHt vaut pour cette intervention seulement : le catalogue ne change pas.
+   */
+  async execute(interventionId: number, lineId: number, quantity: number, promotionId: number | null, unitPriceHt: number): Promise<void> {
+    return this.repository.updateArticle(interventionId, lineId, checkQuantity(quantity), promotionId, checkPrice(unitPriceHt));
   }
 }
 

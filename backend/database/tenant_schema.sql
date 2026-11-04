@@ -1583,7 +1583,8 @@ CREATE TABLE public.quote (
     total_ht numeric(10,2) NOT NULL CHECK (total_ht >= (0)::numeric),
     total_vat numeric(10,2) NOT NULL CHECK (total_vat >= (0)::numeric),
     total_ttc numeric(10,2) NOT NULL CHECK (total_ttc >= (0)::numeric),
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    sent_at timestamp with time zone
 );
 
 ALTER TABLE public.quote OWNER TO postgres;
@@ -1643,6 +1644,31 @@ CREATE TABLE public.customer_login_code (
 ALTER TABLE public.customer_login_code OWNER TO postgres;
 
 CREATE INDEX ix_customer_login_code_email ON public.customer_login_code USING btree (email, created_at DESC);
+
+--
+-- Demandes de devis des clients (site b2c). Devis établi par le garage (quote_id) : la demande est traitée.
+--
+
+CREATE TABLE public.quote_request (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    customer_id bigint NOT NULL REFERENCES public.customer(id),
+    vehicle_id bigint NOT NULL REFERENCES public.vehicle(id),
+    message text,
+    quote_id bigint REFERENCES public.quote(id),
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.quote_request OWNER TO postgres;
+
+CREATE INDEX ix_quote_request_pending ON public.quote_request USING btree (created_at DESC) WHERE (quote_id IS NULL);
+
+CREATE TABLE public.quote_request_service (
+    quote_request_id bigint NOT NULL REFERENCES public.quote_request(id) ON DELETE CASCADE,
+    service_id bigint NOT NULL REFERENCES public.service(id),
+    PRIMARY KEY (quote_request_id, service_id)
+);
+
+ALTER TABLE public.quote_request_service OWNER TO postgres;
 
 
 -- Completed on 2026-10-05 16:35:24

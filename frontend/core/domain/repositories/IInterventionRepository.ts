@@ -22,7 +22,7 @@ export interface IInterventionRepository {
   /** Importe un article du catalogue et renvoie l'identifiant de la ligne. */
   /** promotionId : promotion en cours appliquée à la ligne, sinon null. */
   addArticle(interventionId: number, articleId: number, quantity: number, promotionId: number | null): Promise<number>;
-  updateArticle(interventionId: number, lineId: number, quantity: number, promotionId: number | null): Promise<void>;
+  updateArticle(interventionId: number, lineId: number, quantity: number, promotionId: number | null, unitPriceHt: number): Promise<void>;
   deleteArticle(interventionId: number, lineId: number): Promise<void>;
   /** Ajoute les lignes d'un devis du même client (une seule fois par devis). */
   importQuote(interventionId: number, quoteId: number): Promise<void>;

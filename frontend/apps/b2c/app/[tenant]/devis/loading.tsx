@@ -1,5 +1,5 @@
 import PageLoading from "@/components/ui/PageLoading";
 
 export default function QuoteLoading() {
-  return <PageLoading title="Devis en ligne" message="Chargement des prestations…" />;
+  return <PageLoading title="Demander un devis" message="Chargement des prestations…" />;
 }

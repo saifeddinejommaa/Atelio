@@ -10,6 +10,12 @@ public class QuoteResponse
     // UTC.
     public DateTime CreatedAt { get; set; }
 
+    // UTC. Renseigné : le devis a été envoyé au client.
+    public DateTime? SentAt { get; set; }
+
+    // Importé sur une intervention.
+    public bool IsImported { get; set; }
+
     public decimal TotalHt { get; set; }
 
     public decimal TotalVat { get; set; }
@@ -25,6 +31,8 @@ public class QuoteResponse
     public string? CustomerEmail { get; set; }
 
     public string? CustomerPhone { get; set; }
+
+    public long VehicleId { get; set; }
 
     public string VehiclePlate { get; set; } = null!;
 
@@ -45,6 +53,8 @@ public class QuoteResponse
 
 public class QuoteLineResponse
 {
+    public long ArticleId { get; set; }
+
     public string Name { get; set; } = null!;
 
     public string? Description { get; set; }

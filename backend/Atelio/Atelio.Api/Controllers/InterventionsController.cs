@@ -141,12 +141,12 @@ public class InterventionsController : ControllerBase
         return Ok(new { id = lineId });
     }
 
-    /// <summary>Change la quantité et la promotion d'un article : { quantity, promotionId? }.</summary>
+    /// <summary>Change la quantité, le prix et la promotion d'un article : { quantity, promotionId?, unitPriceHt? }.</summary>
     [HttpPut("{id:long}/articles/{lineId:long}")]
     public async Task<IActionResult> UpdateArticle(long id, long lineId, [FromBody] InterventionArticleRequest request, CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new UpdateInterventionArticleCommand { InterventionId = id, LineId = lineId, Quantity = request.Quantity, PromotionId = request.PromotionId },
+            new UpdateInterventionArticleCommand { InterventionId = id, LineId = lineId, Quantity = request.Quantity, PromotionId = request.PromotionId, UnitPriceHt = request.UnitPriceHt },
             cancellationToken);
 
         return NoContent();

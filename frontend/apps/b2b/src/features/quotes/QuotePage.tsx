@@ -1,9 +1,11 @@
 import { ApiError, QuoteApiRepository } from '@atelio/core/data'
-import { SendQuote, VAT_RATE, type GarageQuote } from '@atelio/core/domain'
+import { SendQuote, VAT_RATE } from '@atelio/core/domain'
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useRevalidator } from 'react-router'
 import { useBrand } from '../../brand/useBrand'
 import { useDeferredData } from '../../components/DeferredRoute'
+import NewQuotePanel from './NewQuotePanel'
+import type { QuoteData } from './QuoteLoader'
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
 const qty = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
@@ -12,9 +14,13 @@ const date = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit'
 /**
  * Devis imprimable (A4), comme la facture : prix HT, TVA, TTC.
  * Il s'imprime (ou s'enregistre en PDF) depuis le navigateur, ou s'envoie par e-mail au client.
+ * Il se modifie tant qu'il n'est ni envoyé au client, ni importé sur une intervention.
  */
 export default function QuotePage() {
-  const quote = useDeferredData<GarageQuote>()
+  const { quote, vehicles, catalog } = useDeferredData<QuoteData>()
+  const revalidator = useRevalidator()
+  const [editing, setEditing] = useState(false)
+  const editable = !quote.sentAt && !quote.isImported
   const { brand, api } = useBrand()
   const [sending, setSending] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
@@ -26,6 +32,7 @@ export default function QuotePage() {
     try {
       await new SendQuote(new QuoteApiRepository(api)).execute(quote.id)
       setMessage({ ok: true, text: `Devis envoyé à ${quote.customerEmail}.` })
+      void revalidator.revalidate()
     } catch (err) {
       setMessage({ ok: false, text: err instanceof ApiError && err.status < 500 ? err.message : "L'envoi a échoué, réessayez." })
     } finally {
@@ -40,6 +47,17 @@ export default function QuotePage() {
           ← {quote.customerFirstName} {quote.customerLastName}
         </Link>
         <div className="flex flex-wrap items-center gap-2">
+          {quote.sentAt && <span className="text-sm text-zinc-500">Envoyé le {date.format(new Date(quote.sentAt))}</span>}
+          {!quote.sentAt && quote.isImported && <span className="text-sm text-zinc-500">Importé sur une intervention</span>}
+          {editable && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="rounded-brand border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold hover:border-primary"
+            >
+              Modifier
+            </button>
+          )}
           <button
             type="button"
             disabled={sending || !quote.customerEmail}
@@ -155,6 +173,19 @@ export default function QuotePage() {
           {brand.legal.vatNumber}
         </footer>
       </article>
+      {editing && (
+        <NewQuotePanel
+          customerId={quote.customerId}
+          vehicles={vehicles}
+          catalog={catalog}
+          quote={quote}
+          onSaved={() => {
+            setEditing(false)
+            void revalidator.revalidate()
+          }}
+          onClose={() => setEditing(false)}
+        />
+      )}
     </>
   )
 }

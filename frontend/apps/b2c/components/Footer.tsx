@@ -13,7 +13,7 @@ export default function Footer({ tenant, services }: { tenant: SiteTenant; servi
       title: "Services",
       links: [
         { path: "/rendez-vous", label: "Prendre rendez-vous" },
-        { path: "/devis", label: "Devis en ligne" },
+        { path: "/devis", label: "Demander un devis" },
         { path: "/garages", label: "Trouver un garage" },
         { path: "/offres", label: "Offres du moment" },
       ],

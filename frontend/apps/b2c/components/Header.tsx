@@ -12,7 +12,7 @@ import { tenantPath, type SiteTenant } from "@/tenants";
 
 const navLinks = [
   { path: "/garages", label: "Trouver un garage" },
-  { path: "/devis", label: "Devis en ligne" },
+  { path: "/devis", label: "Demander un devis" },
   { path: "/offres", label: "Offres du moment" },
 ];
 

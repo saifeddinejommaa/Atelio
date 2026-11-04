@@ -16,6 +16,10 @@ export class VehicleApiRepository implements IVehicleRepository {
     return vehicle && toCustomerVehicle(vehicle);
   }
 
+  async save(customerId: number, plate: string): Promise<void> {
+    await this.api.post("/vehicles", { customerId, plate });
+  }
+
   async updateDetails(vehicleId: number, details: VehicleDetails): Promise<void> {
     await this.api.put(`/vehicles/${vehicleId}/details`, details);
   }

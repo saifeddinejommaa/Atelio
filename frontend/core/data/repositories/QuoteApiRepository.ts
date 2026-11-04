@@ -1,4 +1,4 @@
-import type { IQuoteRepository, NewGarageQuote, GarageQuote, GarageQuoteSummary } from "../../domain";
+import type { IQuoteRepository, NewGarageQuote, GarageQuote, GarageQuoteChanges, GarageQuoteSummary } from "../../domain";
 import { ApiError, type ApiClient } from "../http/ApiClient";
 
 /** L'API renvoie des dates UTC, parfois sans le suffixe "Z". */
@@ -11,7 +11,7 @@ export class QuoteApiRepository implements IQuoteRepository {
 
   async getById(id: number): Promise<GarageQuote | null> {
     const quote = await this.api.get<GarageQuote>(`/quotes/${id}`);
-    return quote && { ...quote, createdAt: utc(quote.createdAt), lines: quote.lines ?? [] };
+    return quote && { ...quote, createdAt: utc(quote.createdAt), sentAt: quote.sentAt && utc(quote.sentAt), lines: quote.lines ?? [] };
   }
 
   async getByCustomer(customerId: number): Promise<GarageQuoteSummary[]> {
@@ -23,6 +23,10 @@ export class QuoteApiRepository implements IQuoteRepository {
     const created = await this.api.post<{ id: number }>("/quotes", quote);
     if (!created) throw new ApiError(500, "L'API n'a pas renvoyé le devis créé.");
     return created.id;
+  }
+
+  async update(id: number, changes: GarageQuoteChanges): Promise<void> {
+    await this.api.put(`/quotes/${id}`, changes);
   }
 
   async send(id: number): Promise<void> {

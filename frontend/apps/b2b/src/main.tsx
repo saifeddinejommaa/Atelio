@@ -25,6 +25,9 @@ import CustomerPage from './features/customers/CustomerPage.tsx'
 import CustomersPage from './features/customers/CustomersPage.tsx'
 import { quoteLoader } from './features/quotes/QuoteLoader'
 import QuotePage from './features/quotes/QuotePage.tsx'
+import { quoteRequestLoader, quoteRequestsLoader } from './features/quotes/QuoteRequestLoader'
+import QuoteRequestPage from './features/quotes/QuoteRequestPage.tsx'
+import QuoteRequestsPage from './features/quotes/QuoteRequestsPage.tsx'
 import TeamPage from './features/team/TeamPage.tsx'
 import { appointmentsLoader } from './features/appointments/AppointmentsLoader'
 import { interventionLoader } from './features/interventions/InterventionLoader'
@@ -105,6 +108,24 @@ function createRouter(api: ApiClient, brand: Brand) {
                 </DeferredRoute>
               ),
               loader: deferred(customerLoader(api)),
+            },
+            {
+              path: 'devis',
+              element: (
+                <DeferredRoute title="Demandes de devis" message="Chargement des demandes…">
+                  <QuoteRequestsPage />
+                </DeferredRoute>
+              ),
+              loader: deferred(quoteRequestsLoader(api)),
+            },
+            {
+              path: 'devis/demandes/:id',
+              element: (
+                <DeferredRoute title="Demande de devis" message="Chargement de la demande…">
+                  <QuoteRequestPage />
+                </DeferredRoute>
+              ),
+              loader: deferred(quoteRequestLoader(api)),
             },
             {
               path: 'devis/:id',

@@ -37,6 +37,16 @@ public class QuotesController : ControllerBase
         return Ok(new { id });
     }
 
+    /// <summary>Modifie un devis ni envoyé ni importé : { vehicleId, lines: [{ articleId, quantity }] }.</summary>
+    [HttpPut("{id:long}")]
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateQuoteCommand command, CancellationToken cancellationToken)
+    {
+        command.QuoteId = id;
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
     /// <summary>Envoie le devis par e-mail au client.</summary>
     [HttpPost("{id:long}/send")]
     public async Task<IActionResult> Send(long id, CancellationToken cancellationToken)

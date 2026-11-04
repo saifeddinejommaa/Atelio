@@ -71,8 +71,8 @@ export class InterventionApiRepository implements IInterventionRepository {
     return created.id;
   }
 
-  async updateArticle(interventionId: number, lineId: number, quantity: number, promotionId: number | null): Promise<void> {
-    await this.api.put(`/interventions/${interventionId}/articles/${lineId}`, { quantity, promotionId });
+  async updateArticle(interventionId: number, lineId: number, quantity: number, promotionId: number | null, unitPriceHt: number): Promise<void> {
+    await this.api.put(`/interventions/${interventionId}/articles/${lineId}`, { quantity, promotionId, unitPriceHt });
   }
 
   async importQuote(interventionId: number, quoteId: number): Promise<void> {

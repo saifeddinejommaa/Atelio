@@ -36,7 +36,7 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
       {/* Bandeau principal */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary-light to-primary text-on-primary">
         <div className="pointer-events-none absolute -right-32 -top-32 h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--tenant-secondary)_22%,transparent),transparent)]" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 lg:grid-cols-2 lg:py-24">
+        <div className="relative mx-auto max-w-7xl px-4 py-16 lg:py-24">
           <div>
             {tenant.content.heroBadge && (
               <p className="mb-5 inline-block rounded-full bg-on-primary/10 px-3 py-1 text-sm font-medium">
@@ -55,54 +55,10 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
                 Prendre rendez-vous
               </Button>
               <Button as={Link} href={href("/devis")} variant="inverse" size="lg">
-                Obtenir un devis
+                Demander un devis
               </Button>
             </div>
           </div>
-
-          <form
-            action={href("/devis")}
-            className="rounded-brand bg-white p-6 text-foreground shadow-2xl sm:p-8"
-          >
-            <h2 className="text-xl font-bold">Votre devis en 1 minute</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Saisissez votre immatriculation pour un prix adapté à votre véhicule.
-            </p>
-
-            <label htmlFor="immat" className="mt-6 block text-sm font-medium">
-              Immatriculation
-            </label>
-            <div className="mt-2 flex overflow-hidden rounded-lg border-2 border-primary">
-              <span className="flex w-10 flex-col items-center justify-center bg-blue-700 text-xs font-bold text-white">
-                F
-              </span>
-              <input
-                id="immat"
-                name="immat"
-                placeholder="AB-123-CD"
-                className="w-full px-3 py-3 text-lg font-bold uppercase tracking-widest outline-none"
-              />
-            </div>
-
-            <label htmlFor="prestation" className="mt-5 block text-sm font-medium">
-              Prestation
-            </label>
-            <select
-              id="prestation"
-              name="prestation"
-              className="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-3 outline-none focus:border-primary"
-            >
-              {services.map((s) => (
-                <option key={s.slug} value={s.slug}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-
-            <Button type="submit" size="lg" fullWidth className="mt-6">
-              Voir mon prix
-            </Button>
-          </form>
         </div>
       </section>
 

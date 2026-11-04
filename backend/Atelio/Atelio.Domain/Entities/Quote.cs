@@ -34,6 +34,10 @@ public class Quote
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
+    // Premier envoi au client : renseigné, le devis n'est plus modifiable.
+    [Column("sent_at")]
+    public DateTime? SentAt { get; set; }
+
     public List<QuoteLine> Lines { get; set; } = [];
 }
 

@@ -96,7 +96,7 @@ export default function ArticlesCard({
   const [selected, setSelected] = useState<Article | null>(null)
   const [quantity, setQuantity] = useState('1')
   const [promotionId, setPromotionId] = useState('')
-  const [editing, setEditing] = useState<{ id: number; quantity: string; promotionId: string } | null>(null)
+  const [editing, setEditing] = useState<{ id: number; quantity: string; price: string; promotionId: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [importing, setImporting] = useState(false)
@@ -185,6 +185,7 @@ export default function ArticlesCard({
           editing.id,
           toNumber(editing.quantity),
           editing.promotionId ? Number(editing.promotionId) : null,
+          toNumber(editing.price),
         ),
       () => setEditing(null),
     )
@@ -388,7 +389,23 @@ export default function ArticlesCard({
                     qty.format(a.quantity)
                   )}
                 </td>
-                <td className="py-2 pr-2 text-right">{euro.format(a.unitPriceHt)}</td>
+                <td className="py-2 pr-2 text-right">
+                  {editing?.id === a.id ? (
+                    <input
+                      inputMode="decimal"
+                      value={editing.price}
+                      onChange={(e) => setEditing({ ...editing, price: e.target.value })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') save()
+                        if (e.key === 'Escape') setEditing(null)
+                      }}
+                      aria-label="Prix unitaire HT"
+                      className={`${input} text-right`}
+                    />
+                  ) : (
+                    euro.format(a.unitPriceHt)
+                  )}
+                </td>
                 <td className="py-2 pr-2 text-right font-medium">{euro.format(articleTotal(a))}</td>
                 {!readOnly && (
                   <td className="py-2 text-right">
@@ -409,6 +426,7 @@ export default function ArticlesCard({
                             setEditing({
                               id: a.id,
                               quantity: String(a.quantity).replace('.', ','),
+                              price: String(a.unitPriceHt).replace('.', ','),
                               promotionId: a.promotionId === null ? '' : String(a.promotionId),
                             })
                           }

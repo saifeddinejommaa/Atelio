@@ -35,6 +35,8 @@ public class AtelioDbContext : DbContext
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<Quote> Quotes => Set<Quote>();
     public DbSet<QuoteLine> QuoteLines => Set<QuoteLine>();
+    public DbSet<QuoteRequest> QuoteRequests => Set<QuoteRequest>();
+    public DbSet<QuoteRequestService> QuoteRequestServices => Set<QuoteRequestService>();
     public DbSet<InterventionArticle> InterventionArticles => Set<InterventionArticle>();
     public DbSet<ServicePart> ServiceParts => Set<ServicePart>();
     public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
@@ -72,6 +74,7 @@ public class AtelioDbContext : DbContext
         modelBuilder.Entity<GarageService>().HasKey(x => new { x.GarageId, x.ServiceId });
         modelBuilder.Entity<AppointmentService>().HasKey(x => new { x.AppointmentId, x.ServiceId });
         modelBuilder.Entity<InterventionService>().HasKey(x => new { x.InterventionId, x.ServiceId });
+        modelBuilder.Entity<QuoteRequestService>().HasKey(x => new { x.QuoteRequestId, x.ServiceId });
 
         modelBuilder.Entity<Appointment>()
             .HasMany(x => x.Services)
@@ -97,6 +100,11 @@ public class AtelioDbContext : DbContext
             .HasMany(x => x.Lines)
             .WithOne()
             .HasForeignKey(x => x.QuoteId);
+
+        modelBuilder.Entity<QuoteRequest>()
+            .HasMany(x => x.Services)
+            .WithOne()
+            .HasForeignKey(x => x.QuoteRequestId);
 
         modelBuilder.Entity<Intervention>()
             .HasMany(x => x.Articles)
