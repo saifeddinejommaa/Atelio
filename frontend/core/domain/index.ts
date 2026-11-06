@@ -97,6 +97,8 @@ export {
   AbandonAppointment,
   CheckAppointmentStart,
   RescheduleAppointment,
+
+  SetAppointmentEstimate,
   StartAppointment,
 } from "./usecases/GarageAppointmentActions";
 export {
@@ -112,6 +114,7 @@ export {
   GetServiceCategories,
   UpdateServiceLabour,
   UpdateSparePart,
+  SetInterventionEstimate,
 } from "./usecases/GetIntervention";
 export { CheckSlot, GetGarageCapacity, GetGarageMechanics } from "./usecases/GaragePlanning";
 

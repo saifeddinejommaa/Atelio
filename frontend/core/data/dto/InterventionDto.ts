@@ -38,11 +38,10 @@ export type InterventionDto = {
     serviceId: number;
     code: string;
     name: string;
-    durationMinutes: number;
+    durationMinutes: number | null;
     categoryId: number | null;
     categoryName: string | null;
     hourlyRate: number | null;
-    uncertainDuration: boolean;
     quantity: number;
     unitPrice: number;
   }[];
@@ -54,6 +53,7 @@ export type InterventionDto = {
 /** Élément de GET /api/interventions. */
 export type InterventionSummaryDto = {
   id: number;
+  employeeId: number | null;
   reference: string | null;
   statusId: number;
   statusLabel: string;

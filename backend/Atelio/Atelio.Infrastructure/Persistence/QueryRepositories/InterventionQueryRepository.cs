@@ -75,7 +75,6 @@ public class InterventionQueryRepository : IInterventionQueryRepository
             c.id AS {nameof(InterventionServiceResponse.CategoryId)},
             c.name AS {nameof(InterventionServiceResponse.CategoryName)},
             c.hourly_rate AS {nameof(InterventionServiceResponse.HourlyRate)},
-            s.uncertain_duration AS {nameof(InterventionServiceResponse.UncertainDuration)},
             ins.quantity AS {nameof(InterventionServiceResponse.Quantity)},
             ins.unit_price AS {nameof(InterventionServiceResponse.UnitPrice)}
 
@@ -149,6 +148,7 @@ public class InterventionQueryRepository : IInterventionQueryRepository
             i.status_id AS {nameof(InterventionSummaryResponse.StatusId)},
             ist.label AS {nameof(InterventionSummaryResponse.StatusLabel)},
             i.started_at AS {nameof(InterventionSummaryResponse.StartedAt)},
+            i.employee_id AS {nameof(InterventionSummaryResponse.EmployeeId)},
             c.first_name AS {nameof(InterventionSummaryResponse.CustomerFirstName)},
             c.last_name AS {nameof(InterventionSummaryResponse.CustomerLastName)},
             v.plate AS {nameof(InterventionSummaryResponse.VehiclePlate)}

@@ -17,6 +17,15 @@ export class RescheduleAppointment {
 }
 
 /** Abandonne un rendez-vous : annulé, ou client non venu. */
+/** Indique ou retire le temps estimé d'un rendez-vous (l'API recalcule sa fin). */
+export class SetAppointmentEstimate {
+  constructor(private readonly repository: IAppointmentRepository) {}
+
+  execute(reference: string, estimatedMinutes: number | null): Promise<string | null> {
+    return this.repository.setEstimate(reference, estimatedMinutes);
+  }
+}
+
 export class AbandonAppointment {
   constructor(private readonly repository: IAppointmentRepository) {}
 

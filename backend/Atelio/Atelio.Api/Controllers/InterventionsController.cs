@@ -130,6 +130,16 @@ public class InterventionsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Temps estimé des prestations sans temps connu : { estimatedMinutes }.</summary>
+    [HttpPut("{id:long}/estimate")]
+    public async Task<IActionResult> SetEstimate(long id, [FromBody] SetInterventionEstimateCommand command, CancellationToken cancellationToken)
+    {
+        command.InterventionId = id;
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
     /// <summary>Importe un article du catalogue : { articleId, quantity, promotionId? }. Renvoie { id } de la ligne.</summary>
     [HttpPost("{id:long}/articles")]
     public async Task<IActionResult> AddArticle(long id, [FromBody] InterventionArticleRequest request, CancellationToken cancellationToken)

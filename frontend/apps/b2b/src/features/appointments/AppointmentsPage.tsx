@@ -3,7 +3,7 @@ import type { CalendarRef } from '@fullcalendar/react'
 import { useEffect, useRef, useState } from 'react'
 import { useCurrentGarage } from '../../garage/useCurrentGarage'
 import AppointmentDetailPanel from './AppointmentDetailPanel'
-import { calendarLegend, LOCKED_BACKGROUND, MIN_LEAD_HOURS } from './AppointmentStatus'
+import { calendarLegend, LOCKED_BACKGROUND } from './AppointmentStatus'
 import type { AppointmentsData } from './AppointmentsLoader'
 import AppointmentsCalendar from './AppointmentsCalendar'
 import NewAppointmentPanel from './NewAppointmentPanel'
@@ -15,7 +15,7 @@ export default function AppointmentsPage() {
   const services = allServices.filter((s) => garage.serviceCodes.includes(s.code))
   const legend = [
     ...calendarLegend(appointmentStatuses, interventionStatuses),
-    { label: `Plus réservable (moins de ${MIN_LEAD_HOURS} h)`, color: LOCKED_BACKGROUND },
+    { label: 'Passé', color: LOCKED_BACKGROUND },
   ]
   const calendarRef = useRef<CalendarRef>(null)
   // Créneau cliqué : ouvre le panneau de création.

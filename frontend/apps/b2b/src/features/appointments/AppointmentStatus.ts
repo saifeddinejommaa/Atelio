@@ -14,10 +14,7 @@ const grey: StatusColors = { color: '#71717a', contrastColor: '#ffffff' }
 const red: StatusColors = { color: '#dc2626', contrastColor: '#ffffff' }
 const light: StatusColors = { color: '#d4d4d8', contrastColor: '#52525b' }
 
-/** Délai minimal avant un rendez-vous (règle de l'API : SlotPlanner.MinLeadMinutes). */
-export const MIN_LEAD_HOURS = 3
-
-/** Fond hachuré des créneaux qu'on ne peut plus réserver (passés ou à moins de MIN_LEAD_HOURS), défini dans index.css. */
+/** Fond hachuré des créneaux passés, défini dans index.css. */
 export const LOCKED_BACKGROUND = 'var(--slot-locked)'
 
 /** Couleurs du calendrier par statut de rendez-vous (avant le lancement de l'intervention). */
@@ -46,7 +43,7 @@ export function displayColors(display: AppointmentDisplayStatus): StatusColors {
 /**
  * Légende du calendrier : statuts actifs regroupés par couleur (libellés des tables).
  * « Terminé » (rendez-vous lancé) et « Annulée » (intervention) ne sont pas listés : le calendrier
- * affiche alors le statut de l'intervention, ou le rendez-vous annulé.
+ * affiche alors le statut de l'intervention. Les rendez-vous et interventions annulés n'y apparaissent pas.
  */
 export function calendarLegend(
   appointmentStatuses: StatusOption<AppointmentStatus>[],
@@ -54,7 +51,7 @@ export function calendarLegend(
 ): { label: string; color: string }[] {
   const entries = [
     ...appointmentStatuses
-      .filter((s) => s.isActive && s.id !== AppointmentStatus.Completed)
+      .filter((s) => s.isActive && s.id !== AppointmentStatus.Completed && s.id !== AppointmentStatus.Cancelled)
       .map((s) => ({ label: s.label, color: appointmentColors[s.id].color })),
     ...interventionStatuses
       .filter((s) => s.isActive && s.id !== InterventionStatus.Cancelled)

@@ -11,7 +11,7 @@ export type AppointmentDto = {
   statusId: number;
   statusLabel: string;
   scheduledAt: string;
-  estimatedEndAt: string;
+  estimatedEndAt: string | null;
   customerNotes: string | null;
   garageId: number;
   garageName: string;
@@ -27,6 +27,8 @@ export type AppointmentDto = {
   /** Id et libellé de la table intervention_status. */
   interventionStatusId: number | null;
   interventionStatusLabel: string | null;
+  estimatedMinutes: number | null;
+  interventionEmployeeId: number | null;
 };
 
 /** Corps de POST /api/appointments. */
@@ -34,6 +36,7 @@ export type CreateAppointmentDto = {
   customerId: number;
   garageId: number;
   serviceIds: number[];
+  estimatedMinutes?: number;
   scheduledAt: string;
   vehicleId?: number;
   plate?: string;
@@ -46,7 +49,7 @@ export type AppointmentCreatedDto = {
   id: number;
   reference: string;
   scheduledAt: string;
-  estimatedEndAt: string;
+  estimatedEndAt: string | null;
 };
 
 /** Réponse de GET /api/appointments/{ref}/start-check. */
@@ -54,7 +57,7 @@ export type StartCheckDto = {
   possible: boolean;
   message: string | null;
   startAt: string;
-  estimatedEndAt: string;
+  estimatedEndAt: string | null;
   employeeId: number | null;
   employeeName: string | null;
 };

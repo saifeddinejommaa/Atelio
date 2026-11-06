@@ -18,6 +18,8 @@ import { useBrand } from '../../brand/useBrand'
 import SidePanel from '../../components/SidePanel'
 import SlotCheckMessage from './SlotCheckMessage'
 import StartAppointmentForm from './StartAppointmentForm'
+import AppointmentEstimateForm from './AppointmentEstimateForm'
+import { endLabel } from './EndLabel'
 import { useSlotCheck } from './useSlotCheck'
 import { displayColors } from './AppointmentStatus'
 
@@ -190,7 +192,7 @@ export default function AppointmentDetailPanel({
       <Section title="Heure">
         <p className="first-letter:uppercase">
           {dayFormat.format(new Date(a.scheduledAt))}, {timeFormat.format(new Date(a.scheduledAt))} –{' '}
-          {timeFormat.format(new Date(a.estimatedEndAt))}
+          {a.estimatedEndAt ? endLabel(new Date(a.scheduledAt), new Date(a.estimatedEndAt)) : 'à estimer'}
         </p>
         {canReschedule(a) && (
           <div className="mt-3 flex gap-2">
@@ -213,6 +215,9 @@ export default function AppointmentDetailPanel({
           </div>
         )}
         <SlotCheckMessage check={slotCheck} />
+        {canReschedule(a) && (a.estimatedEndAt === null || a.estimatedMinutes !== null) && (
+          <AppointmentEstimateForm appointment={a} onChanged={onChanged} />
+        )}
       </Section>
 
       <Section title="Intervention demandée">

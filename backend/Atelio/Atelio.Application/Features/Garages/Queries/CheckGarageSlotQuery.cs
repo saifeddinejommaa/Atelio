@@ -8,7 +8,7 @@ using MediatR;
 namespace Atelio.Application.Features.Garages.Queries;
 
 /// <summary>
-/// Un rendez-vous peut-il être placé à cette heure ? Durée : celle des prestations demandées,
+/// Le garage peut-il placer un rendez-vous à cette heure ? Durée : celle des prestations demandées,
 /// ou celle du rendez-vous qu'on déplace (qui n'est alors pas compté comme occupé).
 /// </summary>
 public class CheckGarageSlotQuery : IRequest<SlotCheckResponse>
@@ -19,6 +19,9 @@ public class CheckGarageSlotQuery : IRequest<SlotCheckResponse>
     public DateTime ScheduledAt { get; set; }
 
     public List<long> ServiceIds { get; set; } = [];
+
+    // Temps total estimé par le garage, à la place de celui des prestations.
+    public int? EstimatedMinutes { get; set; }
 
     // Référence du rendez-vous déplacé.
     public string? ExcludeAppointment { get; set; }
@@ -76,19 +79,24 @@ public class CheckGarageSlotQueryHandler : IRequestHandler<CheckGarageSlotQuery,
             ? await BookingRules.GetWorkAsync(_garages, _services, garage.Id, request.ServiceIds, cancellationToken)
             : await BookingRules.GetAppointmentWorkAsync(_services, excluded!, cancellationToken);
 
+        if (request.EstimatedMinutes is int estimated)
+        {
+            work = work with { Minutes = estimated };
+        }
+
         var localStart = DateTime.SpecifyKind(request.ScheduledAt, DateTimeKind.Unspecified);
         var day = DateOnly.FromDateTime(localStart);
 
         var planner = await BookingRules.CreatePlannerAsync(_planning, _tenant, garage, day, day, cancellationToken, excluded?.Id);
-        var placement = planner.TryPlace(localStart, work.Minutes, _clock.GetUtcNow().UtcDateTime);
+        var placement = planner.TryPlaceForGarage(localStart, work.Minutes, _clock.GetUtcNow().UtcDateTime);
 
         return new SlotCheckResponse
         {
             Available = placement.Available,
             Message = placement.Reason,
-            DurationMinutes = work.Minutes,
+            DurationMinutes = work.Minutes ?? 0,
             EstimatedEndAt = placement.EndUtc,
-            Warning = placement.Available ? BookingRules.UncertainWarning(work, localStart) : null,
+            Warning = placement.Available ? placement.Warning ?? BookingRules.UncertainWarning(work, localStart) : null,
         };
     }
 }

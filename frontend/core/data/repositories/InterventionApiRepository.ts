@@ -79,6 +79,10 @@ export class InterventionApiRepository implements IInterventionRepository {
     await this.api.post(`/interventions/${interventionId}/quotes/${quoteId}/import`, {});
   }
 
+  async setEstimate(interventionId: number, estimatedMinutes: number): Promise<void> {
+    await this.api.put(`/interventions/${interventionId}/estimate`, { estimatedMinutes });
+  }
+
   async deleteArticle(interventionId: number, lineId: number): Promise<void> {
     await this.api.delete(`/interventions/${interventionId}/articles/${lineId}`);
   }

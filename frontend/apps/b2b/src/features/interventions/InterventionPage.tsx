@@ -4,6 +4,7 @@ import ArticlesCard from './ArticlesCard'
 import type { InterventionData } from './InterventionLoader'
 import InterventionActions from './InterventionActions'
 import { interventionStatusClasses } from './InterventionStatus'
+import InterventionEstimateForm from './InterventionEstimateForm'
 import MechanicPicker from './MechanicPicker'
 import TotalsCard from './TotalsCard'
 import VehicleCard from './VehicleCard'
@@ -71,7 +72,7 @@ export default function InterventionPage() {
         <Card title="Mécanicien">
           <MechanicPicker key={intervention.employeeId ?? 0} intervention={intervention} mechanics={mechanics} />
           {intervention.employeeId === null && (
-            <p className="mt-2 text-sm text-amber-700">Aucun mécanicien n'était libre au lancement : choisissez-en un.</p>
+            <p className="mt-2 text-sm text-amber-700">Cette intervention n'a pas de mécanicien responsable : choisissez-en un dès que possible.</p>
           )}
         </Card>
       </div>
@@ -81,12 +82,16 @@ export default function InterventionPage() {
           {intervention.services.length > 0 ? (
             <ul className="list-inside list-disc text-sm">
               {intervention.services.map((s) => (
-                <li key={s.serviceId}>{s.name}</li>
+                <li key={s.serviceId}>
+                  {s.name}
+                  {s.durationMinutes === null && <span className="ml-2 text-amber-700">à estimer</span>}
+                </li>
               ))}
             </ul>
           ) : (
             <p className="text-sm text-zinc-400">Aucune prestation.</p>
           )}
+          {!locked && intervention.services.some((s) => s.durationMinutes === null) && <InterventionEstimateForm interventionId={intervention.id} />}
         </Card>
 
         <Card title="Message du client">

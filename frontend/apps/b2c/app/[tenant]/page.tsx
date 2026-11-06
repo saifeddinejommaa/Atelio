@@ -2,7 +2,9 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import PromotionCarousel from "@/components/promotions/PromotionCarousel";
 import { getServices } from "@/lib/garageService/ServiceQueries";
+import { getActivePromotions } from "@/lib/promotion/PromotionQueries";
 import ServicePrice from "@/components/ServicePrice";
 import { resolveTenant } from "@/lib/tenant";
 import { tenantPath } from "@/tenants";
@@ -22,7 +24,7 @@ const reviews = [
 
 export default async function Home({ params }: PageProps<"/[tenant]">) {
   const tenant = await resolveTenant(params);
-  const services = await getServices(tenant.slug);
+  const [services, promotions] = await Promise.all([getServices(tenant.slug), getActivePromotions(tenant.slug)]);
   const href = (path: string) => tenantPath(tenant, path);
 
   const steps = [
@@ -33,6 +35,8 @@ export default async function Home({ params }: PageProps<"/[tenant]">) {
 
   return (
     <>
+      <PromotionCarousel tenantSlug={tenant.slug} promotions={promotions} bookingPath={href("/rendez-vous")} />
+
       {/* Bandeau principal */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary-light to-primary text-on-primary">
         <div className="pointer-events-none absolute -right-32 -top-32 h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--tenant-secondary)_22%,transparent),transparent)]" />

@@ -26,6 +26,8 @@ export interface IAppointmentRepository {
   cancel(reference: string, customerId: number): Promise<void>;
   /** Garage : nouvelle heure locale, "2026-10-12T14:00". */
   reschedule(reference: string, scheduledAt: string): Promise<void>;
+  /** Indique ou retire le temps estimé. Renvoie un avertissement (aucun mécanicien libre), ou null. */
+  setEstimate(reference: string, estimatedMinutes: number | null): Promise<string | null>;
   /** Garage : annulé ou client non venu. */
   abandon(reference: string, status: AbandonStatus): Promise<void>;
   /** Garage : ouvre l'intervention et renvoie son identifiant.

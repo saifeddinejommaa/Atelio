@@ -560,6 +560,72 @@ internal static class InterventionArticleRules
 // MAIN-D'ŒUVRE D'UNE PRESTATION (ex. « Autre » : temps passé et type indiqués par le mécanicien)
 // ============================================================
 
+/// <summary>Temps estimé des prestations sans temps connu : réparti entre elles, il entre dans le planning.</summary>
+public class SetInterventionEstimateCommand : IRequest<Unit>
+{
+    public long InterventionId { get; set; }
+
+    public int EstimatedMinutes { get; set; }
+}
+
+public class SetInterventionEstimateCommandValidator : AbstractValidator<SetInterventionEstimateCommand>
+{
+    public SetInterventionEstimateCommandValidator()
+    {
+        RuleFor(x => x.EstimatedMinutes)
+            .InclusiveBetween(1, BookingRules.MaxEstimatedMinutes)
+            .WithMessage("L'estimation doit être comprise entre 1 minute et 200 heures.");
+    }
+}
+
+public class SetInterventionEstimateCommandHandler : IRequestHandler<SetInterventionEstimateCommand, Unit>
+{
+    private readonly IInterventionRepository _interventions;
+    private readonly IInvoiceRepository _invoices;
+    private readonly IServiceCategoryRepository _categories;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public SetInterventionEstimateCommandHandler(
+        IInterventionRepository interventions,
+        IInvoiceRepository invoices,
+        IServiceCategoryRepository categories,
+        IUnitOfWork unitOfWork)
+    {
+        _interventions = interventions;
+        _invoices = invoices;
+        _categories = categories;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<Unit> Handle(SetInterventionEstimateCommand request, CancellationToken cancellationToken)
+    {
+        var intervention = await _interventions.GetWithLinesAsync(request.InterventionId, cancellationToken)
+            ?? throw new NotFoundException($"Intervention {request.InterventionId} introuvable.");
+        await InvoiceRules.EnsureNotInvoicedAsync(_invoices, intervention.Id, cancellationToken);
+
+        var lines = intervention.Services.Where(s => s.LabourMinutes is null).ToList();
+        if (lines.Count == 0)
+        {
+            throw new BusinessException("Toutes les prestations de cette intervention ont déjà un temps.");
+        }
+
+        var rates = (await _categories.GetAllAsync(cancellationToken)).ToDictionary(c => c.Id, c => c.HourlyRate);
+        var share = Math.Max(1, request.EstimatedMinutes / lines.Count);
+        foreach (var line in lines)
+        {
+            line.LabourMinutes = share;
+            if (line.CategoryId is long categoryId && rates.TryGetValue(categoryId, out var rate))
+            {
+                line.UnitPrice = Pricing.Labour(rate, share);
+            }
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
+    }
+}
+
 public class UpdateServiceLabourCommand : IRequest<Unit>
 {
     public long InterventionId { get; set; }

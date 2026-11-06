@@ -95,8 +95,8 @@ public class InterventionServiceResponse
 
     public int Quantity { get; set; }
 
-    // Temps de main-d'œuvre (temps passé saisi, sinon durée prévue de la prestation).
-    public int DurationMinutes { get; set; }
+    // Temps de main-d'œuvre (temps passé saisi, sinon durée prévue de la prestation). Vide : à saisir.
+    public int? DurationMinutes { get; set; }
 
     public long? CategoryId { get; set; }
 
@@ -104,9 +104,6 @@ public class InterventionServiceResponse
 
     // Taux horaire TTC de la catégorie.
     public decimal? HourlyRate { get; set; }
-
-    // Durée incertaine (ex. « Autre ») : temps et type à saisir selon le mécanicien.
-    public bool UncertainDuration { get; set; }
 
     // Prix unitaire TTC.
     public decimal UnitPrice { get; set; }
@@ -171,6 +168,9 @@ public class KitItemResponse
 public class InterventionSummaryResponse
 {
     public long Id { get; set; }
+
+    // Mécanicien responsable, null si elle est sans responsable.
+    public long? EmployeeId { get; set; }
 
     // Référence du rendez-vous d'origine (null pour une intervention sans rendez-vous).
     public string? Reference { get; set; }

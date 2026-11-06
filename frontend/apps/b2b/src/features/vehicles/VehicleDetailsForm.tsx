@@ -22,7 +22,7 @@ function today(): string {
 
 /**
  * Informations du véhicule (carte grise) saisies par le garage avant l'entrée en atelier :
- * marque, modèle, version, 1re mise en circulation, énergie, boîte. Pré-rempli avec ce qui est connu.
+ * marque, modèle, code moteur, 1re mise en circulation, énergie, boîte. Pré-rempli avec ce qui est connu.
  */
 export default function VehicleDetailsForm({
   vehicle,
@@ -79,8 +79,8 @@ export default function VehicleDetailsForm({
           <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="Indiquez le modèle" maxLength={80} className={input} />
         </label>
         <label className="block">
-          <span className="mb-1 block font-semibold">Version</span>
-          <input value={version} onChange={(e) => setVersion(e.target.value)} placeholder="Indiquez la version" maxLength={80} className={input} />
+          <span className="mb-1 block font-semibold">Code moteur</span>
+          <input value={version} onChange={(e) => setVersion(e.target.value)} placeholder="Indiquez le code moteur" maxLength={80} className={input} />
         </label>
         <label className="block">
           <span className="mb-1 block font-semibold">1re mise en circulation</span>

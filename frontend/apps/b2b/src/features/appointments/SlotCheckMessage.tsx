@@ -1,6 +1,5 @@
+import { endWithDay } from './EndLabel'
 import type { SlotCheckState } from './useSlotCheck'
-
-const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
 /** Résultat de la vérification du créneau, sous le champ concerné. */
 export default function SlotCheckMessage({ check }: { check: SlotCheckState }) {
@@ -12,9 +11,9 @@ export default function SlotCheckMessage({ check }: { check: SlotCheckState }) {
   return (
     <>
       <p className="mt-2 text-sm font-medium text-emerald-700">
-        ✓ Créneau disponible
+        {check.warning ? 'Enregistrement possible' : '✓ Créneau disponible'}
         {check.estimatedEndAt && (
-          <span className="font-normal text-zinc-600"> · fin estimée {time.format(new Date(check.estimatedEndAt))} (pauses comprises)</span>
+          <span className="font-normal text-zinc-600"> · fin estimée {endWithDay(new Date(check.estimatedEndAt))} (pauses comprises)</span>
         )}
       </p>
       {check.warning && <p className="mt-2 rounded-brand bg-amber-50 px-3 py-2 text-sm text-amber-800">{check.warning}</p>}

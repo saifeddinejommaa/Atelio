@@ -68,7 +68,7 @@ public class Vehicle
         var missing = new List<string>();
         if (string.IsNullOrWhiteSpace(Make)) missing.Add("marque");
         if (string.IsNullOrWhiteSpace(Model)) missing.Add("modèle");
-        if (string.IsNullOrWhiteSpace(Version)) missing.Add("version");
+        if (string.IsNullOrWhiteSpace(Version)) missing.Add("code moteur");
         if (FirstRegistration is null) missing.Add("date de 1re mise en circulation");
         if (Fuel is null) missing.Add("énergie");
         if (Gearbox is null) missing.Add("boîte de vitesses");

@@ -10,6 +10,7 @@ const config: TenantConfig = {
   contact: {
     phone: "0171483183",
     phoneLabel: "01 71 48 31 83",
+    secondPhone: { phone: "0652526100", label: "06 52 52 61 00" },
     email: "garage.mg78440@gmail.com",
   },
   // Indiquez les textes de la marque : heroBadge (badge de l'accueil), rating (note des avis clients).

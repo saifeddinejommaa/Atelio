@@ -6,15 +6,15 @@ export type Service = {
   slug: string;
   name: string;
   description: string;
-  /** Prix « à partir de » TTC, promotion déduite (null si non renseigné). */
+  /** Prix « à partir de » TTC, promotion déduite (null si non renseigné ou à 0 € : sur devis). */
   priceFrom: number | null;
   /** Prix TTC avant promotion. */
   basePrice: number;
   /** Remise en cours (ex. 20 pour -20 %), null si aucune. */
   discountPercent: number | null;
-  durationMinutes: number;
-  /** Durée lisible, ex. "1 h 30". */
-  duration: string;
+  durationMinutes: number | null;
+  /** Durée lisible, ex. "1 h 30" ; null : à préciser par le garage (ex. Autre). */
+  duration: string | null;
   icon: IconName;
   /** Texte de présentation de la page dédiée. */
   intro: string;
@@ -166,17 +166,21 @@ export function toService(entity: ServiceEntity): Service {
     slug: entity.code,
     name: entity.name,
     description: entity.description ?? "",
-    priceFrom: entity.finalPrice,
+    priceFrom: entity.finalPrice > 0 ? entity.finalPrice : null,
     basePrice: entity.price,
     discountPercent: entity.discountPercent,
     durationMinutes: entity.durationMinutes,
-    duration: formatDuration(entity.durationMinutes),
+    duration: entity.durationMinutes === null ? null : formatDuration(entity.durationMinutes),
     icon: extra?.icon ?? "wrench",
     intro: extra?.intro ?? entity.description ?? "",
     includes: extra?.includes ?? [],
     when: extra?.when ?? "",
   };
 }
+
+/** Prestation sans durée : le client ne réserve pas en ligne (même règle dans l'API). */
+export const NO_ESTIMATE_MESSAGE =
+  "Vu que nous ne pouvons pas estimer la durée de votre intervention, veuillez contacter le garage pour avoir un rendez-vous.";
 
 /** « à partir de 69 € » ou « Sur devis » si le service n'a pas de prix. */
 export function priceLabel(service: Service, prefix = "à partir de "): string {

@@ -5,14 +5,12 @@ export type InterventionService = {
   serviceId: number;
   code: string;
   name: string;
-  /** Temps de main-d'œuvre (temps passé saisi, sinon durée prévue). */
-  durationMinutes: number;
+  /** Temps de main-d'œuvre (temps passé saisi, sinon durée prévue). null : à saisir. */
+  durationMinutes: number | null;
   categoryId: number | null;
   categoryName: string | null;
   /** Taux horaire TTC de la catégorie. */
   hourlyRate: number | null;
-  /** Durée incertaine (ex. « Autre ») : temps et type à saisir selon le mécanicien. */
-  uncertainDuration: boolean;
   quantity: number;
   /** Prix unitaire TTC. */
   unitPrice: number;
@@ -142,6 +140,8 @@ export function labourPrice(hourlyRate: number, minutes: number): number {
 /** Intervention dans la liste du back-office. */
 export type InterventionSummary = {
   id: number;
+  /** Mécanicien responsable, null si elle est sans responsable. */
+  employeeId: number | null;
   /** Référence du rendez-vous d'origine (null sans rendez-vous). */
   reference: string | null;
   status: Status<InterventionStatus>;

@@ -1,3 +1,4 @@
+using Atelio.Domain.Entities;
 using Atelio.Domain.Enums;
 using Atelio.Domain.Planning;
 using Atelio.Domain.Repositories;
@@ -45,41 +46,51 @@ public class PlanningRepository : IPlanningRepository
         CancellationToken cancellationToken = default,
         long? excludeAppointmentId = null)
     {
-        // Durée de travail = somme des prestations (la fin estimée, elle, inclut les pauses).
+        // Durée de travail = estimation du garage, sinon somme des prestations (la fin estimée, elle, inclut les pauses).
         var appointments = await _context.Appointments
             .Where(a => a.GarageId == garageId
                 && (excludeAppointmentId == null || a.Id != excludeAppointmentId)
                 && (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed)
-                && fromUtc <= a.ScheduledAt && a.ScheduledAt < toUtc)
+                && a.ScheduledAt < toUtc && fromUtc < a.EstimatedEndAt)
             .Select(a => new
             {
                 a.Id,
                 a.ScheduledAt,
+                a.EstimatedMinutes,
                 Minutes = _context.AppointmentServices
                     .Where(s => s.AppointmentId == a.Id)
-                    .Join(_context.Services, s => s.ServiceId, s => s.Id, (link, service) => service.DurationMinutes)
+                    .Join(_context.Services, s => s.ServiceId, s => s.Id, (link, service) => service.DurationMinutes ?? 0)
                     .Sum(),
+                Unknown = _context.AppointmentServices
+                    .Where(s => s.AppointmentId == a.Id)
+                    .Join(_context.Services, s => s.ServiceId, s => s.Id, (link, service) => service.DurationMinutes)
+                    .Any(minutes => minutes == null),
             })
             .ToListAsync(cancellationToken);
 
         var interventions = await _context.Interventions
             .Where(i => i.GarageId == garageId
                 && i.Status == InterventionStatus.InProgress
-                && i.StartedAt != null && fromUtc <= i.StartedAt && i.StartedAt < toUtc)
+                && i.StartedAt != null && i.StartedAt < toUtc)
             .Select(i => new
             {
                 StartedAt = i.StartedAt!.Value,
                 i.EmployeeId,
                 Minutes = _context.InterventionServices
                     .Where(s => s.InterventionId == i.Id)
-                    .Join(_context.Services, s => s.ServiceId, s => s.Id, (link, service) => service.DurationMinutes * link.Quantity)
+                    .Join(_context.Services, s => s.ServiceId, s => s.Id, (link, service) => (link.LabourMinutes ?? service.DurationMinutes ?? 0) * link.Quantity)
                     .Sum(),
+                Unknown = _context.InterventionServices
+                    .Where(s => s.InterventionId == i.Id)
+                    .Join(_context.Services, s => s.ServiceId, s => s.Id, (link, service) => link.LabourMinutes ?? service.DurationMinutes)
+                    .Any(minutes => minutes == null),
             })
             .ToListAsync(cancellationToken);
 
         return appointments
-            .Select(a => new PlannedJob(a.Id, a.ScheduledAt, a.Minutes, null))
-            .Concat(interventions.Select(i => new PlannedJob(null, i.StartedAt, i.Minutes, i.EmployeeId)))
+            // Temps inconnu : pas d'estimation, donc rien de bloqué.
+            .Select(a => new PlannedJob(a.Id, a.ScheduledAt, a.EstimatedMinutes ?? (a.Unknown ? 0 : a.Minutes), null))
+            .Concat(interventions.Select(i => new PlannedJob(null, i.StartedAt, i.Unknown ? 0 : i.Minutes, i.EmployeeId)))
             .Where(j => j.WorkMinutes > 0)
             .ToList();
     }

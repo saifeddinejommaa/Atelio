@@ -5,10 +5,8 @@ export type Service = {
   code: string;
   name: string;
   description: string | null;
-  durationMinutes: number;
-  /** Durée incertaine (ex. « Autre ») : à placer de préférence le matin. */
-  uncertainDuration: boolean;
-  /** Prix TTC avant promotion. */
+  /** null : pas de durée exacte (ex. Autre), le garage indique le temps à la prise de rendez-vous. */
+  durationMinutes: number | null;  /** Prix TTC avant promotion. */
   price: number;
   /** Meilleure remise active (ex. 20 pour -20 %), null si aucune. */
   discountPercent: number | null;
@@ -26,6 +24,6 @@ export type ManagedService = Service & {
 };
 
 /** Prestation à enregistrer. */
-export type ServiceInput = Pick<Service, "name" | "description" | "price" | "durationMinutes" | "uncertainDuration"> & {
+export type ServiceInput = Pick<Service, "name" | "description" | "price" | "durationMinutes"> & {
   categoryId: number | null;
 };

@@ -10,7 +10,7 @@ export type GarageFilter = {
 export type AvailabilityQuery = {
   garageId: number;
   serviceIds: number[];
-  /** Premier jour, "2026-10-05". Par défaut : demain. */
+  /** Premier jour, "2026-10-05". Par défaut : aujourd'hui. */
   from?: string;
   days?: number;
 };
@@ -31,6 +31,8 @@ export type SlotCheckQuery = {
   scheduledAt: string;
   /** Durée : celle de ces prestations... */
   serviceIds?: number[];
+  /** Temps total estimé par le garage, à la place de celui des prestations. */
+  estimatedMinutes?: number;
   /** ... ou celle du rendez-vous déplacé (non compté comme occupé). */
   excludeAppointment?: string;
 };

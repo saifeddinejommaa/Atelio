@@ -24,6 +24,8 @@ export interface IInterventionRepository {
   addArticle(interventionId: number, articleId: number, quantity: number, promotionId: number | null): Promise<number>;
   updateArticle(interventionId: number, lineId: number, quantity: number, promotionId: number | null, unitPriceHt: number): Promise<void>;
   deleteArticle(interventionId: number, lineId: number): Promise<void>;
+  /** Temps estimé des prestations sans temps connu. */
+  setEstimate(interventionId: number, estimatedMinutes: number): Promise<void>;
   /** Ajoute les lignes d'un devis du même client (une seule fois par devis). */
   importQuote(interventionId: number, quoteId: number): Promise<void>;
   /** Catégories de prestations avec leur taux horaire. */

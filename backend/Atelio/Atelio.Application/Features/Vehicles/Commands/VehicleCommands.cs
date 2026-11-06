@@ -106,7 +106,7 @@ public class UpdateVehicleDetailsCommandValidator : AbstractValidator<UpdateVehi
     {
         RuleFor(x => x.Make).NotEmpty().WithMessage("Indiquez la marque.").MaximumLength(50);
         RuleFor(x => x.Model).NotEmpty().WithMessage("Indiquez le modèle.").MaximumLength(80);
-        RuleFor(x => x.Version).NotEmpty().WithMessage("Indiquez la version.").MaximumLength(80);
+        RuleFor(x => x.Version).NotEmpty().WithMessage("Indiquez le code moteur.").MaximumLength(80);
         RuleFor(x => x.FirstRegistration)
             .Must(d => d.Year >= 1950 && d <= DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime))
             .WithMessage("Date de 1re mise en circulation invalide.");

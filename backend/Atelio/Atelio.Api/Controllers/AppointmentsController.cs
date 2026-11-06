@@ -42,7 +42,18 @@ public class AppointmentsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateAppointmentCommand command, CancellationToken cancellationToken)
     {
+        command.ByGarage = true;
+
         return Ok(await _mediator.Send(command, cancellationToken));
+    }
+
+    /// <summary>Garage : indique ou retire l'estimation : { estimatedMinutes? }. Renvoie { warning }.</summary>
+    [HttpPut("{reference}/estimate")]
+    public async Task<IActionResult> SetEstimate(string reference, [FromBody] SetAppointmentEstimateCommand command, CancellationToken cancellationToken)
+    {
+        command.Reference = reference;
+
+        return Ok(new { warning = await _mediator.Send(command, cancellationToken) });
     }
 
     /// <summary>Garage : déplace le rendez-vous (même durée), si un mécanicien est disponible.</summary>

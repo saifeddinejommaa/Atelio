@@ -2,6 +2,7 @@ import { AppointmentStatus } from "@atelio/core/domain";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ContactPhones from "@/components/ContactPhones";
 import CancelAppointmentButton from "@/components/appointments/CancelAppointmentButton";
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
@@ -40,7 +41,7 @@ export default async function MyAppointmentsPage({ params }: PageProps<"/[tenant
         )}
         {result.status === "unknown-customer" && (
           <Notice>
-            Votre compte client {tenant.name} est introuvable. Contactez-nous au {tenant.contact.phoneLabel}.
+            Votre compte client {tenant.name} est introuvable. Contactez-nous au <ContactPhones contact={tenant.contact} />.
           </Notice>
         )}
 

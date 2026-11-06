@@ -25,7 +25,7 @@ export function toAppointmentEntity(dto: AppointmentDto): Appointment {
     // Ids fixes, partagés avec le backend : la conversion vers le type d'id est sûre.
     status: { id: dto.statusId as AppointmentStatus, label: dto.statusLabel },
     scheduledAt: utc(dto.scheduledAt),
-    estimatedEndAt: utc(dto.estimatedEndAt),
+    estimatedEndAt: dto.estimatedEndAt ? utc(dto.estimatedEndAt) : null,
     customerNotes: dto.customerNotes,
     garageId: dto.garageId,
     garageName: dto.garageName,
@@ -37,6 +37,8 @@ export function toAppointmentEntity(dto: AppointmentDto): Appointment {
     serviceCodes: dto.serviceCodes ?? [],
     serviceNames: dto.serviceNames ?? [],
     interventionId: dto.interventionId ?? null,
+    interventionEmployeeId: dto.interventionEmployeeId,
+    estimatedMinutes: dto.estimatedMinutes,
     interventionStatus:
       dto.interventionStatusId != null
         ? { id: dto.interventionStatusId as InterventionStatus, label: dto.interventionStatusLabel ?? "" }
@@ -49,7 +51,7 @@ export function toBookedAppointment(dto: AppointmentCreatedDto): BookedAppointme
     id: dto.id,
     reference: dto.reference,
     scheduledAt: utc(dto.scheduledAt),
-    estimatedEndAt: utc(dto.estimatedEndAt),
+    estimatedEndAt: dto.estimatedEndAt ? utc(dto.estimatedEndAt) : null,
   };
 }
 
@@ -58,6 +60,7 @@ export function toCreateAppointmentDto(request: AppointmentRequest): CreateAppoi
     customerId: request.customerId,
     garageId: request.garageId,
     serviceIds: request.serviceIds,
+    estimatedMinutes: request.estimatedMinutes,
     scheduledAt: request.scheduledAt,
     vehicleId: request.vehicleId,
     plate: request.plate,
@@ -71,7 +74,7 @@ export function toStartCheck(dto: StartCheckDto): StartCheck {
     possible: dto.possible,
     message: dto.message,
     startAt: utc(dto.startAt),
-    estimatedEndAt: utc(dto.estimatedEndAt),
+    estimatedEndAt: dto.estimatedEndAt ? utc(dto.estimatedEndAt) : null,
     employeeId: dto.employeeId,
     employeeName: dto.employeeName,
   };

@@ -23,7 +23,11 @@ public class AppointmentResponse
 
     public DateTime ScheduledAt { get; set; }
 
-    public DateTime EstimatedEndAt { get; set; }
+    // Vide : pas d'estimation.
+    public DateTime? EstimatedEndAt { get; set; }
+
+    // Temps total estimé par le garage.
+    public int? EstimatedMinutes { get; set; }
 
     public string? CustomerNotes { get; set; }
 
@@ -52,6 +56,9 @@ public class AppointmentResponse
     public int? InterventionStatusId { get; set; }
 
     public string? InterventionStatusLabel { get; set; }
+
+    // Mécanicien de l'intervention, null si elle est sans responsable.
+    public long? InterventionEmployeeId { get; set; }
 }
 
 public class AppointmentCreatedResponse
@@ -62,7 +69,7 @@ public class AppointmentCreatedResponse
 
     public DateTime ScheduledAt { get; set; }
 
-    public DateTime EstimatedEndAt { get; set; }
+    public DateTime? EstimatedEndAt { get; set; }
 }
 
 /// <summary>Vérification avant lancement d'un rendez-vous à une heure donnée.</summary>
@@ -76,7 +83,7 @@ public class StartCheckResponse
     public DateTime StartAt { get; set; }
 
     // Fin estimée, pauses du mécanicien comprises (début + durée si aucun mécanicien libre).
-    public DateTime EstimatedEndAt { get; set; }
+    public DateTime? EstimatedEndAt { get; set; }
 
     // Premier mécanicien libre, affecté au lancement.
     public long? EmployeeId { get; set; }

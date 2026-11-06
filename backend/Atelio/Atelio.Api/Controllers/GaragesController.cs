@@ -104,10 +104,11 @@ public class GaragesController : ControllerBase
         [FromQuery] DateTime scheduledAt,
         [FromQuery] List<long> serviceIds,
         [FromQuery] string? excludeAppointment,
+        [FromQuery] int? estimatedMinutes,
         CancellationToken cancellationToken)
     {
         return Ok(await _mediator.Send(
-            new CheckGarageSlotQuery { GarageId = id, ScheduledAt = scheduledAt, ServiceIds = serviceIds, ExcludeAppointment = excludeAppointment },
+            new CheckGarageSlotQuery { GarageId = id, ScheduledAt = scheduledAt, ServiceIds = serviceIds, ExcludeAppointment = excludeAppointment, EstimatedMinutes = estimatedMinutes },
             cancellationToken));
     }
 }

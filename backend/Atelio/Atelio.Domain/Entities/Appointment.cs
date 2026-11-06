@@ -27,8 +27,13 @@ public class Appointment
     public DateTime ScheduledAt { get; set; }
 
     // Début + somme des durées des services demandés.
+    // Vide : pas d'estimation, le rendez-vous ne bloque pas le planning des mécaniciens.
     [Column("estimated_end_at")]
-    public DateTime EstimatedEndAt { get; set; }
+    public DateTime? EstimatedEndAt { get; set; }
+
+    // Temps total estimé par le garage, à la place de la durée des prestations.
+    [Column("estimated_minutes")]
+    public int? EstimatedMinutes { get; set; }
 
     [Column("status_id")]
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Confirmed;

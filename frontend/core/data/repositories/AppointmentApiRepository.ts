@@ -45,6 +45,11 @@ export class AppointmentApiRepository implements IAppointmentRepository {
     await this.api.post(`/appointments/${encodeURIComponent(reference)}/reschedule`, { scheduledAt });
   }
 
+  async setEstimate(reference: string, estimatedMinutes: number | null): Promise<string | null> {
+    const result = await this.api.put<{ warning: string | null }>(`/appointments/${encodeURIComponent(reference)}/estimate`, { estimatedMinutes });
+    return result?.warning ?? null;
+  }
+
   async abandon(reference: string, status: AbandonStatus): Promise<void> {
     await this.api.post(`/appointments/${encodeURIComponent(reference)}/abandon`, { statusId: status });
   }

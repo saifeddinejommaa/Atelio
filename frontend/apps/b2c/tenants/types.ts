@@ -14,6 +14,8 @@ export type TenantConfig = Brand & {
   contact: {
     phone: string;
     phoneLabel: string;
+    /** Second numéro, s'il y en a un. */
+    secondPhone?: { phone: string; label: string };
     email: string;
   };
   /** Textes propres au client ; chacun est masqué s'il est absent. */

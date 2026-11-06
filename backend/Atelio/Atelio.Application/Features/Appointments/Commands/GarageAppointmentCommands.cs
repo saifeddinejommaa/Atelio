@@ -75,19 +75,106 @@ public class RescheduleAppointmentCommandHandler : IRequestHandler<RescheduleApp
             var day = DateOnly.FromDateTime(localStart);
 
             var planner = await BookingRules.CreatePlannerAsync(_planning, _tenant, garage, day, day, ct, excludeAppointmentId: appointment.Id);
-            var placement = planner.TryPlace(localStart, workMinutes, nowUtc);
+            var placement = planner.TryPlaceForGarage(localStart, workMinutes, nowUtc);
             if (!placement.Available)
             {
                 throw new BusinessException(placement.Reason!);
             }
 
             appointment.ScheduledAt = TimeZoneInfo.ConvertTimeToUtc(localStart, _tenant.TimeZone);
-            appointment.EstimatedEndAt = placement.EndUtc!.Value;
+            appointment.EstimatedEndAt = placement.EndUtc;
             appointment.UpdatedAt = nowUtc;
             _appointments.Update(appointment);
         }, cancellationToken);
 
         return Unit.Value;
+    }
+}
+
+// ============================================================
+// ESTIMATION (temps total indiqué ou retiré par le garage)
+// ============================================================
+
+public class SetAppointmentEstimateCommand : IRequest<string?>
+{
+    public string Reference { get; set; } = null!;
+
+    // Vide : plus d'estimation, le rendez-vous ne bloque plus le planning s'il a une prestation sans durée.
+    public int? EstimatedMinutes { get; set; }
+}
+
+public class SetAppointmentEstimateCommandValidator : AbstractValidator<SetAppointmentEstimateCommand>
+{
+    public SetAppointmentEstimateCommandValidator()
+    {
+        RuleFor(x => x.EstimatedMinutes)
+            .InclusiveBetween(1, BookingRules.MaxEstimatedMinutes)
+            .When(x => x.EstimatedMinutes.HasValue)
+            .WithMessage("L'estimation doit être comprise entre 1 minute et 200 heures.");
+    }
+}
+
+public class SetAppointmentEstimateCommandHandler : IRequestHandler<SetAppointmentEstimateCommand, string?>
+{
+    private readonly IAppointmentRepository _appointments;
+    private readonly IGarageRepository _garages;
+    private readonly IServiceRepository _services;
+    private readonly IPlanningRepository _planning;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenant;
+    private readonly TimeProvider _clock;
+
+    public SetAppointmentEstimateCommandHandler(
+        IAppointmentRepository appointments,
+        IGarageRepository garages,
+        IServiceRepository services,
+        IPlanningRepository planning,
+        IUnitOfWork unitOfWork,
+        ITenantContext tenant,
+        TimeProvider clock)
+    {
+        _appointments = appointments;
+        _garages = garages;
+        _services = services;
+        _planning = planning;
+        _unitOfWork = unitOfWork;
+        _tenant = tenant;
+        _clock = clock;
+    }
+
+    /// <summary>Enregistre l'estimation et recalcule la fin. Renvoie un avertissement (aucun mécanicien libre), ou null.</summary>
+    public async Task<string?> Handle(SetAppointmentEstimateCommand request, CancellationToken cancellationToken)
+    {
+        var appointment = await GarageAppointmentRules.GetOpenAsync(_appointments, request.Reference, cancellationToken);
+        var garage = await _garages.GetByIdAsync(appointment.GarageId, cancellationToken)
+            ?? throw new NotFoundException($"Garage {appointment.GarageId} introuvable.");
+
+        string? warning = null;
+        await _unitOfWork.ExecuteInTransactionAsync(async ct =>
+        {
+            await _appointments.LockGarageScheduleAsync(garage.Id, ct);
+
+            appointment.EstimatedMinutes = request.EstimatedMinutes;
+            var work = await BookingRules.GetAppointmentWorkAsync(_services, appointment, ct);
+
+            var localStart = TimeZoneInfo.ConvertTimeFromUtc(appointment.ScheduledAt, _tenant.TimeZone);
+            var day = DateOnly.FromDateTime(localStart);
+            var planner = await BookingRules.CreatePlannerAsync(_planning, _tenant, garage, day, day, ct, excludeAppointmentId: appointment.Id);
+
+            // L'heure ne change pas : un rendez-vous de ce matin reste estimable.
+            var placement = planner.TryPlaceForGarage(localStart, work.Minutes, appointment.ScheduledAt, allowFull: true);
+            if (!placement.Available)
+            {
+                throw new BusinessException(placement.Reason!);
+            }
+
+            warning = placement.Warning;
+            appointment.EstimatedEndAt = placement.EndUtc;
+            appointment.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
+            _appointments.Update(appointment);
+        }, cancellationToken);
+
+        return warning;
     }
 }
 
@@ -204,7 +291,7 @@ public class StartAppointmentCommandHandler : IRequestHandler<StartAppointmentCo
         var nowUtc = _clock.GetUtcNow().UtcDateTime;
         var appointment = await GarageAppointmentRules.GetOpenAsync(_appointments, request.Reference, cancellationToken);
 
-        // Le véhicule doit être identifié (marque, modèle, version...) avant d'entrer en atelier.
+        // Le véhicule doit être identifié (marque, modèle, code moteur...) avant d'entrer en atelier.
         var vehicle = await _vehicles.GetByIdAsync(appointment.VehicleId, cancellationToken)
             ?? throw new NotFoundException($"Véhicule {appointment.VehicleId} introuvable.");
         var missing = vehicle.MissingDetails();
@@ -221,10 +308,16 @@ public class StartAppointmentCommandHandler : IRequestHandler<StartAppointmentCo
         var services = (await _services.GetActiveByIdsAsync(serviceIds, cancellationToken)).ToDictionary(s => s.Id);
         var rates = (await _categories.GetAllAsync(cancellationToken)).ToDictionary(c => c.Id, c => c.HourlyRate);
 
+        // Prestations sans durée : se partagent ce qui reste de l'estimation du garage.
+        var withoutDuration = serviceIds.Count(id => services.GetValueOrDefault(id)?.DurationMinutes is null);
+        int? estimatedShare = appointment.EstimatedMinutes is int total && withoutDuration > 0
+            ? Math.Max(1, (total - services.Values.Sum(s => s.DurationMinutes ?? 0)) / withoutDuration)
+            : null;
+
         InterventionService ToLine(long serviceId)
         {
             var service = services.GetValueOrDefault(serviceId);
-            var minutes = service?.DurationMinutes;
+            var minutes = service?.DurationMinutes ?? estimatedShare;
             var categoryId = service?.CategoryId;
             var rate = categoryId is long id ? rates.GetValueOrDefault(id) : 0m;
             return new InterventionService
@@ -269,7 +362,7 @@ public class StartAppointmentCommandHandler : IRequestHandler<StartAppointmentCo
 }
 
 /// <summary>Lancement évalué : début et fin estimée (UTC), et placement (mécanicien libre, ou raison).</summary>
-internal record StartEvaluation(DateTime StartUtc, DateTime EndUtc, Placement Placement);
+internal record StartEvaluation(DateTime StartUtc, DateTime? EndUtc, Placement Placement);
 
 internal static class GarageAppointmentRules
 {
@@ -310,7 +403,7 @@ internal static class GarageAppointmentRules
 
         var placement = planner.TryStart(localStart, work.Minutes);
         var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, tenant.TimeZone);
-        return new StartEvaluation(startUtc, placement.EndUtc ?? startUtc.AddMinutes(work.Minutes), placement);
+        return new StartEvaluation(startUtc, placement.EndUtc ?? (work.Minutes is int minutes ? startUtc.AddMinutes(minutes) : null), placement);
     }
 
     /// <summary>Rendez-vous encore ouvert (en attente ou confirmé), sinon erreur.</summary>

@@ -52,7 +52,6 @@ export function toInterventionEntity(dto: InterventionDto): Intervention {
       categoryId: s.categoryId,
       categoryName: s.categoryName,
       hourlyRate: s.hourlyRate,
-      uncertainDuration: s.uncertainDuration ?? false,
       quantity: s.quantity,
       unitPrice: s.unitPrice,
     })),
@@ -83,6 +82,7 @@ export function toInterventionEntity(dto: InterventionDto): Intervention {
 export function toInterventionSummary(dto: InterventionSummaryDto): InterventionSummary {
   return {
     id: dto.id,
+    employeeId: dto.employeeId,
     reference: dto.reference,
     status: toStatus(dto),
     startedAt: utc(dto.startedAt),

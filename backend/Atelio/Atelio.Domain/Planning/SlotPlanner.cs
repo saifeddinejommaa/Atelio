@@ -27,17 +27,24 @@ public record CapacityPeriod(DateTime Start, DateTime End, int Free, int Total);
 /// <summary>Créneau proposé au client, en heure locale du garage.</summary>
 public record Slot(DateTime LocalStart, DateTime StartUtc, DateTime EndUtc, bool Available);
 
-/// <summary>Résultat du placement d'un rendez-vous : fin estimée et mécanicien pressenti, ou raison du refus.</summary>
-public record Placement(bool Available, string? Reason, DateTime? EndUtc, long? EmployeeId);
+/// <summary>
+/// Résultat du placement d'un rendez-vous : fin estimée et mécanicien pressenti, ou raison du refus.
+/// Warning : possible pour le garage, mais à signaler (aucun mécanicien libre sur toute la durée).
+/// </summary>
+public record Placement(bool Available, string? Reason, DateTime? EndUtc, long? EmployeeId, string? Warning = null);
 
 /// <summary>
-/// Place les rendez-vous en simulant leur répartition entre les mécaniciens, jour par jour :
+/// Place les rendez-vous en simulant leur répartition entre les mécaniciens :
 /// - un mécanicien travaille selon son planning type (plages du jour), moins ses absences,
 ///   et dans les heures d'ouverture du garage ;
-/// - un travail commence quand le mécanicien est en poste, s'arrête pendant ses pauses et
-///   reprend ensuite ; il doit finir le jour même ;
+/// - un travail commence quand le mécanicien est en poste, s'arrête pendant ses pauses et hors de ses
+///   journées, puis reprend à sa plage suivante : il peut donc s'étaler sur plusieurs jours ;
 /// - les travaux déjà prévus sont placés dans l'ordre de leur début, chacun chez le mécanicien
-///   possible le moins chargé de la journée (une intervention affectée reste chez son mécanicien).
+///   possible le moins chargé de la journée (une intervention affectée reste chez son mécanicien) ;
+/// - un travail sans mécanicien libre sur toute sa durée occupe quand même le moins chargé :
+///   il prend une place au garage, pour que le site ne propose pas de créneau de trop.
+/// Le client réserve un travail qui finit le jour même (TryPlace) ; le garage peut faire plus (TryPlaceForGarage).
+/// Pour le garage, sans temps de travail connu (workMinutes null), rien n'est estimé ni bloqué.
 /// Rien n'est enregistré : l'affectation réelle se fait dans l'intervention.
 /// </summary>
 public class SlotPlanner
@@ -45,13 +52,21 @@ public class SlotPlanner
     public const int StepMinutes = 30;
 
     /// <summary>Délai minimal entre maintenant et le début d'un rendez-vous (réservation ou déplacement).</summary>
-    public const int MinLeadMinutes = 180;
+    public const int MinLeadMinutes = 60;
+
+    /// <summary>Tolérance du garage sur un créneau tout juste commencé (client au comptoir).</summary>
+    public const int GaragePastToleranceMinutes = 5;
+
+    /// <summary>Jours explorés au plus pour placer un travail long.</summary>
+    public const int MaxPlanningDays = 60;
 
     private readonly Garage _garage;
     private readonly TimeZoneInfo _timeZone;
     private readonly IReadOnlyList<Mechanic> _mechanics;
     private readonly IReadOnlyList<PlannedJob> _jobs;
     private readonly Dictionary<DateOnly, DayPlan> _days = [];
+    private readonly Dictionary<long, long> _assignments = [];
+    private bool _jobsPlaced;
 
     public SlotPlanner(Garage garage, TimeZoneInfo timeZone, IReadOnlyList<Mechanic> mechanics, IReadOnlyList<PlannedJob> jobs)
     {
@@ -80,27 +95,74 @@ public class SlotPlanner
             return Refused($"Un rendez-vous se prend au moins {MinLeadMinutes / 60} h à l'avance.");
         }
 
-        var plan = Plan(day);
-        var best = plan.FindMechanic(startUtc, workMinutes);
+        var best = FindMechanic(startUtc, workMinutes, sameDay: true);
         return best is null
             ? Refused("Aucun mécanicien n'est disponible à cette heure pour tout le travail (pauses comprises, fin le jour même).")
             : new Placement(true, null, best.Value.Segments[^1].End, best.Value.EmployeeId);
     }
 
     /// <summary>
-    /// Lancement d'un travail à cette heure locale (le client est là) : premier mécanicien libre
-    /// pour tout le travail, pauses comprises, fin le jour même. Pas de contrôle « créneau passé ».
+    /// Rendez-vous pris par le garage : le travail peut durer plusieurs jours et sans délai minimal.
+    /// Sans mécanicien libre sur toute la durée, c'est possible quand même, avec un avertissement.
+    /// Une heure de début complète est refusée, sauf allowFull (rendez-vous déjà posé qu'on estime sans le déplacer).
     /// </summary>
-    public Placement TryStart(DateTime localStart, int workMinutes)
+    public Placement TryPlaceForGarage(DateTime localStart, int? workMinutes, DateTime nowUtc, bool allowFull = false)
     {
-        var first = Plan(DateOnly.FromDateTime(localStart)).FindMechanic(ToUtc(localStart), workMinutes, firstFree: true);
+        var day = DateOnly.FromDateTime(localStart);
+        var time = TimeOnly.FromDateTime(localStart);
+        if (!_garage.IsOpenOn(day.DayOfWeek) || time < _garage.OpeningTime || time >= _garage.ClosingTime)
+        {
+            return Refused($"Le garage est fermé à ce moment-là (ouvert de {_garage.OpeningTime:HH\\:mm} à {_garage.ClosingTime:HH\\:mm}).");
+        }
+
+        var startUtc = ToUtc(localStart);
+        if (startUtc < nowUtc.AddMinutes(-GaragePastToleranceMinutes))
+        {
+            return Refused("Ce créneau est déjà passé.");
+        }
+
+        if (!allowFull && IsFull(localStart))
+        {
+            return Refused("Ce créneau est complet : choisissez un autre horaire.");
+        }
+
+        if (workMinutes is not int minutes)
+        {
+            return new Placement(true, null, null, null);
+        }
+
+        var best = FindMechanic(startUtc, minutes);
+        return best is not null
+            ? new Placement(true, null, best.Value.Segments[^1].End, best.Value.EmployeeId)
+            : new Placement(
+                true,
+                null,
+                EstimateEnd(startUtc, minutes),
+                null,
+                "Aucun mécanicien n'est libre sur toute la durée : à enregistrer sans mécanicien, à affecter plus tard.");
+    }
+
+    /// <summary>
+    /// Lancement d'un travail à cette heure locale (le client est là) : premier mécanicien libre
+    /// pour tout le travail, pauses comprises, sur plusieurs jours si besoin. Pas de contrôle « créneau passé ».
+    /// Sans mécanicien libre, la fin estimée reste donnée avec le refus.
+    /// </summary>
+    public Placement TryStart(DateTime localStart, int? workMinutes)
+    {
+        if (workMinutes is not int minutes)
+        {
+            return Refused("Aucun temps n'est estimé.");
+        }
+
+        var startUtc = ToUtc(localStart);
+        var first = FindMechanic(startUtc, minutes, firstFree: true);
         return first is null
-            ? Refused("Aucun mécanicien n'est libre à cette heure pour tout le travail (pauses comprises, fin le jour même).")
+            ? new Placement(false, "Aucun mécanicien n'est libre à cette heure pour tout le travail.", EstimateEnd(startUtc, minutes), null)
             : new Placement(true, null, first.Value.Segments[^1].End, first.Value.EmployeeId);
     }
 
-    /// <summary>Créneaux d'une journée pour un travail donné. latestStart : heure de début maximale (ex. 12:00).</summary>
-    public IReadOnlyList<Slot> GetSlots(DateOnly day, int workMinutes, DateTime nowUtc, TimeOnly? latestStart = null)
+    /// <summary>Créneaux d'une journée pour un travail donné.</summary>
+    public IReadOnlyList<Slot> GetSlots(DateOnly day, int workMinutes, DateTime nowUtc)
     {
         var slots = new List<Slot>();
         if (!_garage.IsOpenOn(day.DayOfWeek))
@@ -111,11 +173,6 @@ public class SlotPlanner
         var closing = day.ToDateTime(_garage.ClosingTime);
         for (var localStart = day.ToDateTime(_garage.OpeningTime); localStart < closing; localStart = localStart.AddMinutes(StepMinutes))
         {
-            if (latestStart is TimeOnly latest && TimeOnly.FromDateTime(localStart) >= latest)
-            {
-                break;
-            }
-
             var placement = TryPlace(localStart, workMinutes, nowUtc);
             var startUtc = ToUtc(localStart);
             slots.Add(new Slot(localStart, startUtc, placement.EndUtc ?? startUtc.AddMinutes(workMinutes), placement.Available));
@@ -136,7 +193,8 @@ public class SlotPlanner
             return periods;
         }
 
-        var plan = Plan(day);
+        EnsureJobsPlaced();
+        var plan = Day(day);
         var closing = day.ToDateTime(_garage.ClosingTime);
         for (var localStart = day.ToDateTime(_garage.OpeningTime); localStart < closing; localStart = localStart.AddMinutes(StepMinutes))
         {
@@ -159,38 +217,200 @@ public class SlotPlanner
     }
 
     /// <summary>Mécanicien pressenti pour un rendez-vous déjà prévu (répartition simulée), ou null.</summary>
-    public long? GetAssignedEmployee(long appointmentId, DateOnly day) =>
-        Plan(day).Assignments.TryGetValue(appointmentId, out var employeeId) ? employeeId : null;
+    public long? GetAssignedEmployee(long appointmentId, DateOnly day)
+    {
+        EnsureJobsPlaced();
+        return _assignments.TryGetValue(appointmentId, out var employeeId) ? employeeId : null;
+    }
+
+    /// <summary>La case du calendrier de cette heure locale est-elle complète (aucun mécanicien libre) ?</summary>
+    private bool IsFull(DateTime localStart)
+    {
+        EnsureJobsPlaced();
+        var day = DateOnly.FromDateTime(localStart);
+        var opening = day.ToDateTime(_garage.OpeningTime);
+        var slot = opening.AddMinutes((int)(localStart - opening).TotalMinutes / StepMinutes * StepMinutes);
+        var closing = day.ToDateTime(_garage.ClosingTime);
+        var end = slot.AddMinutes(StepMinutes) < closing ? slot.AddMinutes(StepMinutes) : closing;
+        return Day(day).Count(ToUtc(slot), ToUtc(end)).Free == 0;
+    }
 
     public DateTime ToUtc(DateTime local) =>
         TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), _timeZone);
 
     private static Placement Refused(string reason) => new(false, reason, null, null);
 
-    /// <summary>Répartition simulée d'une journée, calculée une seule fois.</summary>
-    private DayPlan Plan(DateOnly day)
+    private DateOnly LocalDay(DateTime utc) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(utc, _timeZone));
+
+    /// <summary>Plages de travail des mécaniciens pour une journée, et leurs travaux prévus.</summary>
+    private DayPlan Day(DateOnly day)
     {
-        if (_days.TryGetValue(day, out var plan))
+        if (!_days.TryGetValue(day, out var plan))
         {
-            return plan;
+            plan = new DayPlan(_mechanics.Select(m => new MechanicDay(m.EmployeeId, WorkPeriods(m, day))).ToList());
+            _days[day] = plan;
         }
 
-        plan = new DayPlan(_mechanics.Select(m => new MechanicDay(m.EmployeeId, WorkPeriods(m, day))).ToList());
-
-        var dayStart = ToUtc(day.ToDateTime(TimeOnly.MinValue));
-        var dayEnd = ToUtc(day.AddDays(1).ToDateTime(TimeOnly.MinValue));
-        foreach (var job in _jobs.Where(j => j.StartUtc >= dayStart && j.StartUtc < dayEnd).OrderBy(j => j.StartUtc))
-        {
-            plan.Place(job);
-        }
-
-        _days[day] = plan;
         return plan;
+    }
+
+    /// <summary>Répartition simulée des travaux déjà prévus, calculée une seule fois.</summary>
+    private void EnsureJobsPlaced()
+    {
+        if (_jobsPlaced)
+        {
+            return;
+        }
+
+        _jobsPlaced = true;
+        foreach (var job in _jobs.OrderBy(j => j.StartUtc))
+        {
+            Place(job);
+        }
+    }
+
+    private void Place(PlannedJob job)
+    {
+        // Intervention déjà affectée : elle reste chez son mécanicien.
+        if (job.EmployeeId is long id && _mechanics.Any(m => m.EmployeeId == id))
+        {
+            AddBusy(id, Schedule(id, job.StartUtc, job.WorkMinutes, sameDay: false)
+                ?? Schedule(id, job.StartUtc, job.WorkMinutes, sameDay: false, force: true)
+                ?? [new Period(job.StartUtc, job.StartUtc.AddMinutes(job.WorkMinutes))]);
+            return;
+        }
+
+        var best = FindMechanic(job.StartUtc, job.WorkMinutes);
+        if (best is not null)
+        {
+            AddBusy(best.Value.EmployeeId, best.Value.Segments);
+            if (job.AppointmentId is long appointmentId)
+            {
+                _assignments[appointmentId] = best.Value.EmployeeId;
+            }
+
+            return;
+        }
+
+        // Personne de libre sur toute la durée : le travail occupe quand même une place au garage.
+        if (ForcedSegments(job.StartUtc, job.WorkMinutes) is { } forced)
+        {
+            AddBusy(forced.EmployeeId, forced.Segments);
+        }
+    }
+
+    private void AddBusy(long employeeId, List<Period> segments)
+    {
+        foreach (var segment in segments)
+        {
+            Day(LocalDay(segment.Start)).Of(employeeId).Busy.Add(segment);
+        }
+    }
+
+    /// <summary>
+    /// Mécanicien possible avec ses morceaux de travail : le moins chargé du jour (puis le plus petit identifiant),
+    /// ou le premier libre (plus petit identifiant) si firstFree.
+    /// </summary>
+    private (long EmployeeId, List<Period> Segments)? FindMechanic(DateTime startUtc, int workMinutes, bool sameDay = false, bool firstFree = false)
+    {
+        EnsureJobsPlaced();
+        (long EmployeeId, List<Period> Segments)? best = null;
+        double bestLoad = double.MaxValue;
+        var day = Day(LocalDay(startUtc));
+        foreach (var mechanic in _mechanics.OrderBy(m => m.EmployeeId))
+        {
+            var segments = Schedule(mechanic.EmployeeId, startUtc, workMinutes, sameDay);
+            if (segments is null)
+            {
+                continue;
+            }
+
+            if (firstFree)
+            {
+                return (mechanic.EmployeeId, segments);
+            }
+
+            var load = day.Of(mechanic.EmployeeId).LoadMinutes;
+            if (load < bestLoad)
+            {
+                best = (mechanic.EmployeeId, segments);
+                bestLoad = load;
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>Travail placé chez le moins chargé qui a des plages, même s'il est occupé.</summary>
+    private (long EmployeeId, List<Period> Segments)? ForcedSegments(DateTime startUtc, int workMinutes)
+    {
+        var day = Day(LocalDay(startUtc));
+        foreach (var mechanic in _mechanics.OrderBy(m => day.Of(m.EmployeeId).LoadMinutes).ThenBy(m => m.EmployeeId))
+        {
+            if (Schedule(mechanic.EmployeeId, startUtc, workMinutes, sameDay: false, force: true) is { } segments)
+            {
+                return (mechanic.EmployeeId, segments);
+            }
+        }
+
+        return null;
+    }
+
+    private DateTime EstimateEnd(DateTime startUtc, int workMinutes) =>
+        ForcedSegments(startUtc, workMinutes)?.Segments[^1].End ?? startUtc.AddMinutes(workMinutes);
+
+    /// <summary>
+    /// Morceaux de travail si le mécanicien commence à startUtc : il doit être en poste et libre à cette heure,
+    /// le travail saute ses pauses et ses jours sans plage, sans chevaucher un autre travail.
+    /// sameDay : il doit finir le jour même. force : horaires seuls, même s'il est occupé ou pas encore en poste.
+    /// </summary>
+    private List<Period>? Schedule(long employeeId, DateTime startUtc, int workMinutes, bool sameDay, bool force = false)
+    {
+        var day = LocalDay(startUtc);
+        if (!force && !Day(day).Of(employeeId).Work.Any(p => p.Start <= startUtc && startUtc < p.End))
+        {
+            return null;
+        }
+
+        var segments = new List<Period>();
+        var remaining = TimeSpan.FromMinutes(workMinutes);
+        for (var i = 0; i < MaxPlanningDays && remaining > TimeSpan.Zero; i++, day = day.AddDays(1))
+        {
+            var mechanic = Day(day).Of(employeeId);
+            foreach (var period in mechanic.Work.Where(p => p.End > startUtc))
+            {
+                var segmentStart = period.Start > startUtc ? period.Start : startUtc;
+                var segmentEnd = segmentStart + remaining < period.End ? segmentStart + remaining : period.End;
+                if (!force && mechanic.Busy.Any(b => b.Overlaps(segmentStart, segmentEnd)))
+                {
+                    return null;
+                }
+
+                segments.Add(new Period(segmentStart, segmentEnd));
+                remaining -= segmentEnd - segmentStart;
+                if (remaining <= TimeSpan.Zero)
+                {
+                    break;
+                }
+            }
+
+            if (sameDay)
+            {
+                break;
+            }
+        }
+
+        return remaining > TimeSpan.Zero ? null : segments;
     }
 
     /// <summary>Plages de travail du jour (UTC), dans les heures d'ouverture, absences retirées.</summary>
     private List<Period> WorkPeriods(Mechanic mechanic, DateOnly day)
     {
+        if (!_garage.IsOpenOn(day.DayOfWeek))
+        {
+            return [];
+        }
+
         var dayOfWeek = day.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)day.DayOfWeek;
         var periods = new List<Period>();
 
@@ -256,36 +476,6 @@ public class SlotPlanner
 
         public double LoadMinutes => Busy.Sum(b => (b.End - b.Start).TotalMinutes);
 
-        /// <summary>
-        /// Morceaux de travail si le mécanicien commence à startUtc : il doit être en poste et libre à cette heure,
-        /// le travail saute ses pauses et doit finir dans ses plages du jour, sans chevaucher un autre travail.
-        /// </summary>
-        public List<Period>? Schedule(DateTime startUtc, int workMinutes)
-        {
-            var first = Work.FindIndex(p => p.Start <= startUtc && startUtc < p.End);
-            if (first < 0)
-            {
-                return null;
-            }
-
-            var segments = new List<Period>();
-            var remaining = TimeSpan.FromMinutes(workMinutes);
-            for (var i = first; i < Work.Count && remaining > TimeSpan.Zero; i++)
-            {
-                var segmentStart = i == first ? startUtc : Work[i].Start;
-                var segmentEnd = segmentStart + remaining < Work[i].End ? segmentStart + remaining : Work[i].End;
-                if (Busy.Any(b => b.Overlaps(segmentStart, segmentEnd)))
-                {
-                    return null;
-                }
-
-                segments.Add(new Period(segmentStart, segmentEnd));
-                remaining -= segmentEnd - segmentStart;
-            }
-
-            return remaining > TimeSpan.Zero ? null : segments;
-        }
-
         public bool WorksDuring(DateTime start, DateTime end) => Work.Any(p => p.Start <= start && end <= p.End);
 
         public bool BusyDuring(DateTime start, DateTime end) => Busy.Any(b => b.Overlaps(start, end));
@@ -293,60 +483,7 @@ public class SlotPlanner
 
     private sealed class DayPlan(List<MechanicDay> mechanics)
     {
-        public Dictionary<long, long> Assignments { get; } = [];
-
-        /// <summary>
-        /// Mécanicien possible avec ses morceaux de travail : le moins chargé (puis le plus petit identifiant),
-        /// ou le premier libre (plus petit identifiant) si firstFree.
-        /// </summary>
-        public (long EmployeeId, List<Period> Segments)? FindMechanic(DateTime startUtc, int workMinutes, bool firstFree = false)
-        {
-            (long EmployeeId, List<Period> Segments)? best = null;
-            double bestLoad = double.MaxValue;
-            foreach (var mechanic in mechanics.OrderBy(m => m.EmployeeId))
-            {
-                var segments = mechanic.Schedule(startUtc, workMinutes);
-                if (segments is not null && firstFree)
-                {
-                    return (mechanic.EmployeeId, segments);
-                }
-
-                if (segments is not null && mechanic.LoadMinutes < bestLoad)
-                {
-                    best = (mechanic.EmployeeId, segments);
-                    bestLoad = mechanic.LoadMinutes;
-                }
-            }
-
-            return best;
-        }
-
-        public void Place(PlannedJob job)
-        {
-            // Intervention déjà affectée : elle reste chez son mécanicien.
-            var assigned = job.EmployeeId is long id ? mechanics.FirstOrDefault(m => m.EmployeeId == id) : null;
-            if (assigned is not null)
-            {
-                var segments = assigned.Schedule(job.StartUtc, job.WorkMinutes)
-                    ?? [new Period(job.StartUtc, job.StartUtc.AddMinutes(job.WorkMinutes))];
-                assigned.Busy.AddRange(segments);
-                return;
-            }
-
-            // Sinon, le moins chargé de ceux qui peuvent le faire. Un travail impossible à placer
-            // (pris avant un changement de planning, par exemple) est ignoré.
-            var best = FindMechanic(job.StartUtc, job.WorkMinutes);
-            if (best is null)
-            {
-                return;
-            }
-
-            mechanics.First(m => m.EmployeeId == best.Value.EmployeeId).Busy.AddRange(best.Value.Segments);
-            if (job.AppointmentId is long appointmentId)
-            {
-                Assignments[appointmentId] = best.Value.EmployeeId;
-            }
-        }
+        public MechanicDay Of(long employeeId) => mechanics.First(m => m.EmployeeId == employeeId);
 
         /// <summary>(libres, en poste) sur [start, end[.</summary>
         public (int Free, int Total) Count(DateTime start, DateTime end)

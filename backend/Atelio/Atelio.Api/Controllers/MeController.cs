@@ -70,6 +70,8 @@ public class MeController : ControllerBase
     public async Task<IActionResult> Book([FromBody] CreateAppointmentCommand command, CancellationToken cancellationToken)
     {
         command.CustomerId = CustomerId;
+        // L'estimation est réservée au garage.
+        command.EstimatedMinutes = null;
 
         return Ok(await _mediator.Send(command, cancellationToken));
     }

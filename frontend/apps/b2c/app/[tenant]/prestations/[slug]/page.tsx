@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ContactPhones from "@/components/ContactPhones";
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { getServiceBySlug, getServices } from "@/lib/garageService/ServiceQueries";
-import { formatEuro, priceLabel } from "@/lib/garageService/services";
+import { formatEuro, NO_ESTIMATE_MESSAGE, priceLabel } from "@/lib/garageService/services";
 import { resolveTenant } from "@/lib/tenant";
 import { tenantPath } from "@/tenants";
 
@@ -89,24 +90,37 @@ export default async function ServicePage({ params }: PageProps<"/[tenant]/prest
               </span>
             </p>
           )}
-          <p className="mt-1 text-sm text-zinc-500">TTC, pièces et main-d&apos;œuvre comprises</p>
+          {service.priceFrom !== null && <p className="mt-1 text-sm text-zinc-500">TTC, pièces et main-d&apos;œuvre comprises</p>}
 
           <p className="mt-5 flex items-center gap-2 text-sm">
             <Icon name="clock" className="h-5 w-5 text-primary" />
-            Durée indicative : <strong>{service.duration}</strong>
+            {service.duration ? (
+              <>
+                Durée indicative : <strong>{service.duration}</strong>
+              </>
+            ) : (
+              "Durée à préciser par le garage"
+            )}
           </p>
 
-          <Button as={Link} href={bookingHref} size="lg" fullWidth className="mt-6">
-            Prendre rendez-vous
-          </Button>
+          {service.duration ? (
+            <Button as={Link} href={bookingHref} size="lg" fullWidth className="mt-6">
+              Prendre rendez-vous
+            </Button>
+          ) : (
+            <div className="mt-6 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+              <p>{NO_ESTIMATE_MESSAGE}</p>
+              <p className="mt-2 text-base font-bold">
+                <ContactPhones contact={tenant.contact} />
+              </p>
+            </div>
+          )}
           <Button as={Link} href={href(`/devis?prestation=${service.slug}`)} variant="outline" size="lg" fullWidth className="mt-3">
             Demander un devis
           </Button>
           <p className="mt-4 text-center text-sm text-zinc-500">
             Une question ?{" "}
-            <a href={`tel:${tenant.contact.phone}`} className="font-semibold text-primary">
-              {tenant.contact.phoneLabel}
-            </a>
+            <ContactPhones contact={tenant.contact} linkClassName="font-semibold text-primary" />
           </p>
         </Card>
       </section>

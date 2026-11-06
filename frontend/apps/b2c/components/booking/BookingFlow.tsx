@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { lookupVehicle } from "@atelio/core/data";
 import { computeQuote, garageOffers, isValidPlate, MAX_NOTES_LENGTH, type DayAvailability } from "@atelio/core/domain";
+import ContactPhones from "@/components/ContactPhones";
 import Icon from "@/components/Icon";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import { NO_ESTIMATE_MESSAGE } from "@/lib/garageService/services";
 import LoadingState from "@/components/ui/LoadingState";
 import { confirmBooking, loadAvailability } from "@/lib/appointment/AppointmentActions";
 import type { Garage } from "@/lib/garage/garages";
@@ -86,13 +88,20 @@ export default function BookingFlow({
     category ? computeQuote([s], category, (x) => x.priceFrom ?? 0).totalTTC : (s.priceFrom ?? 0);
   const pricePrefix = category ? "" : "à partir de ";
   const total = chosen.reduce((sum, s) => sum + priceOf(s), 0);
+  // Prestation sans prix : « Sur devis », jamais « 0 € ».
+  const serviceFee = (s: Service) => (s.priceFrom === null ? "Sur devis" : `${pricePrefix}${priceOf(s)} €`);
+  const hasQuoteOnly = chosen.some((s) => s.priceFrom === null);
+  const totalLabel = total === 0 && hasQuoteOnly ? "Sur devis" : `${hasQuoteOnly ? "à partir de " : pricePrefix}${total} €`;
   // Seuls les garages qui réalisent toutes les prestations choisies sont proposés.
   const eligible = garages.filter((g) => garageOffers(g, selected));
   const garage = eligible.find((g) => g.id === garageId);
   const day = days.find((d) => d.date === date);
 
+  // Prestation sans durée : pas de réservation en ligne, le client contacte le garage.
+  const hasNoDuration = chosen.some((s) => s.durationMinutes === null);
+
   const canContinue = [
-    selected.length > 0,
+    selected.length > 0 && !hasNoDuration,
     !!savedVehicle || isValidPlate(plate),
     !!garage,
     !!date && !!time,
@@ -202,13 +211,19 @@ export default function BookingFlow({
                     <Icon name={s.icon} className="h-6 w-6 shrink-0 text-primary" />
                     <span className="flex-1">
                       <span className="block font-semibold">{s.name}</span>
-                      <span className="block text-sm text-zinc-500">{pricePrefix}{priceOf(s)} € · {s.duration}</span>
+                      <span className="block text-sm text-zinc-500">{serviceFee(s)}{s.duration && ` · ${s.duration}`}</span>
                     </span>
                     {on && <Icon name="check" className="h-5 w-5 text-primary" />}
                   </button>
                 );
               })}
             </div>
+            {hasNoDuration && (
+              <p role="alert" className="mt-4 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+                {NO_ESTIMATE_MESSAGE}{" "}
+                <ContactPhones contact={tenant.contact} linkClassName="whitespace-nowrap font-bold" />
+              </p>
+            )}
           </>
         )}
 
@@ -308,7 +323,7 @@ export default function BookingFlow({
               ))}
               {eligible.length === 0 && (
                 <p className="rounded-lg bg-muted p-4 text-sm text-zinc-600">
-                  Aucun garage ne réalise toutes ces prestations. Retirez-en une ou contactez-nous au {tenant.contact.phoneLabel}.
+                  Aucun garage ne réalise toutes ces prestations. Retirez-en une ou contactez-nous au <ContactPhones contact={tenant.contact} />.
                 </p>
               )}
             </div>
@@ -454,7 +469,7 @@ export default function BookingFlow({
                   {chosen.map((s) => (
                     <li key={s.slug} className="flex justify-between gap-2">
                       {s.name}
-                      <span className="whitespace-nowrap text-zinc-500">{pricePrefix}{priceOf(s)} €</span>
+                      <span className="whitespace-nowrap text-zinc-500">{serviceFee(s)}</span>
                     </li>
                   ))}
                 </ul>
@@ -494,7 +509,7 @@ export default function BookingFlow({
         </dl>
         <div className="mt-5 flex items-baseline justify-between border-t border-zinc-200 pt-4">
           <span className="text-sm text-zinc-500">Total estimé</span>
-          <span className="text-2xl font-extrabold text-primary">{pricePrefix}{total} €</span>
+          <span className="text-2xl font-extrabold text-primary">{totalLabel}</span>
         </div>
         <p className="mt-2 text-xs text-zinc-500">Paiement au garage, après l&apos;intervention.</p>
       </Card>

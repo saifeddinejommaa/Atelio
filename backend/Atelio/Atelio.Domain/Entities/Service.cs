@@ -23,17 +23,13 @@ public class Service
     [Column("price")]
     public decimal Price { get; set; }
 
-    // Durée estimée : sert au placement des rendez-vous.
+    // Durée estimée : sert au placement des rendez-vous. Vide : pas de durée exacte (ex. « Autre »).
     [Column("duration_minutes")]
-    public int DurationMinutes { get; set; }
+    public int? DurationMinutes { get; set; }
 
     // Catégorie : donne le taux horaire de main-d'œuvre.
     [Column("category_id")]
     public long? CategoryId { get; set; }
-
-    // Durée incertaine (ex. « Autre ») : à placer de préférence le matin.
-    [Column("uncertain_duration")]
-    public bool UncertainDuration { get; set; }
 
     [Column("is_active")]
     public bool IsActive { get; set; } = true;

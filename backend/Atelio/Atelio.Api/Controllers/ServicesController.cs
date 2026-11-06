@@ -46,7 +46,7 @@ public class ServicesController : ControllerBase
     }
 
     /// <summary>
-    /// Ajoute une prestation : { name, description?, price, durationMinutes, categoryId?, uncertainDuration }. Renvoie { id }.
+    /// Ajoute une prestation : { name, description?, price, durationMinutes?, categoryId? }. Renvoie { id }.
     /// </summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ServiceInput request, CancellationToken cancellationToken)
@@ -59,7 +59,6 @@ public class ServicesController : ControllerBase
                 Price = request.Price,
                 DurationMinutes = request.DurationMinutes,
                 CategoryId = request.CategoryId,
-                UncertainDuration = request.UncertainDuration,
             },
             cancellationToken);
 
@@ -78,7 +77,6 @@ public class ServicesController : ControllerBase
                 Price = request.Price,
                 DurationMinutes = request.DurationMinutes,
                 CategoryId = request.CategoryId,
-                UncertainDuration = request.UncertainDuration,
             },
             cancellationToken);
 

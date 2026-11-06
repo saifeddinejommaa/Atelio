@@ -27,6 +27,7 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             ast.label AS {nameof(AppointmentResponse.StatusLabel)},
             a.scheduled_at AS {nameof(AppointmentResponse.ScheduledAt)},
             a.estimated_end_at AS {nameof(AppointmentResponse.EstimatedEndAt)},
+            a.estimated_minutes AS {nameof(AppointmentResponse.EstimatedMinutes)},
             a.customer_notes AS {nameof(AppointmentResponse.CustomerNotes)},
             g.id AS {nameof(AppointmentResponse.GarageId)},
             g.name AS {nameof(AppointmentResponse.GarageName)},
@@ -39,7 +40,8 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
             COALESCE(srv.names, ARRAY[]::text[]) AS {nameof(AppointmentResponse.ServiceNames)},
             itv.id AS {nameof(AppointmentResponse.InterventionId)},
             itv.status_id AS {nameof(AppointmentResponse.InterventionStatusId)},
-            itv.status_label AS {nameof(AppointmentResponse.InterventionStatusLabel)}
+            itv.status_label AS {nameof(AppointmentResponse.InterventionStatusLabel)},
+            itv.employee_id AS {nameof(AppointmentResponse.InterventionEmployeeId)}
 
         FROM appointment a
         INNER JOIN customer c ON c.id = a.customer_id
@@ -58,7 +60,7 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
 
         -- Dernière intervention ouverte à partir du rendez-vous.
         LEFT JOIN LATERAL (
-            SELECT i.id, i.status_id, ist.label AS status_label
+            SELECT i.id, i.status_id, ist.label AS status_label, i.employee_id
             FROM intervention i
             INNER JOIN intervention_status ist ON ist.id = i.status_id
             WHERE i.appointment_id = a.id
@@ -109,9 +111,10 @@ public class AppointmentQueryRepository : IAppointmentQueryRepository
         }
 
         // Jours à l'heure locale du garage, convertis en bornes UTC : [from 00:00, lendemain de to 00:00[.
+        // Un rendez-vous sur plusieurs jours compte sur toute la période qu'il chevauche.
         if (filter.From is DateOnly from)
         {
-            sql.Append(" AND a.scheduled_at >= @FromUtc");
+            sql.Append(" AND COALESCE(a.estimated_end_at, a.scheduled_at) >= @FromUtc");
             parameters.Add("FromUtc", ToUtc(from));
         }
 

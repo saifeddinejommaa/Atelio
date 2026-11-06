@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ContactPhones from "@/components/ContactPhones";
 import Logo from "@/components/Logo";
 import type { Service } from "@/lib/garageService/services";
 import { tenantPath, type SiteTenant } from "@/tenants";
@@ -27,9 +28,7 @@ export default function Footer({ tenant, services }: { tenant: SiteTenant; servi
           <Logo tenant={tenant} />
           {tenant.tagline && <p className="mt-4 text-sm leading-6 text-on-primary/80">{tenant.tagline}</p>}
           <p className="mt-3 text-sm text-on-primary/80">
-            <a href={`tel:${tenant.contact.phone}`} className="hover:text-secondary">
-              {tenant.contact.phoneLabel}
-            </a>
+            <ContactPhones contact={tenant.contact} linkClassName="hover:text-secondary" />
             <br />
             <a href={`mailto:${tenant.contact.email}`} className="hover:text-secondary">
               {tenant.contact.email}

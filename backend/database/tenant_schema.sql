@@ -54,12 +54,14 @@ CREATE TABLE public.appointment (
     vehicle_id bigint NOT NULL,
     garage_id bigint NOT NULL,
     scheduled_at timestamp with time zone NOT NULL,
-    estimated_end_at timestamp with time zone NOT NULL,
+    estimated_end_at timestamp with time zone,
+    estimated_minutes integer,
     customer_notes text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     status_id integer CONSTRAINT appointment_status_id_not_null1 NOT NULL,
-    CONSTRAINT appointment_check CHECK ((estimated_end_at > scheduled_at))
+    CONSTRAINT appointment_check CHECK ((estimated_end_at > scheduled_at)),
+    CONSTRAINT appointment_estimated_minutes_check CHECK ((estimated_minutes > 0))
 );
 
 
@@ -578,12 +580,11 @@ CREATE TABLE public.service (
     code character varying(50) NOT NULL,
     name character varying(150) NOT NULL,
     description text,
-    duration_minutes integer NOT NULL,
+    duration_minutes integer,
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     price numeric(10,2) NOT NULL,
-    uncertain_duration boolean DEFAULT false NOT NULL,
     category_id bigint,
     CONSTRAINT service_duration_minutes_check CHECK ((duration_minutes > 0)),
     CONSTRAINT service_price_check CHECK ((price >= (0)::numeric))
@@ -1721,4 +1722,5 @@ INSERT INTO public.service_category (code, name, hourly_rate, sort_order) VALUES
     ('pneumatique', 'Pneumatiques',                50, 2),
     ('mecanique',   'Mécanique',                   65, 3),
     ('electricite', 'Électricité & climatisation', 75, 4),
-    ('diagnostic',  'Contrôle & diagnostic',       70, 5);
+    ('diagnostic',  'Contrôle & diagnostic',       70, 5),
+    ('autre',       'Autre',                        0, 6);

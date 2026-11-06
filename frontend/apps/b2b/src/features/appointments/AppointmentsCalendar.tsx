@@ -4,6 +4,7 @@ import {
   AppointmentStatus,
   GetGarageAppointments,
   GetGarageCapacity,
+  InterventionStatus,
   type Appointment,
   type CapacityPeriod,
   type Garage,
@@ -26,7 +27,7 @@ import '@fullcalendar/react/themes/classic/theme.css'
 import '@fullcalendar/react/themes/classic/palette.css'
 import { useCallback, useMemo, useRef, useState, type RefObject } from 'react'
 import { useBrand } from '../../brand/useBrand'
-import { displayColors, MIN_LEAD_HOURS } from './AppointmentStatus'
+import { displayColors } from './AppointmentStatus'
 import LoadingState from '../../components/LoadingState'
 
 type ViewType = 'timeGridDay' | 'timeGridWeek'
@@ -53,10 +54,8 @@ function mondayOf(date: Date): Date {
   return monday
 }
 
-/** Premier instant réservable : maintenant + MIN_LEAD_HOURS. */
-function firstBookable(): Date {
-  return new Date(Date.now() + MIN_LEAD_HOURS * 3_600_000)
-}
+/** Durée d'une case du calendrier (SlotPlanner.StepMinutes). */
+const SLOT_MINUTES = 30
 
 function addDays(date: Date, days: number): Date {
   const d = new Date(date)
@@ -69,10 +68,15 @@ function vehicleLabel(a: Appointment): string {
 }
 
 /** Rendez-vous comptés par jour (annulés exclus). */
+/** Rendez-vous annulé, ou intervention annulée : plus affiché ni compté dans le calendrier. */
+function isCancelled(appointment: Appointment): boolean {
+  const display = appointmentDisplayStatus(appointment)
+  return display.kind === 'intervention' ? display.status.id === InterventionStatus.Cancelled : display.status.id === AppointmentStatus.Cancelled
+}
+
 function countByDay(appointments: Appointment[]): Record<string, number> {
   const counts: Record<string, number> = {}
   for (const a of appointments) {
-    if (a.status.id === AppointmentStatus.Cancelled) continue
     const day = isoDay(new Date(a.scheduledAt))
     counts[day] = (counts[day] ?? 0) + 1
   }
@@ -132,18 +136,19 @@ export default function AppointmentsCalendar({
   const loadEvents = useCallback(
     async (info: EventSourceFuncInfo): Promise<EventInput[]> => {
       const monday = mondayOf(info.start)
-      const appointments = await new GetGarageAppointments(new AppointmentApiRepository(api)).execute(
+      const found = await new GetGarageAppointments(new AppointmentApiRepository(api)).execute(
         garage.id,
         isoDay(monday),
         isoDay(addDays(monday, 6)),
       )
+      const appointments = found.filter((a) => !isCancelled(a))
       const counts = countByDay(appointments)
       setWeek((w) => ({ ...w, start: isoDay(monday), counts }))
 
       return appointments.map((a) => ({
         id: String(a.id),
         start: a.scheduledAt,
-        end: a.estimatedEndAt,
+        end: a.estimatedEndAt ?? undefined,
         title: `${a.customerFirstName} ${a.customerLastName}`,
         ...displayColors(appointmentDisplayStatus(a)),
         className: 'appointment-event',
@@ -167,7 +172,7 @@ export default function AppointmentsCalendar({
       setWeek((w) => ({ ...w, full }))
 
       // Avant le premier instant réservable : une seule bande hachurée (index.css), sans les fonds de capacité.
-      const lockedUntil = firstBookable()
+      const lockedUntil = new Date()
       const locked: EventInput[] =
         lockedUntil > monday ? [{ start: monday, end: lockedUntil, display: 'background', className: 'slot-locked' }] : []
 
@@ -188,12 +193,13 @@ export default function AppointmentsCalendar({
 
   const eventSources = useMemo(() => [loadEvents, loadCapacity], [loadEvents, loadCapacity])
 
-  // Pas de rendez-vous dans le passé, ni sur une plage complète.
+  // Pas de rendez-vous dans le passé, ni sur une plage complète. Case en cours (client au comptoir) : à partir de maintenant.
   const slotClick = useCallback(
     (info: DateClickInfo) => {
+      const now = new Date()
       const time = info.date.getTime()
       const full = capacity.current.some((p) => p.free === 0 && new Date(p.start).getTime() <= time && time < new Date(p.end).getTime())
-      if (info.date >= firstBookable() && !full) onSlotClick(info.date)
+      if (time + SLOT_MINUTES * 60_000 > now.getTime() && !full) onSlotClick(info.date < now ? now : info.date)
     },
     [onSlotClick],
   )
@@ -344,6 +350,10 @@ function AppointmentEvent({ info }: { info: EventDisplayInfo }) {
         {vehicleLabel(appointment)}
         {appointment.serviceNames.length > 0 && ` · ${appointment.serviceNames.join(', ')}`}
       </div>
+      {appointment.estimatedEndAt === null && appointment.interventionId === null && <div className="mt-0.5 font-bold">⏳ À estimer</div>}
+      {appointment.interventionId !== null && appointment.interventionEmployeeId === null && (
+        <div className="mt-0.5 font-bold">⚠ Sans mécanicien</div>
+      )}
     </div>
   )
 }

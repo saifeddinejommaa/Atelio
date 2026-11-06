@@ -167,6 +167,9 @@ export default function InterventionsPage() {
                         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${interventionStatusClasses[i.status.id]}`}>
                           {i.status.label}
                         </span>
+                        {i.employeeId === null && (
+                          <span className="ml-2 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Sans mécanicien</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-zinc-600">{i.startedAt ? dateTime.format(new Date(i.startedAt)) : '—'}</td>
                     </tr>

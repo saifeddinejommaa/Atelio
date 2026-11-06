@@ -15,6 +15,8 @@ import { useState, type FormEvent } from 'react'
 import { useBrand } from '../../brand/useBrand'
 import SidePanel from '../../components/SidePanel'
 import CustomerSearch from '../customers/CustomerSearch'
+import { endLabel } from './EndLabel'
+import { hoursToMinutes, isValidEstimate } from './EstimateHours'
 import SlotCheckMessage from './SlotCheckMessage'
 import { useSlotCheck } from './useSlotCheck'
 
@@ -71,13 +73,19 @@ export default function NewAppointmentPanel({
   const [plate, setPlate] = useState('')
 
   const [serviceIds, setServiceIds] = useState<number[]>([])
+  // Estimation facultative (heures), demandée pour une prestation sans durée.
+  const [estimateHours, setEstimateHours] = useState('')
   const [notes, setNotes] = useState('')
 
   const [loadingCustomer, setLoadingCustomer] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const duration = services.filter((s) => serviceIds.includes(s.id)).reduce((sum, s) => sum + s.durationMinutes, 0)
+  const chosenServices = services.filter((s) => serviceIds.includes(s.id))
+  const hasNoDuration = chosenServices.some((s) => s.durationMinutes === null)
+  const typedEstimate = hasNoDuration && estimateHours.trim() !== ''
+  const estimateValid = !typedEstimate || isValidEstimate(estimateHours)
+  const estimatedMinutes = typedEstimate && estimateValid ? hoursToMinutes(estimateHours) : undefined
 
   async function selectCustomer(found: CustomerSummary) {
     setError('')
@@ -110,9 +118,9 @@ export default function NewAppointmentPanel({
   const hasCustomer = customer !== null || (creatingCustomer && !!newCustomer.firstName.trim() && !!newCustomer.lastName.trim() && !!newCustomer.phone.trim())
   // Disponibilité vérifiée dès que les prestations (donc la durée) sont connues.
   const slotCheck = useSlotCheck(
-    serviceIds.length > 0 ? { garageId: garage.id, scheduledAt: localDateTime(start), serviceIds: [...serviceIds].sort() } : null,
+    serviceIds.length > 0 && estimateValid ? { garageId: garage.id, scheduledAt: localDateTime(start), serviceIds: [...serviceIds].sort(), estimatedMinutes } : null,
   )
-  const canSubmit = hasCustomer && hasVehicle && slotCheck.status === 'available' && !submitting
+  const canSubmit = hasCustomer && hasVehicle && estimateValid && slotCheck.status === 'available' && !submitting
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -128,6 +136,7 @@ export default function NewAppointmentPanel({
         customerId: id,
         garageId: garage.id,
         serviceIds,
+        estimatedMinutes,
         scheduledAt: localDateTime(start),
         vehicleId: typeof vehicleChoice === 'number' ? vehicleChoice : undefined,
         plate: vehicleChoice === NEW_VEHICLE ? plate : undefined,
@@ -149,7 +158,7 @@ export default function NewAppointmentPanel({
           <p className="first-letter:uppercase">
             {startFormat.format(start)}
             {slotCheck.status === 'available' && slotCheck.estimatedEndAt &&
-              ` – ${new Date(slotCheck.estimatedEndAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}
+              ` – ${endLabel(start, new Date(slotCheck.estimatedEndAt))}`}
           </p>
           <p className="text-zinc-500">{garage.name}</p>
         </>
@@ -241,19 +250,34 @@ export default function NewAppointmentPanel({
 
           {/* Prestations */}
           <section>
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Prestations</h3>
-              {duration > 0 && <span className="text-sm text-zinc-600">Durée : {formatDuration(duration)}</span>}
-            </div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Prestations</h3>
             <div className="mt-3 space-y-2">
               {services.map((s) => (
                 <label key={s.id} className="flex cursor-pointer items-center gap-3 rounded-brand border border-zinc-200 px-3 py-2 text-sm hover:border-zinc-300">
                   <input type="checkbox" checked={serviceIds.includes(s.id)} onChange={() => toggleService(s.id)} className="accent-secondary" />
                   <span className="flex-1">{s.name}</span>
-                  <span className="text-zinc-500">{formatDuration(s.durationMinutes)}</span>
+                  {s.durationMinutes !== null && <span className="text-zinc-500">{formatDuration(s.durationMinutes)}</span>}
                 </label>
               ))}
             </div>
+            {hasNoDuration && (
+              <label className="mt-4 block text-sm font-semibold">
+                Votre estimation (en heures, facultatif)
+                <input
+                  inputMode="decimal"
+                  value={estimateHours}
+                  onChange={(e) => setEstimateHours(e.target.value)}
+                  placeholder="Indiquez le temps estimé"
+                  className="mt-1 w-full rounded-brand border border-zinc-300 px-3 py-2 font-normal outline-none focus:border-primary"
+                />
+                {!estimateValid && <span className="mt-1 block text-xs font-normal text-red-700">Indiquez un temps entre 1 minute et 200 heures, par exemple 1,5.</span>}
+                {!typedEstimate && (
+                  <span className="mt-1 block rounded-brand bg-amber-50 px-3 py-2 text-xs font-normal text-amber-800">
+                    ⚠ Sans estimation, le rendez-vous est enregistré à cette heure, sans bloquer le planning du mécanicien.
+                  </span>
+                )}
+              </label>
+            )}
             <SlotCheckMessage check={slotCheck} />
           </section>
 

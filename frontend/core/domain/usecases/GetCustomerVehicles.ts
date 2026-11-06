@@ -40,7 +40,7 @@ export class UpdateVehicleDetails {
     const version = details.version.trim();
     if (!make) throw new ValidationError("Indiquez la marque.");
     if (!model) throw new ValidationError("Indiquez le modèle.");
-    if (!version) throw new ValidationError("Indiquez la version.");
+    if (!version) throw new ValidationError("Indiquez le code moteur.");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(details.firstRegistration)) throw new ValidationError("Indiquez la date de 1re mise en circulation.");
     if (new Date(details.firstRegistration) > new Date()) throw new ValidationError("La date de 1re mise en circulation est dans le futur.");
     if (!details.fuel) throw new ValidationError("Choisissez l'énergie.");

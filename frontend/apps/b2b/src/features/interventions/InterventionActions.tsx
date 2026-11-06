@@ -70,7 +70,10 @@ export default function InterventionActions({ intervention }: { intervention: In
       {intervention.status.id === InterventionStatus.InProgress &&
         (confirming ? (
           <>
-            <span className="text-sm text-zinc-600">Les travaux sont terminés ?</span>
+            <span className="text-sm text-zinc-600">
+              Les travaux sont terminés ?
+              {intervention.employeeId === null && <span className="ml-1 font-semibold text-amber-700">Aucun mécanicien n'est renseigné.</span>}
+            </span>
             <button type="button" disabled={busy} onClick={() => run(() => new FinishIntervention(repository).execute(intervention.id))} className={primary}>
               Oui, véhicule prêt
             </button>

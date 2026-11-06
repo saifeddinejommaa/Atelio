@@ -4,8 +4,7 @@ export type ServiceDto = {
   code: string;
   name: string;
   description: string | null;
-  durationMinutes: number;
-  uncertainDuration: boolean;
+  durationMinutes: number | null;
   price: number;
   discountPercent: number | null;
   finalPrice: number;

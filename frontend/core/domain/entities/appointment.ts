@@ -11,7 +11,7 @@ export type Appointment = {
   status: Status<AppointmentStatus>;
   /** Début du rendez-vous, ISO 8601 en UTC. */
   scheduledAt: string;
-  estimatedEndAt: string;
+  estimatedEndAt: string | null;
   customerNotes: string | null;
   garageId: number;
   garageName: string;
@@ -22,9 +22,13 @@ export type Appointment = {
   vehicleModel: string | null;
   serviceCodes: string[];
   serviceNames: string[];
+  /** Temps total estimé par le garage (minutes). */
+  estimatedMinutes: number | null;
   /** Intervention ouverte à partir du rendez-vous (null si pas encore lancé). */
   interventionId: number | null;
   interventionStatus: Status<InterventionStatus> | null;
+  /** Mécanicien de l'intervention, null si elle est sans responsable ou pas encore lancée. */
+  interventionEmployeeId: number | null;
 };
 
 /** Demande de rendez-vous. */
@@ -32,6 +36,8 @@ export type AppointmentRequest = {
   customerId: number;
   garageId: number;
   serviceIds: number[];
+  /** Back-office : temps total estimé en minutes. */
+  estimatedMinutes?: number;
   /** Heure locale du garage, "2026-10-05T09:30". */
   scheduledAt: string;
   /** Véhicule existant du client, ou immatriculation (créé s'il est inconnu). */
@@ -46,7 +52,7 @@ export type BookedAppointment = {
   id: number;
   reference: string;
   scheduledAt: string;
-  estimatedEndAt: string;
+  estimatedEndAt: string | null;
 };
 
 /** Rendez-vous encore ouvert : en attente ou confirmé. */
@@ -87,7 +93,7 @@ export type StartCheck = {
   message: string | null;
   /** Début et fin estimée (UTC, ISO 8601), pauses comprises. */
   startAt: string;
-  estimatedEndAt: string;
+  estimatedEndAt: string | null;
   /** Premier mécanicien libre, affecté au lancement. */
   employeeId: number | null;
   employeeName: string | null;

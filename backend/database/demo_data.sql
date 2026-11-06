@@ -228,16 +228,16 @@ COPY public.appointment (id, reference, customer_id, vehicle_id, garage_id, sche
 -- Data for Name: service; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.service (id, code, name, description, duration_minutes, is_active, created_at, updated_at, price, uncertain_duration, category_id) FROM stdin;
-1	vidange	Vidange & entretien	Huile moteur, filtres et points de contrôle selon le carnet constructeur.	45	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	69.00	f	1
-2	freinage	Freinage	Plaquettes, disques et liquide de frein contrôlés et remplacés.	60	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	89.00	f	3
-3	pneus	Pneus	Montage, équilibrage, géométrie et stockage de vos pneus.	45	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	49.00	f	2
-4	climatisation	Climatisation	Recharge, désinfection et diagnostic du circuit de clim.	60	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	79.00	f	4
-5	batterie	Batterie	Test gratuit et remplacement de batterie en moins de 30 minutes.	30	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	99.00	f	4
-6	revision	Révision constructeur	Révision complète qui préserve votre garantie constructeur.	120	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	149.00	f	1
-7	controle-technique	Pré-contrôle technique	Vérification des points clés avant votre passage au contrôle.	30	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	29.00	f	5
-8	echappement	Échappement	Silencieux, catalyseur et filtre à particules diagnostiqués.	90	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	119.00	f	3
-25	autre	Autre	Besoin non listé : à préciser au garage.	60	t	2026-10-05 01:14:56.591443+02	2026-10-05 13:36:21.209465+02	0.00	t	5
+COPY public.service (id, code, name, description, duration_minutes, is_active, created_at, updated_at, price, category_id) FROM stdin;
+1	vidange	Vidange & entretien	Huile moteur, filtres et points de contrôle selon le carnet constructeur.	45	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	69.00	1
+2	freinage	Freinage	Plaquettes, disques et liquide de frein contrôlés et remplacés.	60	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	89.00	3
+3	pneus	Pneus	Montage, équilibrage, géométrie et stockage de vos pneus.	45	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	49.00	2
+4	climatisation	Climatisation	Recharge, désinfection et diagnostic du circuit de clim.	60	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	79.00	4
+5	batterie	Batterie	Test gratuit et remplacement de batterie en moins de 30 minutes.	30	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	99.00	4
+6	revision	Révision constructeur	Révision complète qui préserve votre garantie constructeur.	120	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	149.00	1
+7	controle-technique	Pré-contrôle technique	Vérification des points clés avant votre passage au contrôle.	30	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	29.00	5
+8	echappement	Échappement	Silencieux, catalyseur et filtre à particules diagnostiqués.	90	t	2026-10-02 19:44:00.877194+02	2026-10-05 13:36:21.209465+02	119.00	3
+25	autre	Autre	Besoin non listé : à préciser au garage.	\N	t	2026-10-05 01:14:56.591443+02	2026-10-05 13:36:21.209465+02	0.00	5
 \.
 
 

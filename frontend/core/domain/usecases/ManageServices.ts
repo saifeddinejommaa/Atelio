@@ -7,7 +7,7 @@ function checkService(service: ServiceInput): ServiceInput {
   const name = service.name.trim();
   if (!name) throw new ValidationError("Indiquez le nom de la prestation.");
   if (!(service.price >= 0)) throw new ValidationError("Indiquez un prix valide.");
-  if (!(Number.isInteger(service.durationMinutes) && service.durationMinutes > 0)) {
+  if (service.durationMinutes !== null && !(Number.isInteger(service.durationMinutes) && service.durationMinutes > 0)) {
     throw new ValidationError("Indiquez une durée en minutes supérieure à 0.");
   }
   return { ...service, name, description: service.description?.trim() || null };

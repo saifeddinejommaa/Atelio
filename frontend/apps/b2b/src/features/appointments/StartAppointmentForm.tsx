@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router'
 import { useBrand } from '../../brand/useBrand'
 import VehicleDetailsForm from '../vehicles/VehicleDetailsForm'
 import LoadingState from '../../components/LoadingState'
+import { endLabel, endWithDay } from './EndLabel'
 
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
@@ -43,7 +44,7 @@ function errorMessage(error: unknown): string {
 /**
  * Lancement d'un rendez-vous le jour même : heure réelle de début (maintenant par défaut), vérification
  * (premier mécanicien libre, fin estimée). Si personne n'est libre, on peut lancer quand même.
- * Le véhicule doit être identifié (marque, modèle, version...) : sinon le formulaire s'ouvre et le lancement attend.
+ * Le véhicule doit être identifié (marque, modèle, code moteur...) : sinon le formulaire s'ouvre et le lancement attend.
  */
 export default function StartAppointmentForm({ appointment, onCancel }: { appointment: Appointment; onCancel: () => void }) {
   const { api } = useBrand()
@@ -102,7 +103,7 @@ export default function StartAppointmentForm({ appointment, onCancel }: { appoin
     <div className="space-y-3">
       <h3 className="font-bold">Lancer l'intervention</h3>
       <p className="text-sm text-zinc-600">
-        Rendez-vous prévu : {time.format(new Date(appointment.scheduledAt))} – {time.format(new Date(appointment.estimatedEndAt))}
+        Rendez-vous prévu : {time.format(new Date(appointment.scheduledAt))} {appointment.estimatedEndAt ? `– ${endLabel(new Date(appointment.scheduledAt), new Date(appointment.estimatedEndAt))}` : '· à estimer'}
       </p>
       <label className="flex items-center gap-3 text-sm">
         <span className="text-zinc-600">Début réel</span>
@@ -119,7 +120,7 @@ export default function StartAppointmentForm({ appointment, onCancel }: { appoin
       {state.status === 'error' && <p className="rounded-brand bg-red-50 px-3 py-2 text-sm text-red-700">{state.message}</p>}
       {state.status === 'done' && state.check.possible && (
         <p className="text-sm font-medium text-emerald-700">
-          ✓ Possible · fin estimée {time.format(new Date(state.check.estimatedEndAt))} (pauses comprises)
+          ✓ Possible · fin estimée {state.check.estimatedEndAt ? endWithDay(new Date(state.check.estimatedEndAt)) : 'à estimer'} (pauses comprises)
           {state.check.employeeName && <span className="font-normal text-zinc-600"> · mécanicien : {state.check.employeeName}</span>}
         </p>
       )}

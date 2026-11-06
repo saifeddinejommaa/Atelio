@@ -22,7 +22,6 @@ public class ServiceQueryRepository : IServiceQueryRepository
             s.name AS {nameof(ServiceResponse.Name)},
             s.description AS {nameof(ServiceResponse.Description)},
             s.duration_minutes AS {nameof(ServiceResponse.DurationMinutes)},
-            s.uncertain_duration AS {nameof(ServiceResponse.UncertainDuration)},
             s.price AS {nameof(ServiceResponse.Price)},
             (SELECT MAX(p.discount_percent) FROM promotion p
              WHERE p.service_id = s.id AND p.is_active
@@ -41,7 +40,6 @@ public class ServiceQueryRepository : IServiceQueryRepository
             s.name AS {nameof(ServiceAdminResponse.Name)},
             s.description AS {nameof(ServiceAdminResponse.Description)},
             s.duration_minutes AS {nameof(ServiceAdminResponse.DurationMinutes)},
-            s.uncertain_duration AS {nameof(ServiceAdminResponse.UncertainDuration)},
             s.price AS {nameof(ServiceAdminResponse.Price)},
             (SELECT MAX(p.discount_percent) FROM promotion p
              WHERE p.service_id = s.id AND p.is_active

@@ -129,8 +129,7 @@ export default function ServicesPage() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {formatDuration(s.durationMinutes)}
-                  {s.uncertainDuration && <span className="block text-xs text-zinc-500">incertaine</span>}
+                  {s.durationMinutes === null ? 'À préciser' : formatDuration(s.durationMinutes)}
                 </td>
                 <td className="px-4 py-3">
                   <span

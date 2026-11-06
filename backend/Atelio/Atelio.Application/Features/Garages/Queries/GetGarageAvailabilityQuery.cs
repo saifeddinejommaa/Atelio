@@ -14,7 +14,7 @@ public class GetGarageAvailabilityQuery : IRequest<IReadOnlyList<GarageDayAvaila
 
     public List<long> ServiceIds { get; set; } = [];
 
-    // Premier jour (heure locale du garage). Par défaut : demain.
+    // Premier jour (heure locale du garage). Par défaut : aujourd'hui.
     public DateOnly? From { get; set; }
 
     public int Days { get; set; } = 14;
@@ -64,20 +64,23 @@ public class GetGarageAvailabilityQueryHandler
 
         var work = await BookingRules.GetWorkAsync(_garages, _services, garage.Id, request.ServiceIds, cancellationToken);
 
+        // Prestation sans durée : pas de créneau en ligne, le client contacte le garage.
+        if (work.Minutes is not int minutes)
+        {
+            return [];
+        }
+
         var nowUtc = _clock.GetUtcNow().UtcDateTime;
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, _tenant.TimeZone));
-        var from = request.From ?? today.AddDays(1);
+        var from = request.From ?? today;
         var to = from.AddDays(request.Days);
 
         var planner = await BookingRules.CreatePlannerAsync(_planning, _tenant, garage, from, to, cancellationToken);
 
-        // Site client : une prestation à durée incertaine (ex. « Autre ») ne se réserve que le matin.
-        var latestStart = work.Uncertain ? BookingRules.UncertainLatestStart : (TimeOnly?)null;
-
         var result = new List<GarageDayAvailabilityResponse>();
         for (var day = from; day < to; day = day.AddDays(1))
         {
-            var slots = planner.GetSlots(day, work.Minutes, nowUtc, latestStart);
+            var slots = planner.GetSlots(day, minutes, nowUtc);
             if (slots.Count == 0)
             {
                 continue; // garage fermé ce jour-là

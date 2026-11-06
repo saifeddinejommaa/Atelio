@@ -22,14 +22,11 @@ public class ServiceInput
     // Prix « à partir de » TTC, avant promotion.
     public decimal Price { get; set; }
 
-    // Durée estimée : sert au placement des rendez-vous.
-    public int DurationMinutes { get; set; }
+    // Durée estimée : sert au placement des rendez-vous. Vide : pas de durée exacte.
+    public int? DurationMinutes { get; set; }
 
     // Type d'intervention : donne le taux horaire de main-d'œuvre.
     public long? CategoryId { get; set; }
-
-    // Durée incertaine (ex. « Autre ») : à placer de préférence le matin.
-    public bool UncertainDuration { get; set; }
 }
 
 public class ServiceInputValidator : AbstractValidator<ServiceInput>
@@ -224,7 +221,6 @@ internal static class ServiceRules
         service.Price = input.Price;
         service.DurationMinutes = input.DurationMinutes;
         service.CategoryId = input.CategoryId;
-        service.UncertainDuration = input.UncertainDuration;
         service.UpdatedAt = nowUtc;
     }
 

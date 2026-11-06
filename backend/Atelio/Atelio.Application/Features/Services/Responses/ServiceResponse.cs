@@ -12,10 +12,8 @@ public class ServiceResponse
 
     public string? Description { get; set; }
 
-    public int DurationMinutes { get; set; }
-
-    // Durée incertaine (ex. « Autre ») : à placer de préférence le matin.
-    public bool UncertainDuration { get; set; }
+    // Vide : pas de durée exacte (ex. « Autre »).
+    public int? DurationMinutes { get; set; }
 
     // Prix TTC du service, avant promotion.
     public decimal Price { get; set; }

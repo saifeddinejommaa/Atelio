@@ -59,6 +59,16 @@ export class DeleteSparePart {
   }
 }
 
+/** Temps estimé des prestations sans temps connu : il entre alors dans le planning. */
+export class SetInterventionEstimate {
+  constructor(private readonly repository: IInterventionRepository) {}
+
+  async execute(interventionId: number, estimatedMinutes: number): Promise<void> {
+    if (!Number.isInteger(estimatedMinutes) || estimatedMinutes <= 0) throw new ValidationError("Indiquez une estimation en heures.");
+    return this.repository.setEstimate(interventionId, estimatedMinutes);
+  }
+}
+
 function checkQuantity(quantity: number): number {
   if (!(quantity > 0)) throw new ValidationError("La quantité doit être supérieure à 0.");
   return quantity;

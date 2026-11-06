@@ -8,6 +8,7 @@ using Atelio.Domain.Repositories;
 using FluentValidation;
 using MediatR;
 using System.Security.Cryptography;
+using System.Text.Json.Serialization;
 
 namespace Atelio.Application.Features.Appointments.Commands;
 
@@ -22,6 +23,13 @@ public class CreateAppointmentCommand : IRequest<AppointmentCreatedResponse>
     public long GarageId { get; set; }
 
     public List<long> ServiceIds { get; set; } = [];
+
+    // Back-office : temps total estimé en minutes. Sans lui, une prestation sans durée ne bloque pas le planning.
+    public int? EstimatedMinutes { get; set; }
+
+    // Fixé par l'API (jamais par le client) : le garage peut réserver sur plusieurs jours, avec un avertissement.
+    [JsonIgnore]
+    public bool ByGarage { get; set; }
 
     // Heure locale du garage, ex. "2026-10-05T09:30".
     public DateTime ScheduledAt { get; set; }
@@ -44,6 +52,10 @@ public class CreateAppointmentCommandValidator : AbstractValidator<CreateAppoint
         RuleFor(x => x.CustomerId).GreaterThan(0);
         RuleFor(x => x.GarageId).GreaterThan(0).WithMessage("Choisissez un garage.");
         RuleFor(x => x.ServiceIds).NotEmpty().WithMessage("Choisissez au moins un service.");
+        RuleFor(x => x.EstimatedMinutes)
+            .InclusiveBetween(1, BookingRules.MaxEstimatedMinutes)
+            .When(x => x.EstimatedMinutes.HasValue)
+            .WithMessage("L'estimation doit être comprise entre 1 minute et 200 heures.");
         RuleFor(x => x)
             .Must(x => x.VehicleId.HasValue || TextRules.IsValidPlate(x.Plate))
             .WithMessage("Indiquez un véhicule ou une immatriculation valide (format AB-123-CD).");
@@ -102,7 +114,11 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
             throw new NotFoundException($"Garage {request.GarageId} introuvable.");
         }
 
-        var work = await BookingRules.GetWorkAsync(_garages, _services, garage.Id, request.ServiceIds, cancellationToken);
+        var work = await BookingRules.GetWorkAsync(_garages, _services, garage.Id, request.ServiceIds, cancellationToken, request.EstimatedMinutes);
+        if (!request.ByGarage && work.Minutes is null)
+        {
+            throw new BusinessException(BookingRules.NoEstimateMessage);
+        }
 
         Appointment appointment = null!;
 
@@ -117,13 +133,15 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
 
             // Répartition simulée entre les mécaniciens : fin estimée pauses comprises.
             var planner = await BookingRules.CreatePlannerAsync(_planning, _tenant, garage, day, day, ct);
-            var placement = planner.TryPlace(localStart, work.Minutes, nowUtc);
+            var placement = request.ByGarage
+                ? planner.TryPlaceForGarage(localStart, work.Minutes, nowUtc)
+                : planner.TryPlace(localStart, work.Minutes!.Value, nowUtc);
             if (!placement.Available)
             {
                 throw new BusinessException(placement.Reason!);
             }
 
-            var endUtc = placement.EndUtc!.Value;
+            var endUtc = placement.EndUtc;
 
             var vehicle = await ResolveVehicleAsync(request, nowUtc, ct);
 
@@ -135,6 +153,7 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
                 GarageId = garage.Id,
                 ScheduledAt = startUtc,
                 EstimatedEndAt = endUtc,
+                EstimatedMinutes = request.EstimatedMinutes,
                 Status = AppointmentStatus.Confirmed,
                 CustomerNotes = TextRules.Clean(request.CustomerNotes),
                 CreatedAt = nowUtc,

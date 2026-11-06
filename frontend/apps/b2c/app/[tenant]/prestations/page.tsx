@@ -46,9 +46,15 @@ export default async function ServicesPage({ params }: PageProps<"/[tenant]/pres
             <p className="mt-2 flex-1 text-sm leading-6 text-zinc-600">{s.description}</p>
             <ServicePrice service={s} size="text-2xl" />
             <div className="mt-5 flex gap-2">
-              <Button as={Link} href={href(`/rendez-vous?prestation=${s.slug}`)} size="sm" className="flex-1">
-                Prendre rendez-vous
-              </Button>
+              {s.duration ? (
+                <Button as={Link} href={href(`/rendez-vous?prestation=${s.slug}`)} size="sm" className="flex-1">
+                  Prendre rendez-vous
+                </Button>
+              ) : (
+                <Button as="a" href={`tel:${tenant.contact.phone}`} size="sm" className="flex-1">
+                  Contacter le garage
+                </Button>
+              )}
               <Button as={Link} href={href(`/prestations/${s.slug}`)} variant="secondary" size="sm">
                 Détails
               </Button>

@@ -43,6 +43,7 @@ export class GarageApiRepository implements IGarageRepository {
       scheduledAt: query.scheduledAt,
       serviceIds: query.serviceIds,
       excludeAppointment: query.excludeAppointment,
+      estimatedMinutes: query.estimatedMinutes,
     });
     return result ? toSlotCheck(result) : { available: false, message: "Garage introuvable.", durationMinutes: 0, estimatedEndAt: null, warning: null };
   }
